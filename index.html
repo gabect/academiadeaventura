@@ -20,12 +20,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.9.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.9.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.9.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.9.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.9.0';let pendingBuild=null;
+const BUILD='0.9.1';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -387,6 +387,8 @@ const FALL_JOINT_RADIUS=.065;
 const FALL_BONE_GEOMETRY=new THREE.CylinderGeometry(1,1,1,7);
 const FALL_Y_AXIS=new THREE.Vector3(0,1,0);
 const FALL_FLOOR=.045;
+// Collision projections are not impulses; keep ragdoll momentum bounded.
+const FALL_MAX_STEP_VELOCITY=.085;
 const rigid=(id,source,offset,radius,material)=>({
  id,source,offset:new THREE.Vector3(...offset),radius,material
 });
@@ -450,10 +452,10 @@ function beginFall(reason='Lost balance'){
  for(const b of ragdollBlueprint()){
   const p=b.source.localToWorld(b.offset.clone());
   p.y=Math.max(p.y,b.radius+.005);
-  const node={id:b.id,p,prev:p.clone().sub(initialVelocity),radius:b.radius};
+  const node={id:b.id,p,prev:p.clone().sub(initialVelocity),radius:b.radius,contacts:new Map(),onFloor:false};
   // A small forward tumble makes a loss of balance visually clear.
   if(['spine','neck','head','shoulder0','shoulder1'].includes(node.id)){
-   const tumble=new THREE.Vector3(Math.sin(player.rotation.y)*.045,.008,Math.cos(player.rotation.y)*.045);
+   const tumble=new THREE.Vector3(Math.sin(player.rotation.y)*.012,0,Math.cos(player.rotation.y)*.012);
    node.prev.sub(tumble);
   }
   const m=new THREE.Mesh(jointGeometry,b.material);
@@ -478,29 +480,36 @@ function beginFall(reason='Lost balance'){
  player.visible=false;
  FALL.group.visible=true;
  runButton.disabled=true;interactButton.disabled=true;
- for(const n of FALL.nodes)n.prev.sub(new THREE.Vector3(0,.06,0));
+ // Gentle downward motion, no upward launch at the start of a fall.
+  for(const n of FALL.nodes)n.prev.y+=.008;
  LOCOMOTION.vx=0;LOCOMOTION.vz=0;
  document.getElementById('message').textContent=reason+' — press Stand Up when ready.';
  renderFallenBody();
 }
 function projectFallNode(n){
- let floorContact=false;
- if(n.p.y<n.radius+FALL_FLOOR){
-  n.p.y=n.radius+FALL_FLOOR;floorContact=true;
- }
- const bound=BOUND-n.radius;
- n.p.x=THREE.MathUtils.clamp(n.p.x,-bound,bound);
- n.p.z=THREE.MathUtils.clamp(n.p.z,-bound,bound);
- for(const o of FALL_COLLIDERS){
-  if(n.p.y-n.radius>o.height)continue;
-  let dx=n.p.x-o.x,dz=n.p.z-o.z;
-  let d=Math.hypot(dx,dz),limit=o.r+n.radius;
-  if(d>=limit)continue;
-  if(d<1e-5){dx=1;dz=0;d=1;}
-  n.p.x=o.x+dx/d*limit;
-  n.p.z=o.z+dz/d*limit;
- }
- return floorContact;
+  let floorContact=false;
+  if(n.p.y<n.radius+FALL_FLOOR){
+   n.p.y=n.radius+FALL_FLOOR;floorContact=true;n.onFloor=true;
+  }
+  // Walls are planes: cancel penetration, never bounce the body away.
+  // The wall normal does not affect downward velocity.
+  const bound=BOUND-n.radius;
+  if(n.p.x>bound){n.p.x=bound;n.contacts.set('east',{x:-1,z:0});}
+  if(n.p.x< -bound){n.p.x=-bound;n.contacts.set('west',{x:1,z:0});}
+  if(n.p.z>bound){n.p.z=bound;n.contacts.set('south',{x:0,z:-1});}
+  if(n.p.z< -bound){n.p.z=-bound;n.contacts.set('north',{x:0,z:1});}
+  for(const o of FALL_COLLIDERS){
+   if(n.p.y-n.radius>o.height)continue;
+   let dx=n.p.x-o.x,dz=n.p.z-o.z;
+   let d=Math.hypot(dx,dz),limit=o.r+n.radius;
+   if(d>=limit)continue;
+   if(d<1e-5){dx=1;dz=0;d=1;}
+   const normal={x:dx/d,z:dz/d};
+   n.p.x=o.x+normal.x*limit;
+   n.p.z=o.z+normal.z*limit;
+   n.contacts.set(o,normal);
+  }
+  return floorContact;
 }
 // Bone-vs-tree collision: prevent a limb from slicing through a narrow trunk
 // even if its two joints happen to lie on either side of it.
@@ -524,43 +533,53 @@ function projectFallBone(link){
  }
 }
 function physicsFallStep(dt){
- let energy=0;
- // Semi-implicit Verlet with mild drag and gravity (world units/sec squared).
- for(const n of FALL.nodes){
-  const previous=n.p.clone();
-  const velocity=n.p.clone().sub(n.prev).multiplyScalar(.976);
-  n.p.add(velocity);
-  n.p.y-=12.0*dt*dt;
-  n.prev.copy(previous);
- }
- for(let iteration=0;iteration<7;iteration++){
-  for(const link of FALL.links){
-   const d=link.b.p.clone().sub(link.a.p),distance=d.length();
-   if(distance<1e-7)continue;
-   const adjustment=d.multiplyScalar((distance-link.length)/distance*.5);
-   link.a.p.add(adjustment);link.b.p.sub(adjustment);
+  let energy=0;
+  // Separate true momentum from large collision and joint corrections.
+  for(const n of FALL.nodes){
+   n.contacts.clear();n.onFloor=false;
+   const velocity=n.p.clone().sub(n.prev).multiplyScalar(.976);
+   n.intent=velocity;
+   n.p.add(velocity);
+   n.p.y-=12.0*dt*dt;
+   n.predicted=n.p.clone();
   }
-  for(const limit of FALL.limits){
-   const d=limit.b.p.clone().sub(limit.a.p),distance=d.length();
-   if(distance>1e-6&&distance<limit.min){
-    const correction=d.multiplyScalar((limit.min-distance)/distance*.5);
-    limit.a.p.sub(correction);limit.b.p.add(correction);
+  for(let iteration=0;iteration<7;iteration++){
+   for(const link of FALL.links){
+    const d=link.b.p.clone().sub(link.a.p),distance=d.length();
+    if(distance<1e-7)continue;
+    const adjustment=d.multiplyScalar((distance-link.length)/distance*.5);
+    link.a.p.add(adjustment);link.b.p.sub(adjustment);
    }
+   for(const limit of FALL.limits){
+    const d=limit.b.p.clone().sub(limit.a.p),distance=d.length();
+    if(distance>1e-6&&distance<limit.min){
+     const correction=d.multiplyScalar((limit.min-distance)/distance*.5);
+     limit.a.p.sub(correction);limit.b.p.add(correction);
+    }
+   }
+   for(const n of FALL.nodes)projectFallNode(n);
+   for(const link of FALL.links)projectFallBone(link);
   }
-  for(const n of FALL.nodes)projectFallNode(n);
-  for(const link of FALL.links)projectFallBone(link);
- }
- for(const n of FALL.nodes){
-  const touchFloor=projectFallNode(n);
-  if(touchFloor){
-   // Ground friction, anti-bounce; friction slows a limb sliding on pavement.
-   n.prev.x=THREE.MathUtils.lerp(n.prev.x,n.p.x,.42);
-   n.prev.z=THREE.MathUtils.lerp(n.prev.z,n.p.z,.42);
-   n.prev.y=n.p.y;
+  for(const n of FALL.nodes){
+   projectFallNode(n);
+   const correction=n.p.clone().sub(n.predicted);
+   const velocity=n.intent.clone().addScaledVector(correction,.10);
+   velocity.clampLength(0,FALL_MAX_STEP_VELOCITY);
+   for(const normal of n.contacts.values()){
+    const into=velocity.x*normal.x+velocity.z*normal.z;
+    if(into<0){velocity.x-=into*normal.x;velocity.z-=into*normal.z;}
+   }
+   if(n.onFloor){
+    if(velocity.y<0)velocity.y=0;
+    velocity.x*=.62;velocity.z*=.62;
+   }else if(n.contacts.size){
+    // Surface friction affects the horizontal slide, not gravity.
+    velocity.x*=.82;velocity.z*=.82;
+   }
+   n.prev.copy(n.p).sub(velocity);
+   energy+=velocity.lengthSq();
   }
-  energy+=n.p.distanceToSquared(n.prev);
- }
- FALL.quiet=energy/FALL.nodes.length<.000015?FALL.quiet+dt:0;
+  FALL.quiet=energy/FALL.nodes.length<.000015?FALL.quiet+dt:0;
 }
 function renderFallenBody(){
  const temp=new THREE.Vector3();
