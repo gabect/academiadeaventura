@@ -15,12 +15,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.7.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.7.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.7.2 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.7.2</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.7.1';let pendingBuild=null;
+const BUILD='0.7.2';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -172,39 +172,56 @@ function poseLeg(leg,forward,lift,pitch=0,crouch=0){
  leg.hip.rotation.x=hipAngle;leg.knee.rotation.x=kneeAngle;
  leg.ankle.rotation.x=-hipAngle-kneeAngle+pitch;
 }
-// Independent walk and run gait profiles, smoothly blended on speed change.
+// Preserve the normal walk while making Run a high-energy sprint.
 const WALK_GAIT={stance:.62,stride:.34,lift:.11,crouch:.06,arm:.38,elbow:.18,lean:.025,roll:.025};
-const RUN_GAIT={stance:.43,stride:.79,lift:.29,crouch:.018,arm:.85,elbow:.58,lean:.17,roll:.05};
 function posePerson(character,phase,runMix=0,blend=0){
  const rig=character.userData.rig;if(!rig)return;
- if(blend<.005){setIdlePose(character);return;}
- const mix=THREE.MathUtils.clamp(Number(runMix),0,1),cfg={};
- for(const key of Object.keys(WALK_GAIT))cfg[key]=THREE.MathUtils.lerp(WALK_GAIT[key],RUN_GAIT[key],mix);
+ if(blend<.005){setIdlePose(character);character.position.y=0;return;}
+ const sprint=THREE.MathUtils.clamp(runMix,0,1);
  for(let i=0;i<rig.legs.length;i++){
   const t=((phase/(Math.PI*2)+i*.5)%1+1)%1;
   let ahead=0,lift=0,pitch=0;
-  if(t<cfg.stance){
-   const s=t/cfg.stance;
-   ahead=(.5-s)*cfg.stride;
-   // Front heel settles; trailing foot points down to push off.
-   pitch=THREE.MathUtils.lerp(-.055,.04+mix*.44,s);
+  // Original walking gait: IK follows the stance and swing of each foot.
+  if(t<WALK_GAIT.stance){
+   const s=t/WALK_GAIT.stance;
+   ahead=(.5-s)*WALK_GAIT.stride;
+   pitch=THREE.MathUtils.lerp(-.055,.04,s);
   }else{
-   const s=(t-cfg.stance)/(1-cfg.stance),eased=s*s*(3-2*s);
-   ahead=(eased-.5)*cfg.stride;
-   lift=Math.sin(Math.PI*s)*cfg.lift;
-   // Lift toe behind, then prepare the forward landing.
-   pitch=THREE.MathUtils.lerp(.10+mix*.30,-.03-mix*.10,eased);
+   const s=(t-WALK_GAIT.stance)/(1-WALK_GAIT.stance);
+   const eased=s*s*(3-2*s);
+   ahead=(eased-.5)*WALK_GAIT.stride;
+   lift=Math.sin(Math.PI*s)*WALK_GAIT.lift;
+   pitch=THREE.MathUtils.lerp(.1,-.03,eased);
   }
-  poseLeg(rig.legs[i],ahead*blend,lift*blend,pitch*blend,cfg.crouch*blend);
+  const leg=rig.legs[i];
+  poseLeg(leg,ahead*blend,lift*blend,pitch*blend,WALK_GAIT.crouch*blend);
+  // Sprint scissors: opposite hips open wide. The front knee drives high;
+  // rear leg remains stretched out for push-off, then folds in recovery.
+  const stridePhase=phase+i*Math.PI;
+  const scissors=Math.cos(stridePhase);
+  const recovery=Math.max(0,-Math.sin(stridePhase));
+  const hipSprint=-.86*scissors;
+  const kneeSprint=.10+.43*Math.max(0,scissors)+1.05*Math.pow(recovery,1.6);
+  const footPitch=.28*Math.max(0,-scissors)-.10*Math.max(0,scissors)-.08*recovery;
+  const ankleSprint=-hipSprint-kneeSprint+footPitch;
+  const weight=sprint*blend;
+  leg.hip.rotation.x=THREE.MathUtils.lerp(leg.hip.rotation.x,hipSprint,weight);
+  leg.knee.rotation.x=THREE.MathUtils.lerp(leg.knee.rotation.x,kneeSprint,weight);
+  leg.ankle.rotation.x=THREE.MathUtils.lerp(leg.ankle.rotation.x,ankleSprint,weight);
  }
  rig.arms.forEach((arm,i)=>{
+  // Opposite arms pump strongly, with bent elbows like a short-distance runner.
   const swing=Math.cos(phase+i*Math.PI);
-  arm.shoulder.rotation.x=swing*cfg.arm*blend;
-  arm.elbow.rotation.x=-cfg.elbow*blend+Math.max(0,swing)*(.05+mix*.12)*blend;
+  const shoulder=THREE.MathUtils.lerp(swing*WALK_GAIT.arm,swing*.96,sprint);
+  const elbow=THREE.MathUtils.lerp(-WALK_GAIT.elbow,-1.05+.15*Math.max(0,-swing),sprint);
+  arm.shoulder.rotation.x=shoulder*blend;
+  arm.elbow.rotation.x=elbow*blend;
  });
- rig.torso.rotation.x=cfg.lean*blend;
- rig.torso.rotation.z=Math.sin(phase)*cfg.roll*blend;
- rig.head.rotation.x=-cfg.lean*.35*blend;
+ rig.torso.rotation.x=THREE.MathUtils.lerp(WALK_GAIT.lean,.22,sprint)*blend;
+ rig.torso.rotation.z=Math.sin(phase)*THREE.MathUtils.lerp(WALK_GAIT.roll,.045,sprint)*blend;
+ rig.head.rotation.x=-rig.torso.rotation.x*.35;
+ // Subtle sprint bounce while retaining the level standing and walking poses.
+ character.position.y=-.11*Math.pow(Math.cos(phase),2)*sprint*blend;
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -307,7 +324,7 @@ const clock=new THREE.Clock();function animate(){
  if(inputLength&&!challengeOpen){
   right/=inputLength;forward/=inputLength;
   const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;
-  distanceMoved=moveWithCollisions(dx*dt*(running?6.2:4.8),dz*dt*(running?6.2:4.8));
+  distanceMoved=moveWithCollisions(dx*dt*(running?8.0:4.8),dz*dt*(running?8.0:4.8));
   player.rotation.y=Math.atan2(dx,dz);
  }
  // Limb animation is driven by real displacement, so obstacles stop the walking motion.
@@ -315,7 +332,7 @@ const clock=new THREE.Clock();function animate(){
  walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
  runBlend=THREE.MathUtils.damp(runBlend,running?1:0,7,dt);
  // Cadence follows actual travel: no running in place at walls.
- if(moving)walkPhase+=distanceMoved*(2.5+runBlend*.75);
+ if(moving)walkPhase+=distanceMoved*THREE.MathUtils.lerp(2.5,1.8,runBlend);
  posePerson(player,walkPhase,runBlend,walkBlend);
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>
