@@ -10,20 +10,21 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Run:** tap **Run** to enable faster movement and **Walk** to return to walking; running also applies to keyboard movement.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
+- **Falling:** touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
 
-## Current version: 0.8.0 — November 7, 2026
-- Reworked movement into a lightweight **ground-contact locomotion controller** with acceleration, deceleration, horizontal momentum, collision response, and reduced mid-air steering.
-- **Foot planting:** each foot has a fixed world-space contact position during its stance interval. The body travels over that foot instead of continually moving both feet along with the player.
-- **Swing and landing:** the opposite foot lifts, moves toward the predicted landing area, then plants. Stance and swing timings differ for walking and sprinting.
-- **Inverse kinematics:** hips, knees, and ankles follow the grounded foot targets while retaining the thin anatomical skeleton.
-- **Support geometry:** adjusted pelvis height and landing distance so typical walking/sprint support targets fit within the avatar's leg length; the first step begins halfway through support to avoid unnatural leg overextension.
-- **Sprint flight:** momentum continues during the airborne interval following push-off, rather than requiring foot contact every frame. Input-driven acceleration is supplied only while at least one foot supports the body.
-- **Cadence:** footsteps advance based on actual travel distance, not a timer, and collision-blocked movement no longer cycles legs in place.
-- **Speed rebalanced for anatomically feasible strides:** brisk walk **3.2 units/s**, sprint **6.0 units/s**, with ramp-up and braking instead of instant changes. Previous values (4.8 / 8.0) exceeded practical planted-foot reach for this skeleton.
-- Preserved the English interface, touchscreen joystick, Run / Talk controls, zoom, camera angle, guardian, questions, scenery and obstacle collision rules.
-- **Limitations:** This is procedural / kinematic locomotion with simplified ground forces, not a full rigid-body, inverse-dynamics, terrain-aware or motion-capture simulation. Foot contact and turning behavior require live-device visual testing.
+## Current version: 0.9.0 — November 7, 2026
+- Added a **lightweight procedural ragdoll** for the main character. After sustained unsafe knee, hip or ankle angles / overextended foot targets, the character loses balance and falls.
+- High-speed, direct impacts with solid obstacles can also cause a fall.
+- The fall is calculated using **Verlet integration + positional constraints (PBD)** for gravity, limb lengths, friction and connected joints. This is a simplified, deterministic game approximation, **not** a certified biomechanical or full rigid-body physics engine.
+- The fallen skeleton interacts with **ground, courtyard limits/walls, tree trunks, lantern posts, towers and the guardian**; segment collision checks reduce arms/legs cutting through narrow trunks.
+- Additional minimum-separation constraints help prevent elbows and knees from folding into implausibly sharp angles.
+- A touch-friendly **Stand Up** button appears after the body falls; press **R** on the keyboard to stand up. Recovery finds a clear nearby position, restores upright locomotion and includes a short cooldown.
+- The fall temporarily disables movement, Run and Talk; camera follow, English UI, zoom, educational quest and current map are otherwise preserved.
+- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.9.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
+- **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.9.0 (2026-11-07):** dangerous-joint fall detection, obstacle-impact falls, lightweight ragdoll, solid-object collisions, and stand-up recovery.
 - **0.8.0 (2026-11-07):** world-anchored foot plants, contact-aware acceleration and inertia, inverse-kinematics stepping, feasible stride lengths.
 - **0.7.2 (2026-11-07):** stronger scissor-stride sprint, alternating bent-arm drive, faster run speed and sprint cadence.
 - **0.7.1 (2026-11-07):** straight standing posture, longer run stride and distinct walk/run animation.
@@ -37,7 +38,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.8.1, feature 0.9.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.9.1, feature 0.10.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
