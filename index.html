@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Academia de Aventura — Prototipo</title><style>
-html,body{margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{position:absolute;top:14px;left:14px;background:#182b32dc;color:white;padding:14px;border-radius:12px;max-width:300px}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:absolute;right:16px;bottom:20px;display:grid;grid-template-columns:repeat(3,46px);gap:5px}#touch button{height:46px;border:0;border-radius:10px;background:#ffffffc9;font-size:20px;touch-action:none}#touch button:nth-child(1){grid-column:2}#touch button:nth-child(2){grid-column:1;grid-row:2}#touch button:nth-child(3){grid-column:2;grid-row:2}#touch button:nth-child(4){grid-column:3;grid-row:2}#touch button:nth-child(5){grid-column:2;grid-row:3}@media(pointer:fine){#touch{opacity:.5}}
+html,body{margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{position:absolute;top:14px;left:14px;background:#182b32dc;color:white;padding:14px;border-radius:12px;max-width:300px}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:absolute;right:16px;bottom:20px;display:grid;grid-template-columns:repeat(3,46px);gap:5px}#touch,#touch button{touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#touch button{height:46px;border:0;border-radius:10px;background:#ffffffc9;font-size:20px;cursor:pointer;overscroll-behavior:contain}#touch button:nth-child(1){grid-column:2}#touch button:nth-child(2){grid-column:1;grid-row:2}#touch button:nth-child(3){grid-column:2;grid-row:2}#touch button:nth-child(4){grid-column:3;grid-row:2}#touch button:nth-child(5){grid-column:2;grid-row:3}@media(pointer:fine){#touch{opacity:.5}}
 #challenge{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:#102533bb;padding:15px}
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
@@ -24,12 +24,46 @@ function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
-function person(color,accent){const g=new THREE.Group();cylinder(.55,.65,1.2,color,0,1.3,0,g,8);cylinder(.35,.35,.6,accent,0,2.2,0,g,10);box(.25,.8,.3,color,-.75,1.3,0,g);box(.25,.8,.3,color,.75,1.3,0,g);box(.3,.65,.35,wood,-.3,.35,0,g);box(.3,.65,.35,wood,.3,.35,0,g);return g}
+function person(color,accent){
+ const g=new THREE.Group();
+ cylinder(.55,.65,1.2,color,0,1.3,0,g,8);
+ cylinder(.35,.35,.6,accent,0,2.2,0,g,10);
+ // Pivotes articulados: conservan exactamente las piezas, posiciones y materiales originales.
+ const limbs={arms:[],legs:[]};
+ for(const side of [-1,1]){
+  const arm=new THREE.Group();arm.position.set(side*.75,1.65,0);
+  box(.25,.8,.3,color,0,-.35,0,arm);g.add(arm);limbs.arms.push(arm);
+  const leg=new THREE.Group();leg.position.set(side*.3,.675,0);
+  box(.3,.65,.35,wood,0,-.325,0,leg);g.add(leg);limbs.legs.push(leg);
+ }
+ g.userData.limbs=limbs;
+ return g;
+}
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
 const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;let xp=0,stage=0,challengeOpen=false,questionIndex=0,picked=[];
 const keys=new Set();addEventListener('keydown',e=>{if(challengeOpen){if(e.code==='Escape')closeChallenge();return}keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyE'&&!e.repeat)interact()});addEventListener('keyup',e=>keys.delete(e.code));
-document.querySelectorAll('#touch button').forEach(b=>{b.addEventListener('pointerdown',e=>{e.preventDefault();keys.add(b.dataset.key);if(b.dataset.key==='KeyE')interact()});for(let t of ['pointerup','pointercancel','pointerleave'])b.addEventListener(t,()=>keys.delete(b.dataset.key))});
+const touch=document.getElementById('touch');
+touch.addEventListener('contextmenu',e=>e.preventDefault());
+touch.addEventListener('selectstart',e=>e.preventDefault());
+touch.addEventListener('dragstart',e=>e.preventDefault());
+document.querySelectorAll('#touch button').forEach(b=>{
+ const key=b.dataset.key;
+ b.addEventListener('contextmenu',e=>e.preventDefault());
+ b.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  try{b.setPointerCapture(e.pointerId)}catch(_){}
+  keys.add(key);
+  if(key==='KeyE'&&!challengeOpen)interact();
+ },{passive:false});
+ const release=e=>{e.preventDefault();keys.delete(key);if(b.hasPointerCapture(e.pointerId))b.releasePointerCapture(e.pointerId)};
+ b.addEventListener('pointerup',release);
+ b.addEventListener('pointercancel',release);
+ b.addEventListener('lostpointercapture',()=>keys.delete(key));
+});
+window.addEventListener('blur',()=>keys.clear());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)keys.clear()});
 const msg=document.getElementById('message'),status=document.getElementById('xp');
 const challenge=document.getElementById('challenge'),progress=document.getElementById('progress'),question=document.getElementById('question'),answers=document.getElementById('answers'),feedback=document.getElementById('feedback');
 const bank=[
@@ -60,5 +94,16 @@ function interact(){
  if(player.position.distanceTo(guardian.position)>2.8){msg.textContent='Acércate al guardián para conversar.';return}
  picked=[...bank].sort(()=>Math.random()-.5).slice(0,3);questionIndex=0;keys.clear();challengeOpen=true;challenge.hidden=false;showQuestion();
 }
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);let right=0,forward=0;if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;const l=Math.hypot(right,forward);if(l&&!challengeOpen){right/=l;forward/=l;const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*4,-10,10);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*4,-10,10);player.rotation.y=Math.atan2(dx,dz)}camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
+let walkPhase=0,walkBlend=0;const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);let right=0,forward=0;if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;const l=Math.hypot(right,forward);if(l&&!challengeOpen){right/=l;forward/=l;const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*4,-10,10);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*4,-10,10);player.rotation.y=Math.atan2(dx,dz)}
+// Animación procedural ligera, sin sprites ni esqueleto externo.
+const moving=l>0&&!challengeOpen;
+walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
+if(moving)walkPhase+=dt*10;
+const swing=Math.sin(walkPhase)*.55*walkBlend;
+const limbs=player.userData.limbs;
+limbs.legs[0].rotation.x=swing;
+limbs.legs[1].rotation.x=-swing;
+limbs.arms[0].rotation.x=-swing*.7;
+limbs.arms[1].rotation.x=swing*.7;
+camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>
