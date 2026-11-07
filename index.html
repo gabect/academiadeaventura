@@ -10,6 +10,8 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #zoomControls button:disabled{opacity:.45;cursor:default}
+#runButton:disabled,#interactButton:disabled{opacity:.5}
+#zoomControls #debugFall{width:54px;height:35px;font-size:11px}
 #landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
 #landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
 @media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
@@ -18,7 +20,7 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.9.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.9.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.9.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.9.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -332,8 +334,15 @@ function stepLocomotion(dt,right,forward,runEnabled){
   gait.vx*=airDrag;gait.vz*=airDrag;
  }
  const startX=player.position.x,startZ=player.position.z;
+ const expectedTravel=Math.hypot(gait.vx,gait.vz)*dt;
+ const impactSpeed=Math.hypot(gait.vx,gait.vz);
  moveWithCollisions(gait.vx*dt,gait.vz*dt);
  const xDelta=player.position.x-startX,zDelta=player.position.z-startZ;
+ // A head-on sprint into a solid trunk or wall can also topple the runner.
+ if(runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
+  Math.hypot(xDelta,zDelta)<expectedTravel*.32){
+  beginFall('Hit an obstacle');return;
+ }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
  gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled?1:0,8,dt);
@@ -462,6 +471,8 @@ function beginFall(reason='Lost balance'){
   FALL.links.push({a:u,b:v,length,mesh});
  }
  player.visible=false;
+ FALL.group.visible=true;
+ runButton.disabled=true;interactButton.disabled=true;
  for(const n of FALL.nodes)n.prev.sub(new THREE.Vector3(0,.06,0));
  LOCOMOTION.vx=0;LOCOMOTION.vz=0;
  document.getElementById('message').textContent=reason+' — press Stand Up when ready.';
@@ -581,6 +592,7 @@ function standUp(){
  }
  if(!spot)spot={x:0,z:5};
  FALL.active=false;FALL.group.visible=false;
+ runButton.disabled=false;interactButton.disabled=false;
  player.visible=true;player.position.set(spot.x,0,spot.z);
  setIdlePose(player);
  Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:2.5});
@@ -591,6 +603,13 @@ function standUp(){
  document.getElementById('message').textContent='Back on your feet. Watch your step!';
 }
 STAND_BUTTON.addEventListener('click',standUp);
+// Optional QA control: ?debug=1 enables a touch-friendly fall test without
+// cluttering the student-facing game.
+const DEBUG_FALL=document.getElementById('debugFall');
+if(new URLSearchParams(location.search).get('debug')==='1'){
+ DEBUG_FALL.hidden=false;
+ DEBUG_FALL.addEventListener('click',()=>beginFall('Test fall'));
+}
 for(const eventName of ['contextmenu','selectstart','dragstart'])
  STAND_BUTTON.addEventListener(eventName,e=>e.preventDefault());
 
