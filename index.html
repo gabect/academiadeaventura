@@ -379,7 +379,7 @@ function moveWithCollisions(dx,dz){
 }
 // Lightweight Verlet/PBD ragdoll: real gravity, fixed-length limbs, friction,
 // obstacle contacts and repeated constraint projection. No external physics engine.
-const FALL={active:false,age:0,quiet:0,accumulator:0,nodes:[],links:[],meshes:[],group:new THREE.Group(),lastCenter:new THREE.Vector3(),reason:''};
+const FALL={active:false,age:0,quiet:0,accumulator:0,nodes:[],links:[],limits:[],meshes:[],group:new THREE.Group(),lastCenter:new THREE.Vector3(),reason:''};
 scene.add(FALL.group);
 FALL.group.visible=false;
 const STAND_BUTTON=document.getElementById('standButton');
@@ -444,7 +444,7 @@ function beginFall(reason='Lost balance'){
  keys.clear();resetStick();
  player.updateMatrixWorld(true);
  for(const child of [...FALL.group.children])FALL.group.remove(child);
- FALL.nodes=[];FALL.links=[];FALL.meshes=[];
+ FALL.nodes=[];FALL.links=[];FALL.limits=[];FALL.meshes=[];
  const nodesByName=new Map();
  const initialVelocity=new THREE.Vector3(LOCOMOTION.vx*.016,0,LOCOMOTION.vz*.016);
  for(const b of ragdollBlueprint()){
@@ -469,6 +469,11 @@ function beginFall(reason='Lost balance'){
    a.startsWith('hip')||a.startsWith('knee')||a.startsWith('ankle')?wood:blue);
   mesh.castShadow=true;FALL.group.add(mesh);
   FALL.links.push({a:u,b:v,length,mesh});
+ }
+ // Prevent elbows/knees from collapsing into impossibly acute angles.
+ for(let i=0;i<2;i++){
+  FALL.limits.push({a:nodesByName.get('hip'+i),b:nodesByName.get('ankle'+i),min:.39});
+  FALL.limits.push({a:nodesByName.get('shoulder'+i),b:nodesByName.get('wrist'+i),min:.31});
  }
  player.visible=false;
  FALL.group.visible=true;
@@ -508,8 +513,11 @@ function projectFallBone(link){
   const y=a.y+(b.y-a.y)*u;
   if(y-.055>o.height)continue;
   const x=a.x+u*dx,z=a.z+u*dz;
-  const nx=x-o.x,nz=z-o.z,dist=Math.hypot(nx,nz),limit=o.r+.065;
-  if(dist>=limit||dist<1e-6)continue;
+  let nx=x-o.x,nz=z-o.z,dist=Math.hypot(nx,nz);
+  const limit=o.r+.065;
+  if(dist>=limit)continue;
+  if(dist<1e-6){nx=-dz; nz=dx;dist=Math.hypot(nx,nz);}
+  if(dist<1e-6)continue;
   const push=(limit-dist)*.60,ix=nx/dist*push,iz=nz/dist*push;
   a.x+=ix*(1-u);a.z+=iz*(1-u);
   b.x+=ix*u;b.z+=iz*u;
@@ -531,6 +539,13 @@ function physicsFallStep(dt){
    if(distance<1e-7)continue;
    const adjustment=d.multiplyScalar((distance-link.length)/distance*.5);
    link.a.p.add(adjustment);link.b.p.sub(adjustment);
+  }
+  for(const limit of FALL.limits){
+   const d=limit.b.p.clone().sub(limit.a.p),distance=d.length();
+   if(distance>1e-6&&distance<limit.min){
+    const correction=d.multiplyScalar((limit.min-distance)/distance*.5);
+    limit.a.p.sub(correction);limit.b.p.add(correction);
+   }
   }
   for(const n of FALL.nodes)projectFallNode(n);
   for(const link of FALL.links)projectFallBone(link);
