@@ -4,20 +4,20 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
 #interactButton{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:15px;font-weight:700;touch-action:none;-webkit-touch-callout:none;user-select:none}
-#landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
+#runButton{position:fixed;right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:14px;font-weight:700;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#runButton[aria-pressed="true"]{background:#497e9e;border-color:#efc56a}#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}#landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
 #landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
 @media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
-@media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#interactButton{width:65px;height:65px;bottom:25px}#message{bottom:12px;font-size:12px;max-width:45%}}
+@media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#interactButton,#runButton{width:65px;height:65px;bottom:25px}#runButton{right:max(102px,calc(env(safe-area-inset-right) + 102px))}#message{bottom:12px;font-size:12px;max-width:45%}}
 #challenge{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:#102533bb;padding:15px}
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Academia de Aventura</h1><p>Demo 0.2 · Prueba del Aprendiz</p><p id="xp">XP: 0 · Misión: Habla con el guardián</p><p>WASD / flechas: moverse · E: interactuar</p></div><div id="message">Acércate al guardián junto a la torre.</div><div id="touch" aria-label="Palanca de movimiento" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interactuar">Hablar</button><div id="landscapePrompt"><strong>Academia de Aventura</strong><p>Este juego se disfruta en pantalla horizontal.</p><button id="landscapeButton" type="button">Jugar en horizontal</button><small>Si el navegador no gira automáticamente, gira el dispositivo y habilita la rotación.</small></div>
+<body><div id="hud"><h1>⚔ Academia de Aventura</h1><p>Demo 0.2 · Prueba del Aprendiz</p><p id="xp">XP: 0 · Misión: Habla con el guardián</p><p>WASD / flechas: moverse · E: interactuar</p></div><div id="message">Acércate al guardián junto a la torre.</div><div id="touch" aria-label="Palanca de movimiento" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interactuar">Hablar</button><button id="runButton" type="button" aria-label="Activar carrera" aria-pressed="false">Correr</button><span id="buildLabel">v0.3.0</span><div id="landscapePrompt"><strong>Academia de Aventura</strong><p>Este juego se disfruta en pantalla horizontal.</p><button id="landscapeButton" type="button">Jugar en horizontal</button><small>Si el navegador no gira automáticamente, gira el dispositivo y habilita la rotación.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">La Prueba del Aprendiz</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Regresar al patio</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='2026-11-07-joystick-1';let pendingBuild=null;
+const BUILD='0.3.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -54,7 +54,7 @@ const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
 const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;let xp=0,stage=0,challengeOpen=false,questionIndex=0,picked=[];
 const keys=new Set();addEventListener('keydown',e=>{if(challengeOpen){if(e.code==='Escape')closeChallenge();return}keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyE'&&!e.repeat)interact()});addEventListener('keyup',e=>keys.delete(e.code));
-document.addEventListener('contextmenu',e=>{if(e.target.closest('#touch,#interactButton'))e.preventDefault()});
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#touch,#interactButton,#runButton'))e.preventDefault()});
 const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
 let stickX=0,stickY=0,stickPointer=null;
 function resetStick(){stickPointer=null;stickX=0;stickY=0;knob.style.transform='translate(0px,0px)'}
@@ -68,6 +68,7 @@ for(const type of ['contextmenu','selectstart','dragstart'])touch.addEventListen
 touch.addEventListener('pointerdown',e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;touch.setPointerCapture(e.pointerId);moveStick(e)},{passive:false});
 touch.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e)}},{passive:false});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])touch.addEventListener(type,e=>{if(e.pointerId===stickPointer)resetStick()});
+const runButton=document.getElementById('runButton');let running=false;runButton.addEventListener('click',()=>{running=!running;runButton.setAttribute('aria-pressed',String(running));runButton.textContent=running?'Caminar':'Correr';runButton.setAttribute('aria-label',running?'Desactivar carrera':'Activar carrera')});for(const type of ['contextmenu','selectstart','dragstart'])runButton.addEventListener(type,e=>e.preventDefault());
 const interactButton=document.getElementById('interactButton');
 interactButton.addEventListener('contextmenu',e=>e.preventDefault());
 interactButton.addEventListener('pointerdown',e=>{e.preventDefault();if(e.pointerType==='mouse'&&e.button!==0)return;interact()},{passive:false});
@@ -111,12 +112,12 @@ function interact(){
 }
 let walkPhase=0,walkBlend=0;let lastReloadAttempt=0;
 function applyUpdateIfSafe(){if(!pendingBuild||challengeOpen||Math.hypot(stickX,stickY)>.1||keys.size)return;if(Date.now()-lastReloadAttempt<10000)return;lastReloadAttempt=Date.now();const url=new URL(location.href);url.searchParams.set('v',pendingBuild);location.replace(url.href)}
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);applyUpdateIfSafe();const dt=Math.min(clock.getDelta(),.04);let right=stickX,forward=-stickY;if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;const l=Math.hypot(right,forward);if(l&&!challengeOpen){right/=l;forward/=l;const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*4,-10,10);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*4,-10,10);player.rotation.y=Math.atan2(dx,dz)}
+const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);applyUpdateIfSafe();const dt=Math.min(clock.getDelta(),.04);let right=stickX,forward=-stickY;if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;const l=Math.hypot(right,forward);if(l&&!challengeOpen){right/=l;forward/=l;const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;player.position.x=THREE.MathUtils.clamp(player.position.x+dx*dt*(running?6.2:4.8),-10,10);player.position.z=THREE.MathUtils.clamp(player.position.z+dz*dt*(running?6.2:4.8),-10,10);player.rotation.y=Math.atan2(dx,dz)}
 // Animación procedural ligera, sin sprites ni esqueleto externo.
 const moving=l>0&&!challengeOpen;
 walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
-if(moving)walkPhase+=dt*10;
-const swing=Math.sin(walkPhase)*.55*walkBlend;
+if(moving)walkPhase+=dt*(running?15:12);
+const swing=Math.sin(walkPhase)*(running?.7:.55)*walkBlend;
 const limbs=player.userData.limbs;
 limbs.legs[0].rotation.x=swing;
 limbs.legs[1].rotation.x=-swing;
