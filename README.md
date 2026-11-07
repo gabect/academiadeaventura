@@ -12,7 +12,12 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
 - **Falling:** touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
 
-## Current version: 0.9.1 — November 7, 2026
+## Current version: 0.9.2 — November 7, 2026
+- **Fall completion fix:** prevents the ragdoll from settling in a half-standing crouch. A decaying, contact-aware loss-of-balance torque tips the upper body, the knees can buckle, and the solver stays awake until both head and pelvis reach the ground.
+- Picks a clear initial fall direction when a nearby wall or tree would block the character's forward tumble. Solid-object collision projection and bounded contact momentum are retained to avoid the old wall-launch bug.
+- **Needs touchscreen QA:** verify falls against walls, near lantern posts/trees, in the open courtyard, and that the body ends fully down and can stand up again.
+
+## Previous version: 0.9.1 — November 7, 2026
 - **Wall-collision hotfix:** fixes artificial horizontal launches when activating Fall beside courtyard walls. Positional overlap corrections no longer feed unlimited ragdoll momentum, and boundary contact cancels motion into the wall while leaving gravity free to bring the character down.
 - Reduced the injected startup tilt and removed the old upward kickoff. Existing tree/post collisions, Stand Up and debug Fall remain available.
 - **Needs visual QA:** test near each wall, especially corners and adjacent towers, and verify the body comes to rest against the surface without bouncing or clipping.
@@ -24,10 +29,11 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - Additional minimum-separation constraints help prevent elbows and knees from folding into implausibly sharp angles.
 - A touch-friendly **Stand Up** button appears after the body falls; press **R** on the keyboard to stand up. Recovery finds a clear nearby position, restores upright locomotion and includes a short cooldown.
 - The fall temporarily disables movement, Run and Talk; camera follow, English UI, zoom, educational quest and current map are otherwise preserved.
-- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.9.1&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
+- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.9.2&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.9.2 (2026-11-07):** fixed half-standing ragdoll by sustaining a bounded tipping moment until ground contact, and only permitting physics sleep once the body is down.
 - **0.9.1 (2026-11-07):** corrected wall-induced ragdoll launches, neutralized artificial collision momentum, added wall contact damping and downward startup.
 - **0.9.0 (2026-11-07):** dangerous-joint fall detection, obstacle-impact falls, lightweight ragdoll, solid-object collisions, and stand-up recovery.
 - **0.8.0 (2026-11-07):** world-anchored foot plants, contact-aware acceleration and inertia, inverse-kinematics stepping, feasible stride lengths.
