@@ -12,12 +12,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.4 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.5.0</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.4 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.6.0</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.5.0';let pendingBuild=null;
+const BUILD='0.6.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -35,37 +35,73 @@ function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
-// Shared humanoid rig for the player, guardian, and future characters.
-const LEG={upper:.35,lower:.34,hipY:.745,ankleY:.095};
+// Skeleton Mode v0.6.0: thin reusable bones and visible joints; no clothing meshes.
+// Both characters share the same anatomical rig, movement and collision footprints.
+const LEG={upper:.43,lower:.42,hipY:.90,ankleY:.11};
+const ARM={upper:.41,lower:.40};
+const jointGeometry=new THREE.SphereGeometry(1,10,7);
+const Y_AXIS=new THREE.Vector3(0,1,0);
+function joint(parent,radius,material,x=0,y=0,z=0){
+ const mesh=new THREE.Mesh(jointGeometry,material);
+ mesh.position.set(x,y,z);mesh.scale.setScalar(radius);
+ mesh.castShadow=true;parent.add(mesh);return mesh;
+}
+function rod(parent,start,end,radius,material){
+ const direction=new THREE.Vector3(end[0]-start[0],end[1]-start[1],end[2]-start[2]);
+ const middle=[(start[0]+end[0])/2,(start[1]+end[1])/2,(start[2]+end[2])/2];
+ const mesh=cylinder(radius,radius,direction.length(),material,...middle,parent,8);
+ mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
+ return mesh;
+}
 function person(color,accent){
- const g=new THREE.Group();
- cylinder(.55,.65,1.2,color,0,1.3,0,g,8);
- cylinder(.35,.35,.6,accent,0,2.2,0,g,10);
+ const root=new THREE.Group();
  const rig={arms:[],legs:[]};
+ // Pelvis and spinal column move together; hips remain grounded in the leg chain.
+ const torso=new THREE.Group();torso.position.y=LEG.hipY;root.add(torso);rig.torso=torso;
+ rod(torso,[0,0,0],[0,.90,0],.07,color);
+ rod(torso,[-.25,0,0],[.25,0,0],.055,color);
+ rod(torso,[-.52,.90,0],[.52,.90,0],.055,color);
+ joint(torso,.10,accent,0,0,0);
+ joint(torso,.09,accent,0,.90,0);
+ rod(torso,[0,.90,0],[0,1.13,0],.055,accent);
+ const head=new THREE.Group();head.position.y=1.13;torso.add(head);rig.head=head;
+ joint(head,.235,accent,0,.23,0); // Anatomical head; not a helmet or garment.
  for(const side of [-1,1]){
-  const shoulder=new THREE.Group();shoulder.position.set(side*.75,1.65,0);g.add(shoulder);
-  box(.25,.41,.3,color,0,-.205,0,shoulder);
-  const elbow=new THREE.Group();elbow.position.y=-.41;shoulder.add(elbow);
-  box(.23,.39,.28,color,0,-.195,0,elbow);
-  rig.arms.push({shoulder,elbow});
-  const hip=new THREE.Group();hip.position.set(side*.3,LEG.hipY,0);g.add(hip);
-  box(.3,LEG.upper,.35,wood,0,-LEG.upper/2,0,hip);
+  // Shoulder -> upper arm -> elbow -> forearm -> wrist -> hand.
+  const shoulder=new THREE.Group();shoulder.position.set(side*.52,.90,0);torso.add(shoulder);
+  joint(shoulder,.082,accent);
+  rod(shoulder,[0,0,0],[0,-ARM.upper,0],.055,color);
+  const elbow=new THREE.Group();elbow.position.y=-ARM.upper;shoulder.add(elbow);
+  joint(elbow,.075,accent);
+  rod(elbow,[0,0,0],[0,-ARM.lower,0],.05,color);
+  const wrist=new THREE.Group();wrist.position.y=-ARM.lower;elbow.add(wrist);
+  joint(wrist,.065,accent);
+  rod(wrist,[0,0,0],[0,-.11,0],.045,accent);
+  joint(wrist,.07,accent,0,-.11,0);
+  rig.arms.push({shoulder,elbow,wrist});
+  // Hip -> thigh -> knee -> shin -> ankle -> forward-pointing foot.
+  const hip=new THREE.Group();hip.position.set(side*.24,LEG.hipY,0);root.add(hip);
+  joint(hip,.09,accent);
+  rod(hip,[0,0,0],[0,-LEG.upper,0],.065,wood);
   const knee=new THREE.Group();knee.position.y=-LEG.upper;hip.add(knee);
-  box(.28,LEG.lower,.32,wood,0,-LEG.lower/2,0,knee);
+  joint(knee,.082,accent);
+  rod(knee,[0,0,0],[0,-LEG.lower,0],.055,wood);
   const ankle=new THREE.Group();ankle.position.y=-LEG.lower;knee.add(ankle);
-  box(.32,.13,.42,wood,0,-.025,.105,ankle);
+  joint(ankle,.067,accent);
+  rod(ankle,[0,-.03,0],[0,-.045,.23],.06,wood);
+  joint(ankle,.055,accent,0,-.045,.23);
   rig.legs.push({hip,knee,ankle});
  }
- g.userData.rig=rig;
- posePerson(g,0,false,0);
- return g;
+ root.userData.rig=rig;
+ posePerson(root,0,false,0);
+ return root;
 }
-// Lightweight two-segment inverse kinematics for articulated knees and ankles.
+// Two-bone inverse kinematics: ankle target drives hip and knee; foot levels itself.
 function poseLeg(leg,forward,lift,pitch=0){
  let down=LEG.hipY-LEG.ankleY-lift;
  let ahead=forward;
- const distance=Math.hypot(down,ahead),maxReach=LEG.upper+LEG.lower-.006;
- if(distance>maxReach){const scale=maxReach/distance;down*=scale;ahead*=scale;}
+ const reach=Math.hypot(down,ahead),maxReach=LEG.upper+LEG.lower-.006;
+ if(reach>maxReach){const ratio=maxReach/reach;down*=ratio;ahead*=ratio;}
  const cosine=THREE.MathUtils.clamp(
   (down*down+ahead*ahead-LEG.upper*LEG.upper-LEG.lower*LEG.lower)/(2*LEG.upper*LEG.lower),-1,1);
  const kneeAngle=Math.acos(cosine);
@@ -75,17 +111,16 @@ function poseLeg(leg,forward,lift,pitch=0){
  leg.knee.rotation.x=kneeAngle;
  leg.ankle.rotation.x=-hipAngle-kneeAngle+pitch;
 }
-// Stance/swing gait: each foot lands, supports the body, lifts, then steps forward.
+// Alternating stance/swing phases; animation fades out when motion stops.
 function posePerson(character,phase,running=false,blend=0){
  const rig=character.userData.rig;
  if(!rig)return;
- const stanceFraction=.62,stride=running?.4:.34,liftHeight=running?.16:.11;
+ const stanceFraction=running?.53:.62,stride=running?.43:.34,liftHeight=running?.18:.11;
  rig.legs.forEach((leg,i)=>{
   const t=((phase/(Math.PI*2)+i*.5)%1+1)%1;
   let forward,lift=0,pitch=0;
-  if(t<stanceFraction){
-   forward=(.5-t/stanceFraction)*stride;
-  }else{
+  if(t<stanceFraction)forward=(.5-t/stanceFraction)*stride;
+  else{
    const swing=(t-stanceFraction)/(1-stanceFraction);
    const eased=swing*swing*(3-2*swing);
    forward=(-.5+eased)*stride;
@@ -95,10 +130,13 @@ function posePerson(character,phase,running=false,blend=0){
   poseLeg(leg,forward*blend,lift*blend,pitch*blend);
  });
  rig.arms.forEach((arm,i)=>{
-  // Each arm counter-swings opposite its corresponding leg; elbows flex for running.
-  arm.shoulder.rotation.x=Math.cos(phase+i*Math.PI)*(running?.48:.33)*blend;
-  arm.elbow.rotation.x=-(running?.38:.16)*blend;
+  // Opposite arm/leg pairs; elbows flex more during running.
+  arm.shoulder.rotation.x=Math.cos(phase+i*Math.PI)*(running?.60:.38)*blend;
+  arm.elbow.rotation.x=-(running?.49:.18)*blend;
  });
+ rig.torso.rotation.x=(running?.10:.025)*blend;
+ rig.torso.rotation.z=Math.sin(phase)*(running?.045:.025)*blend;
+ rig.head.rotation.x=-rig.torso.rotation.x*.4;
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
