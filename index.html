@@ -12,12 +12,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.4 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.4.0</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.4 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.5.0</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.4.0';let pendingBuild=null;
+const BUILD='0.5.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -35,20 +35,70 @@ function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
+// Shared humanoid rig for the player, guardian, and future characters.
+const LEG={upper:.35,lower:.34,hipY:.745,ankleY:.095};
 function person(color,accent){
  const g=new THREE.Group();
  cylinder(.55,.65,1.2,color,0,1.3,0,g,8);
  cylinder(.35,.35,.6,accent,0,2.2,0,g,10);
- // Pivotes articulados: conservan exactamente las piezas, posiciones y materiales originales.
- const limbs={arms:[],legs:[]};
+ const rig={arms:[],legs:[]};
  for(const side of [-1,1]){
-  const arm=new THREE.Group();arm.position.set(side*.75,1.65,0);
-  box(.25,.8,.3,color,0,-.35,0,arm);g.add(arm);limbs.arms.push(arm);
-  const leg=new THREE.Group();leg.position.set(side*.3,.675,0);
-  box(.3,.65,.35,wood,0,-.325,0,leg);g.add(leg);limbs.legs.push(leg);
+  const shoulder=new THREE.Group();shoulder.position.set(side*.75,1.65,0);g.add(shoulder);
+  box(.25,.41,.3,color,0,-.205,0,shoulder);
+  const elbow=new THREE.Group();elbow.position.y=-.41;shoulder.add(elbow);
+  box(.23,.39,.28,color,0,-.195,0,elbow);
+  rig.arms.push({shoulder,elbow});
+  const hip=new THREE.Group();hip.position.set(side*.3,LEG.hipY,0);g.add(hip);
+  box(.3,LEG.upper,.35,wood,0,-LEG.upper/2,0,hip);
+  const knee=new THREE.Group();knee.position.y=-LEG.upper;hip.add(knee);
+  box(.28,LEG.lower,.32,wood,0,-LEG.lower/2,0,knee);
+  const ankle=new THREE.Group();ankle.position.y=-LEG.lower;knee.add(ankle);
+  box(.32,.13,.42,wood,0,-.025,.105,ankle);
+  rig.legs.push({hip,knee,ankle});
  }
- g.userData.limbs=limbs;
+ g.userData.rig=rig;
+ posePerson(g,0,false,0);
  return g;
+}
+// Lightweight two-segment inverse kinematics for articulated knees and ankles.
+function poseLeg(leg,forward,lift,pitch=0){
+ let down=LEG.hipY-LEG.ankleY-lift;
+ let ahead=forward;
+ const distance=Math.hypot(down,ahead),maxReach=LEG.upper+LEG.lower-.006;
+ if(distance>maxReach){const scale=maxReach/distance;down*=scale;ahead*=scale;}
+ const cosine=THREE.MathUtils.clamp(
+  (down*down+ahead*ahead-LEG.upper*LEG.upper-LEG.lower*LEG.lower)/(2*LEG.upper*LEG.lower),-1,1);
+ const kneeAngle=Math.acos(cosine);
+ const hipAngle=Math.atan2(-ahead,down)-
+  Math.atan2(LEG.lower*Math.sin(kneeAngle),LEG.upper+LEG.lower*Math.cos(kneeAngle));
+ leg.hip.rotation.x=hipAngle;
+ leg.knee.rotation.x=kneeAngle;
+ leg.ankle.rotation.x=-hipAngle-kneeAngle+pitch;
+}
+// Stance/swing gait: each foot lands, supports the body, lifts, then steps forward.
+function posePerson(character,phase,running=false,blend=0){
+ const rig=character.userData.rig;
+ if(!rig)return;
+ const stanceFraction=.62,stride=running?.4:.34,liftHeight=running?.16:.11;
+ rig.legs.forEach((leg,i)=>{
+  const t=((phase/(Math.PI*2)+i*.5)%1+1)%1;
+  let forward,lift=0,pitch=0;
+  if(t<stanceFraction){
+   forward=(.5-t/stanceFraction)*stride;
+  }else{
+   const swing=(t-stanceFraction)/(1-stanceFraction);
+   const eased=swing*swing*(3-2*swing);
+   forward=(-.5+eased)*stride;
+   lift=Math.sin(Math.PI*swing)*liftHeight;
+   pitch=Math.sin(Math.PI*swing)*.12;
+  }
+  poseLeg(leg,forward*blend,lift*blend,pitch*blend);
+ });
+ rig.arms.forEach((arm,i)=>{
+  // Each arm counter-swings opposite its corresponding leg; elbows flex for running.
+  arm.shoulder.rotation.x=Math.cos(phase+i*Math.PI)*(running?.48:.33)*blend;
+  arm.elbow.rotation.x=-(running?.38:.16)*blend;
+ });
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -68,6 +118,7 @@ function clearPosition(x,z){
  return true;
 }
 function moveWithCollisions(dx,dz){
+ const initialX=player.position.x,initialZ=player.position.z;
  // Small steps avoid tunneling when running; separate axes permit wall sliding.
  const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.18));
  const sx=dx/steps,sz=dz/steps;
@@ -75,6 +126,7 @@ function moveWithCollisions(dx,dz){
   if(clearPosition(player.position.x+sx,player.position.z))player.position.x+=sx;
   if(clearPosition(player.position.x,player.position.z+sz))player.position.z+=sz;
  }
+ return Math.hypot(player.position.x-initialX,player.position.z-initialZ);
 }
 const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;let xp=0,stage=0,challengeOpen=false,questionIndex=0,picked=[];
 const keys=new Set();addEventListener('keydown',e=>{if(challengeOpen){if(e.code==='Escape')closeChallenge();return}keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyE'&&!e.repeat)interact()});addEventListener('keyup',e=>keys.delete(e.code));
@@ -136,16 +188,26 @@ function interact(){
 }
 let walkPhase=0,walkBlend=0;let lastReloadAttempt=0;
 function applyUpdateIfSafe(){if(!pendingBuild||challengeOpen||Math.hypot(stickX,stickY)>.1||keys.size)return;if(Date.now()-lastReloadAttempt<10000)return;lastReloadAttempt=Date.now();const url=new URL(location.href);url.searchParams.set('v',pendingBuild);location.replace(url.href)}
-const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);applyUpdateIfSafe();const dt=Math.min(clock.getDelta(),.04);let right=stickX,forward=-stickY;if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;const l=Math.hypot(right,forward);if(l&&!challengeOpen){right/=l;forward/=l;const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;moveWithCollisions(dx*dt*(running?6.2:4.8),dz*dt*(running?6.2:4.8));player.rotation.y=Math.atan2(dx,dz)}
-// Animación procedural ligera, sin sprites ni esqueleto externo.
-const moving=l>0&&!challengeOpen;
-walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
-if(moving)walkPhase+=dt*(running?15:12);
-const swing=Math.sin(walkPhase)*(running?.7:.55)*walkBlend;
-const limbs=player.userData.limbs;
-limbs.legs[0].rotation.x=swing;
-limbs.legs[1].rotation.x=-swing;
-limbs.arms[0].rotation.x=-swing*.7;
-limbs.arms[1].rotation.x=swing*.7;
-camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
+const clock=new THREE.Clock();function animate(){
+ requestAnimationFrame(animate);applyUpdateIfSafe();
+ const dt=Math.min(clock.getDelta(),.04);
+ let right=stickX,forward=-stickY;
+ if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
+ if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
+ if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;
+ if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;
+ const inputLength=Math.hypot(right,forward);
+ let distanceMoved=0;
+ if(inputLength&&!challengeOpen){
+  right/=inputLength;forward/=inputLength;
+  const dx=right*.794-forward*.608,dz=-right*.608-forward*.794;
+  distanceMoved=moveWithCollisions(dx*dt*(running?6.2:4.8),dz*dt*(running?6.2:4.8));
+  player.rotation.y=Math.atan2(dx,dz);
+ }
+ // Limb animation is driven by real displacement, so obstacles stop the walking motion.
+ const moving=distanceMoved>.0001&&!challengeOpen;
+ walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
+ if(moving)walkPhase+=distanceMoved/(running?6.2:4.8)*(running?15:12);
+ posePerson(player,walkPhase,running,walkBlend);
+ camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>
