@@ -11,15 +11,17 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
 
-## Current version: 0.7.0 — November 7, 2026
-- Added on-screen **+ / − zoom buttons** in the upper-right corner, away from the joystick and action buttons.
-- Added **mouse wheel / trackpad scroll zoom** for Chromebook and desktop, plus **two-finger pinch zoom** on the 3D canvas for touchscreen devices.
-- Orthographic camera zoom ranges from **0.70× to 3.5×**, stays centered on the player and retains the isometric camera angle.
-- Zoom controls prevent the touch context menu and disable themselves at the minimum/maximum zoom limits.
-- Preserved Skeleton Mode v0.6.0, collisions, movement, camera follow, educational quest and controls.
+## Current version: 0.7.1 — November 7, 2026
+- Fixed the **idle skeleton pose**: hips, knees and ankles now return to neutral, with fully extended legs and level feet.
+- Added separate walk and run gait profiles: running has a wider stride, higher leg lift, stronger push-off, arm swing, elbow bend, and torso lean.
+- Added smoothing when toggling **Run / Walk** to avoid abrupt gait changes.
+- Kept the gait cycle coupled to actual travel distance. Animations stop when a collision prevents movement.
+- Kept the original isometric camera, zoom controls, touchscreen joystick, guardian, scene and educational quiz untouched.
+- **Validation:** JavaScript syntax checked. Visual gait quality and foot contact must be reviewed on a real touchscreen before declaring the movement final.
 
 
 ## Version history
+- **0.7.1 (2026-11-07):** straight standing posture, longer run stride and distinct walk/run animation.
 - **0.7.0 (2026-11-07):** camera zoom buttons, wheel zoom and touchscreen pinch-to-zoom for skeleton inspection.
 - **0.6.0 (2026-11-07):** temporary shared stick-skeleton visualization for player/guardian, visible hands and foot joints, debug-friendly gait.
 - **0.5.0 (2026-11-07):** articulated humanoid rigs and two-bone IK gait, feet and elbows, collision-aware animation.
@@ -30,7 +32,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.7.1, feature 0.8.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.7.2, feature 0.8.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
