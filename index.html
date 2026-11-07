@@ -4,7 +4,10 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
 #interactButton{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:15px;font-weight:700;touch-action:none;-webkit-touch-callout:none;user-select:none}
-#runButton{position:fixed;right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:14px;font-weight:700;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#runButton[aria-pressed="true"]{background:#497e9e;border-color:#efc56a}#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}#landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
+#runButton{position:fixed;right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:14px;font-weight:700;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#runButton[aria-pressed="true"]{background:#497e9e;border-color:#efc56a}#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}#zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#zoomControls button:disabled{opacity:.45;cursor:default}
+#landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
 #landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
 @media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
 @media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#interactButton,#runButton{width:65px;height:65px;bottom:25px}#runButton{right:max(102px,calc(env(safe-area-inset-right) + 102px))}#message{bottom:12px;font-size:12px;max-width:45%}}
@@ -12,16 +15,67 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.4 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.6.0</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.7 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.7.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.6.0';let pendingBuild=null;
+const BUILD='0.7.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
 const camera=new THREE.OrthographicCamera(-10,10,6,-6,.1,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+// Camera zoom stays centered on the player and preserves the isometric perspective.
+const ZOOM_MIN=.70,ZOOM_MAX=3.5;
+const zoomInButton=document.getElementById('zoomIn');
+const zoomOutButton=document.getElementById('zoomOut');
+function setCameraZoom(next){
+ camera.zoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
+ camera.updateProjectionMatrix();
+ zoomInButton.disabled=camera.zoom>=ZOOM_MAX-.001;
+ zoomOutButton.disabled=camera.zoom<=ZOOM_MIN+.001;
+}
+zoomInButton.addEventListener('click',()=>setCameraZoom(camera.zoom*1.25));
+zoomOutButton.addEventListener('click',()=>setCameraZoom(camera.zoom/1.25));
+for(const button of [zoomInButton,zoomOutButton]){
+ for(const eventName of ['contextmenu','selectstart','dragstart']){
+  button.addEventListener(eventName,e=>e.preventDefault());
+ }
+}
+renderer.domElement.style.touchAction='none';
+renderer.domElement.addEventListener('wheel',e=>{
+ e.preventDefault();
+ if(e.deltaY!==0)setCameraZoom(camera.zoom*(e.deltaY<0?1.12:1/1.12));
+},{passive:false});
+// Pinch on the 3D canvas; joystick and action-button pointer events stay independent.
+const zoomPointers=new Map();
+let pinchDistance=0;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.pointerType!=='touch')return;
+ zoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+ if(zoomPointers.size===2){
+  const [a,b]=[...zoomPointers.values()];
+  pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);
+ }
+});
+renderer.domElement.addEventListener('pointermove',e=>{
+ if(!zoomPointers.has(e.pointerId))return;
+ zoomPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(zoomPointers.size!==2)return;
+ e.preventDefault();
+ const [a,b]=[...zoomPointers.values()];
+ const distance=Math.hypot(a.x-b.x,a.y-b.y);
+ if(pinchDistance>0&&distance>0)setCameraZoom(camera.zoom*distance/pinchDistance);
+ pinchDistance=distance;
+},{passive:false});
+for(const type of ['pointerup','pointercancel','lostpointercapture']){
+ renderer.domElement.addEventListener(type,e=>{
+  zoomPointers.delete(e.pointerId);
+  if(zoomPointers.size<2)pinchDistance=0;
+ });
+}
+setCameraZoom(1);
 scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-18;sun.shadow.camera.right=18;sun.shadow.camera.top=18;sun.shadow.camera.bottom=-18;scene.add(sun);
 const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
 const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
