@@ -1,35 +1,38 @@
-# Academia de Aventura
+# Adventure Academy
 
-RPG educativo en navegador, diseñado para Chromebooks y dispositivos táctiles. Prototipo 3D con HTML, CSS, JavaScript y Three.js, sin sprites ni motor de juego tradicional.
+Educational browser-based 3D RPG prototype designed for Chromebooks and touchscreens. Built with HTML, CSS, JavaScript and Three.js, without sprites or a conventional game engine.
 
-**Jugar:** https://gabect.github.io/academiadeaventura/
+**Play:** https://gabect.github.io/academiadeaventura/
 
-## Controles
-- **Teclado:** WASD o flechas para moverse; E para hablar con el guardián.
-- **Pantalla táctil:** joystick circular izquierdo para moverse; botón **Hablar** para interactuar.
-- **Correr:** pulsa **Correr** una vez para activar la carrera; pulsa **Caminar** para desactivarla. La carrera también funciona con teclado.
+## Controls
+- **Keyboard:** WASD or arrow keys to move; E to talk to the guardian.
+- **Touchscreen:** use the circular left joystick to move; tap **Talk** to interact.
+- **Run:** tap **Run** to enable faster movement and **Walk** to return to walking; running also applies to keyboard movement.
+- **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 
-## Versión actual: 0.3.0 — 7 de noviembre de 2026
-- Velocidad al caminar aumentada un 20 % (4 → 4.8 unidades/segundo).
-- Carrera opcional a 6.2 unidades/segundo.
-- Brazos y piernas oscilan más rápido al caminar o correr.
-- Botón táctil de carrera con estado activado/desactivado, sin menú contextual.
-- Número de versión discreto en pantalla.
+## Current version: 0.4.0 — November 7, 2026
+- Translated the visible interface, controls, instructions, guardian dialog and educational questions into English.
+- Added lightweight, geometry-independent 2D collision footprints for tree trunks, lamp posts, the guardian and courtyard towers.
+- Added boundaries against crossing the courtyard walls.
+- Movement resolves X and Z separately, allowing the player to slide along obstacles instead of stopping abruptly.
+- Substepped movement prevents passing through small obstacles during running.
+- Kept character shapes, colors, animation, camera, joystick, and movement speeds unchanged.
 
-## Historial de versiones
-- **0.3.0 (2026-11-07):** movimiento y carrera táctil; documentación inicial.
-- **0.2 (2026-11-07):** patio 3D, cámara isométrica, guardián, prueba educativa y recompensas.
-- **2026-11-07-joystick-1:** joystick analógico, ocultación del panel de instrucciones y comprobación periódica de versiones.
+## Version history
+- **0.4.0 (2026-11-07):** English localization and collision handling.
+- **0.3.0 (2026-11-07):** faster walking, toggle-to-run touch button, animated limbs and version documentation.
+- **0.2 (2026-11-07):** 3D courtyard, isometric camera, guardian, educational trial, and XP.
+- **2026-11-07-joystick-1:** analog joystick, hidden instruction overlay, and periodic version checking.
 
-## Procedimiento para próximos cambios
-1. Modificar únicamente los componentes acordados.
-2. Incrementar la versión de forma coherente: parche (0.3.1), función (0.4.0), cambio incompatible (1.0.0).
-3. Actualizar **BUILD** y el texto **buildLabel** en `index.html`.
-4. Actualizar la versión en `version.json` **al final**, después de publicar el HTML, para que los navegadores detecten la versión nueva.
-5. Registrar fecha y cambios en este README.
-6. Probar en teléfono táctil y Chromebook. GitHub Pages puede tardar en desplegar; un commit no garantiza publicación inmediata.
+## Release process
+1. Change only the components approved for the release.
+2. Increment the semantic version (patch 0.4.1, feature 0.5.0, breaking 1.0.0).
+3. Update `BUILD` and the `buildLabel` element in `index.html`.
+4. Update this README with the release date and change summary.
+5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
+6. Verify the experience in an actual touchscreen browser and Chromebook. GitHub commits do not guarantee GitHub Pages has deployed immediately.
 
-## Notas técnicas
-La comprobación de `version.json` se hace cada 30 segundos y recarga cuando no hay una misión ni controles activos. El sistema no preserva una misión en curso si se recarga. La orientación horizontal depende de las capacidades del navegador.
+## Technical notes
+The game checks `version.json` every 30 seconds and reloads when no quest or input is active. Reloading does not persist a quest in progress. Landscape orientation locking depends on the browser. Collision footprints approximate solid objects; foliage and overhead scenery remain non-collidable.
 
-No introducir datos personales de estudiantes en este repositorio público.
+Do not place personal student information in this public repository.
