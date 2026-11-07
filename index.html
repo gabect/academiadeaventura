@@ -425,6 +425,7 @@ function animate(){
  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
  if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;
  if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;
+ if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,running&&!challengeOpen);
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);
  camera.lookAt(player.position.x,1,player.position.z);
