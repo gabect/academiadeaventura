@@ -179,7 +179,7 @@ function solveLegTarget(leg,localX,localY,localZ,pitch=0,yawOffset=0){
 const FOOT_Y=.05;
 const LOCOMOTION={
  walkSpeed:3.2,runSpeed:6.0,walkStep:.72,runStep:1.16,
- walkStance:.66,runStance:.43,walkLift:.12,runLift:.29,
+ walkStance:.63,runStance:.42,walkLift:.12,runLift:.29,
  vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,feet:[]
 };
 function footPosition(root,index,forward=0,height=FOOT_Y){
@@ -294,7 +294,12 @@ function stepLocomotion(dt,right,forward,runEnabled){
   const yaw=Math.atan2(dx,dz);
   player.rotation.y=yaw;
  }
- const grounded=gait.feet.some(f=>f.contact)||Math.hypot(gait.vx,gait.vz)<.05;
+ const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
+ if(len>.03&&wasStopped&&gait.moveBlend<.03){
+  // Begin midway through the first grounded step, not at full rearward reach.
+  gait.cycle=gait.walkStance*.5;
+ }
+ const grounded=gait.feet.some(f=>f.contact)||wasStopped;
  const target=len>.03?(runEnabled?gait.runSpeed:gait.walkSpeed):0;
  const tx=dx*target,tz=dz*target;
  const dvx=tx-gait.vx,dvz=tz-gait.vz;
