@@ -15,12 +15,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.7 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.7.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.7.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><span id="buildLabel">v0.7.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.7.0';let pendingBuild=null;
+const BUILD='0.7.1';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -150,47 +150,61 @@ function person(color,accent){
  posePerson(root,0,false,0);
  return root;
 }
-// Two-bone inverse kinematics: ankle target drives hip and knee; foot levels itself.
-function poseLeg(leg,forward,lift,pitch=0){
- let down=LEG.hipY-LEG.ankleY-lift;
- let ahead=forward;
- const reach=Math.hypot(down,ahead),maxReach=LEG.upper+LEG.lower-.006;
+// Straight standing pose. Walking/running parameters must never deform idle.
+function setIdlePose(character){
+ const rig=character.userData.rig;if(!rig)return;
+ for(const leg of rig.legs){leg.hip.rotation.x=0;leg.knee.rotation.x=0;leg.ankle.rotation.x=0;}
+ for(const arm of rig.arms){arm.shoulder.rotation.x=.06;arm.elbow.rotation.x=-.09;arm.wrist.rotation.x=0;}
+ rig.torso.rotation.x=0;rig.torso.rotation.z=0;rig.head.rotation.x=0;
+}
+// Two-bone inverse kinematics. With no crouch, stride or lift, legs are straight.
+function poseLeg(leg,forward,lift,pitch=0,crouch=0){
+ const maxReach=LEG.upper+LEG.lower;
+ let down=maxReach-crouch-lift,ahead=forward;
+ const reach=Math.hypot(down,ahead);
  if(reach>maxReach){const ratio=maxReach/reach;down*=ratio;ahead*=ratio;}
  const cosine=THREE.MathUtils.clamp(
-  (down*down+ahead*ahead-LEG.upper*LEG.upper-LEG.lower*LEG.lower)/(2*LEG.upper*LEG.lower),-1,1);
+  (down*down+ahead*ahead-LEG.upper*LEG.upper-LEG.lower*LEG.lower)/
+  (2*LEG.upper*LEG.lower),-1,1);
  const kneeAngle=Math.acos(cosine);
  const hipAngle=Math.atan2(-ahead,down)-
   Math.atan2(LEG.lower*Math.sin(kneeAngle),LEG.upper+LEG.lower*Math.cos(kneeAngle));
- leg.hip.rotation.x=hipAngle;
- leg.knee.rotation.x=kneeAngle;
+ leg.hip.rotation.x=hipAngle;leg.knee.rotation.x=kneeAngle;
  leg.ankle.rotation.x=-hipAngle-kneeAngle+pitch;
 }
-// Alternating stance/swing phases; animation fades out when motion stops.
-function posePerson(character,phase,running=false,blend=0){
- const rig=character.userData.rig;
- if(!rig)return;
- const stanceFraction=running?.53:.62,stride=running?.43:.34,liftHeight=running?.18:.11;
- rig.legs.forEach((leg,i)=>{
+// Independent walk and run gait profiles, smoothly blended on speed change.
+const WALK_GAIT={stance:.62,stride:.34,lift:.11,crouch:.06,arm:.38,elbow:.18,lean:.025,roll:.025};
+const RUN_GAIT={stance:.43,stride:.79,lift:.29,crouch:.018,arm:.85,elbow:.58,lean:.17,roll:.05};
+function posePerson(character,phase,runMix=0,blend=0){
+ const rig=character.userData.rig;if(!rig)return;
+ if(blend<.005){setIdlePose(character);return;}
+ const mix=THREE.MathUtils.clamp(Number(runMix),0,1),cfg={};
+ for(const key of Object.keys(WALK_GAIT))cfg[key]=THREE.MathUtils.lerp(WALK_GAIT[key],RUN_GAIT[key],mix);
+ for(let i=0;i<rig.legs.length;i++){
   const t=((phase/(Math.PI*2)+i*.5)%1+1)%1;
-  let forward,lift=0,pitch=0;
-  if(t<stanceFraction)forward=(.5-t/stanceFraction)*stride;
-  else{
-   const swing=(t-stanceFraction)/(1-stanceFraction);
-   const eased=swing*swing*(3-2*swing);
-   forward=(-.5+eased)*stride;
-   lift=Math.sin(Math.PI*swing)*liftHeight;
-   pitch=Math.sin(Math.PI*swing)*.12;
+  let ahead=0,lift=0,pitch=0;
+  if(t<cfg.stance){
+   const s=t/cfg.stance;
+   ahead=(.5-s)*cfg.stride;
+   // Front heel settles; trailing foot points down to push off.
+   pitch=THREE.MathUtils.lerp(-.055,.04+mix*.44,s);
+  }else{
+   const s=(t-cfg.stance)/(1-cfg.stance),eased=s*s*(3-2*s);
+   ahead=(eased-.5)*cfg.stride;
+   lift=Math.sin(Math.PI*s)*cfg.lift;
+   // Lift toe behind, then prepare the forward landing.
+   pitch=THREE.MathUtils.lerp(.10+mix*.30,-.03-mix*.10,eased);
   }
-  poseLeg(leg,forward*blend,lift*blend,pitch*blend);
- });
+  poseLeg(rig.legs[i],ahead*blend,lift*blend,pitch*blend,cfg.crouch*blend);
+ }
  rig.arms.forEach((arm,i)=>{
-  // Opposite arm/leg pairs; elbows flex more during running.
-  arm.shoulder.rotation.x=Math.cos(phase+i*Math.PI)*(running?.60:.38)*blend;
-  arm.elbow.rotation.x=-(running?.49:.18)*blend;
+  const swing=Math.cos(phase+i*Math.PI);
+  arm.shoulder.rotation.x=swing*cfg.arm*blend;
+  arm.elbow.rotation.x=-cfg.elbow*blend+Math.max(0,swing)*(.05+mix*.12)*blend;
  });
- rig.torso.rotation.x=(running?.10:.025)*blend;
- rig.torso.rotation.z=Math.sin(phase)*(running?.045:.025)*blend;
- rig.head.rotation.x=-rig.torso.rotation.x*.4;
+ rig.torso.rotation.x=cfg.lean*blend;
+ rig.torso.rotation.z=Math.sin(phase)*cfg.roll*blend;
+ rig.head.rotation.x=-cfg.lean*.35*blend;
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -278,7 +292,7 @@ function interact(){
  if(player.position.distanceTo(guardian.position)>2.8){msg.textContent='Move closer to the guardian to talk.';return}
  picked=[...bank].sort(()=>Math.random()-.5).slice(0,3);questionIndex=0;keys.clear();challengeOpen=true;challenge.hidden=false;showQuestion();
 }
-let walkPhase=0,walkBlend=0;let lastReloadAttempt=0;
+let walkPhase=0,walkBlend=0,runBlend=0;let lastReloadAttempt=0;
 function applyUpdateIfSafe(){if(!pendingBuild||challengeOpen||Math.hypot(stickX,stickY)>.1||keys.size)return;if(Date.now()-lastReloadAttempt<10000)return;lastReloadAttempt=Date.now();const url=new URL(location.href);url.searchParams.set('v',pendingBuild);location.replace(url.href)}
 const clock=new THREE.Clock();function animate(){
  requestAnimationFrame(animate);applyUpdateIfSafe();
@@ -299,7 +313,9 @@ const clock=new THREE.Clock();function animate(){
  // Limb animation is driven by real displacement, so obstacles stop the walking motion.
  const moving=distanceMoved>.0001&&!challengeOpen;
  walkBlend=THREE.MathUtils.damp(walkBlend,moving?1:0,12,dt);
- if(moving)walkPhase+=distanceMoved/(running?6.2:4.8)*(running?15:12);
- posePerson(player,walkPhase,running,walkBlend);
+ runBlend=THREE.MathUtils.damp(runBlend,running?1:0,7,dt);
+ // Cadence follows actual travel: no running in place at walls.
+ if(moving)walkPhase+=distanceMoved*(2.5+runBlend*.75);
+ posePerson(player,walkPhase,runBlend,walkBlend);
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);camera.lookAt(player.position.x,1,player.position.z);marker.rotation.y+=dt;renderer.render(scene,camera)}function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>
