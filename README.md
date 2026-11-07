@@ -11,16 +11,20 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
 
-## Current version: 0.7.2 — November 7, 2026
-- Turned **Run** into a distinct, exaggerated short-distance sprint instead of a faster walk.
-- Sprint-only scissor-leg gait: hips swing in opposite directions; the forward knee rises, while the trailing leg reaches backward and extends before recovering.
-- Strong alternating arm drive with visibly bent elbows, increased forward torso lean, and subtle vertical movement.
-- Increased movement speed while sprinting from **6.2 to 8.0 world units/second**; walking stays at **4.8**.
-- Tuned sprint animation cadence to match faster travel without excessively quick leg cycling.
-- Kept the straight idle posture, walking gait, collision handling, isometric camera, touch joystick, zoom, guardian and educational mission.
-- **Validation:** JavaScript syntax checked; actual foot contact, sprint motion, and Chromebook performance still need visual/device testing.
+## Current version: 0.8.0 — November 7, 2026
+- Reworked movement into a lightweight **ground-contact locomotion controller** with acceleration, deceleration, horizontal momentum, collision response, and reduced mid-air steering.
+- **Foot planting:** each foot has a fixed world-space contact position during its stance interval. The body travels over that foot instead of continually moving both feet along with the player.
+- **Swing and landing:** the opposite foot lifts, moves toward the predicted landing area, then plants. Stance and swing timings differ for walking and sprinting.
+- **Inverse kinematics:** hips, knees, and ankles follow the grounded foot targets while retaining the thin anatomical skeleton.
+- **Support geometry:** adjusted pelvis height and landing distance so typical walking/sprint support targets fit within the avatar's leg length; the first step begins halfway through support to avoid unnatural leg overextension.
+- **Sprint flight:** momentum continues during the airborne interval following push-off, rather than requiring foot contact every frame. Input-driven acceleration is supplied only while at least one foot supports the body.
+- **Cadence:** footsteps advance based on actual travel distance, not a timer, and collision-blocked movement no longer cycles legs in place.
+- **Speed rebalanced for anatomically feasible strides:** brisk walk **3.2 units/s**, sprint **6.0 units/s**, with ramp-up and braking instead of instant changes. Previous values (4.8 / 8.0) exceeded practical planted-foot reach for this skeleton.
+- Preserved the English interface, touchscreen joystick, Run / Talk controls, zoom, camera angle, guardian, questions, scenery and obstacle collision rules.
+- **Limitations:** This is procedural / kinematic locomotion with simplified ground forces, not a full rigid-body, inverse-dynamics, terrain-aware or motion-capture simulation. Foot contact and turning behavior require live-device visual testing.
 
 ## Version history
+- **0.8.0 (2026-11-07):** world-anchored foot plants, contact-aware acceleration and inertia, inverse-kinematics stepping, feasible stride lengths.
 - **0.7.2 (2026-11-07):** stronger scissor-stride sprint, alternating bent-arm drive, faster run speed and sprint cadence.
 - **0.7.1 (2026-11-07):** straight standing posture, longer run stride and distinct walk/run animation.
 - **0.7.0 (2026-11-07):** camera zoom buttons, wheel zoom and touchscreen pinch-to-zoom for skeleton inspection.
@@ -33,7 +37,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.7.3, feature 0.8.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.8.1, feature 0.9.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
