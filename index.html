@@ -220,7 +220,7 @@ function poseGroundedCharacter(character,travel,dt){
  // leg's reach and do not stretch or pop off the pavement.
  const phase=gait.cycle*Math.PI*2;
  character.position.y=-THREE.MathUtils.lerp(.15,.18,mix)*blend+
-  Math.sin(phase*2)*.018*blend;
+  Math.sin(phase*2)*.010*blend;
  const stance=THREE.MathUtils.lerp(gait.walkStance,gait.runStance,mix);
  const step=THREE.MathUtils.lerp(gait.walkStep,gait.runStep,mix);
  const lift=THREE.MathUtils.lerp(gait.walkLift,gait.runLift,mix);
@@ -247,7 +247,7 @@ function poseGroundedCharacter(character,travel,dt){
    const ease=s*s*(3-2*s);
    // Predict the next landing along the intended direction.
    const remainingTravel=(1-t)*step*2;
-   const landing=footPosition(character,i,remainingTravel+step*.35);
+   const landing=footPosition(character,i,remainingTravel+stance*step);
    foot.position.lerpVectors(foot.from,landing,ease);
    foot.position.y=FOOT_Y+Math.sin(Math.PI*s)*lift;
   }
