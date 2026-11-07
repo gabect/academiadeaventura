@@ -10,16 +10,16 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Run:** tap **Run** to enable faster movement and **Walk** to return to walking; running also applies to keyboard movement.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 
-## Current version: 0.5.0 — November 7, 2026
-- Replaced rigid legs with a reusable hierarchical humanoid rig: hips, upper legs, knees, lower legs, ankles and visible feet.
-- Added two-segment inverse kinematics for foot placement, alternating stance/swing phases, and ankle leveling.
-- Split arms into upper arms and forearms with elbow joints; arms counter-swing while walking and flex while running.
-- Both the player and guardian use the same human character factory for future animation reuse.
-- Animation now follows actual movement distance and stops when collision prevents moving.
-- Preserved the original palette, blocky style, scene, movement speed, quests, controls and collision footprints.
-- No sprites, models, or external animation files were added.
+## Current version: 0.6.0 — November 7, 2026
+- **Skeleton Mode (temporary development visualization):** player and guardian now use thin rods and visible spherical joints instead of bulky torso, clothing, arm and leg meshes. The head is a simple joint sphere, not a helmet.
+- **Anatomical landmarks:** neck, head, spine, shoulder bar, pelvis, shoulders, elbows, wrists, hands, hips, thighs, knees, shins, ankles and forward-pointing feet.
+- The reusable hierarchical rig retains inverse-kinematics leg poses and coordinated arm movement, with more visible arm swing and bent elbows during running.
+- The player and guardian share the same construction, ready for later character meshes; restore their appearance without rebuilding the joints.
+- Kept the existing blue/red/gold/wood palette, scenery, movement speed, camera, missions, collision footprints, touchscreen joystick and run/talk buttons.
+- This release makes gait behavior *observable*; it is **not yet** a fully verified biomechanical simulation or guaranteed foot-locking system. Test foot sliding and knee direction on a real device before adding clothing meshes.
 
 ## Version history
+- **0.6.0 (2026-11-07):** temporary shared stick-skeleton visualization for player/guardian, visible hands and foot joints, debug-friendly gait.
 - **0.5.0 (2026-11-07):** articulated humanoid rigs and two-bone IK gait, feet and elbows, collision-aware animation.
 - **0.4.0 (2026-11-07):** English localization and collision handling.
 - **0.3.0 (2026-11-07):** faster walking, toggle-to-run touch button, animated limbs and version documentation.
@@ -28,7 +28,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.5.1, feature 0.6.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.6.1, feature 0.7.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
