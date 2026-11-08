@@ -152,106 +152,167 @@ const TERRAIN={floorTop:-.05,soleClearance:.11};
 const WALKABLE_ELEVATIONS=[];
 // Water bodies share one reusable depth sampler; world-space Y is the
 // water surface, while a smooth excavated bed controls walking vs swimming.
-// Lake and outgoing river are one connected water system on a sculpted floor.
-// The original shallow puddle stays available for basic wading tests.
+// World v0.32: ONE broad mountain with upper grassy valley, connected
+// headwater river, real cliff waterfall, irregular lake and south outlet.
+// Coordinates are north-up (north = negative Z). Base terrain is continuous.
+const WORLD={half:83,limit:78,plateauHeight:10,faceZ:-16,crestZ:-60};
 const WATER_BODIES=[
- {id:'puddle',kind:'puddle',x:-7.25,z:4.60,rx:1.35,rz:.85,maxDepth:.28},
- {id:'lake-main',kind:'lake',x:10.0,z:8.10,rx:4.40,rz:4.35,maxDepth:2.80}
+ {id:'shallow-pool',kind:'puddle',x:-9,z:7,rx:2.1,rz:1.2,maxDepth:.32},
+ {id:'lake-organic',kind:'lake',x:38,z:11,rx:20,rz:26,maxDepth:5.0}
 ];
-// River runs out of the southwest side of the lake and winds across the
-// larger playground. Shallow fords alternate with sections deep enough to swim.
+// Eight downstream nodes: lake outflow follows the southern edge.
 const RIVER_NODES=[
- {x:8.20,z:9.50,width:1.65,depth:2.40,flow:.48},
- {x:6.30,z:10.40,width:1.50,depth:2.25,flow:1.00},
- {x:4.25,z:11.80,width:1.43,depth:2.40,flow:1.55},
- {x:1.75,z:13.00,width:1.55,depth:.68,flow:.78},
- {x:-.55,z:13.90,width:1.35,depth:2.15,flow:1.35},
- {x:-3.20,z:14.50,width:1.28,depth:2.55,flow:1.75},
- {x:-6.50,z:15.00,width:1.38,depth:.85,flow:1.15},
- {x:-10.80,z:14.90,width:1.45,depth:2.20,flow:1.45}
+ {x:41,z:34,width:4.2,depth:4.4,flow:1.0},
+ {x:31,z:44,width:4.0,depth:4.0,flow:1.6},
+ {x:13,z:53,width:3.8,depth:3.6,flow:2.0},
+ {x:-7,z:60,width:3.5,depth:3.6,flow:2.35},
+ {x:-29,z:64,width:3.3,depth:3.0,flow:2.6},
+ {x:-51,z:67,width:3.3,depth:3.2,flow:2.0},
+ {x:-76,z:68,width:3.4,depth:3.4,flow:2.4}
+];
+// A continuous source-to-waterfall river starts inside the far impassable
+// cordillera and runs right across the elevated valley.
+const UPPER_RIVER_NODES=[
+ {x:34,z:-79,width:2.8,depth:2.2,flow:3.0},
+ {x:33,z:-68,width:3.0,depth:2.6,flow:3.1},
+ {x:30,z:-56,width:3.2,depth:2.5,flow:2.5},
+ {x:32,z:-44,width:3.0,depth:2.9,flow:2.7},
+ {x:34,z:-32,width:3.0,depth:3.0,flow:3.2},
+ {x:34,z:-18.2,width:3.2,depth:3.0,flow:3.8}
 ];
 const WATER_SURFACE_Y=TERRAIN.floorTop+.018;
-const WATER_RENDER_BOUNDS={minX:-13.0,maxX:15.5,minZ:2.25,maxZ:16.75};
+const WATER_RENDER_BOUNDS={minX:-81,maxX:63,minZ:-22,maxZ:74};
+function smoothWater(t){
+ const u=THREE.MathUtils.clamp(t,0,1);
+ return u*u*(3-2*u);
+}
+function interpolateByX(x,anchors){
+ if(x<=anchors[0][0])return anchors[0][1];
+ for(let i=1;i<anchors.length;i++){
+  const [px,value]=anchors[i];
+  if(x<=px){
+   const [fromX,fromValue]=anchors[i-1];
+   const u=smoothWater((x-fromX)/(px-fromX));
+   return THREE.MathUtils.lerp(fromValue,value,u);
+  }
+ }
+ return anchors[anchors.length-1][1];
+}
+// The whole mountain is one escarpment, not detached cones.
+// West-to-east south face: 60° -> 50° -> traversable flagstone 30°
+// -> 35° -> 90° cliffs on both sides of the waterfall gap.
+function mountainFaceAngle(x){
+ return interpolateByX(x,[
+  [-82,60],[-49,60],[-36,50],[-24,30],[-8,30],
+  [4,35],[19,35],[25,89.4],[80,89.4]
+ ]);
+}
+function mountainBaseHeightAt(x,z){
+ const grade=Math.tan(mountainFaceAngle(x)*Math.PI/180);
+ const run=WORLD.plateauHeight/grade;
+ const progress=THREE.MathUtils.clamp((WORLD.faceZ-z)/run,0,1);
+ let height=WORLD.plateauHeight*progress;
+ // The western high summit slopes at 45° into the upper grassy valley.
+ const peakDistance=Math.hypot(x+60,z+43);
+ height+=Math.max(0,8-peakDistance)*
+  smoothWater((height-7)/3);
+ // The source ridge is intentionally too steep for normal locomotion.
+ const north=Math.max(0,-z+WORLD.crestZ);
+ const ridgeRise=Math.min(17,north*1.7);
+ height+=ridgeRise*(.91+.09*Math.cos(x*.14));
+ return height;
+}
+function lakeRadial(x,z,body){
+ const nx=(x-body.x)/body.rx,nz=(z-body.z)/body.rz;
+ const theta=Math.atan2(nz,nx);
+ const organic=1+.085*Math.sin(theta*3+.1)+
+  .065*Math.cos(theta*5-.7)+.045*Math.sin(theta*9+.35);
+ return Math.hypot(nx,nz)/organic;
+}
+function waterDepthAt(body,x,z){
+ const radial=body.kind==='lake'?lakeRadial(x,z,body):
+  Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
+ return body.maxDepth*smoothWater(1-radial);
+}
+function sampleRiverPath(nodes,x,z){
+ let chosen=null;
+ for(let i=0;i<nodes.length-1;i++){
+  const a=nodes[i],b=nodes[i+1],dx=b.x-a.x,dz=b.z-a.z;
+  const length=Math.hypot(dx,dz);
+  const t=THREE.MathUtils.clamp(
+   ((x-a.x)*dx+(z-a.z)*dz)/(length*length),0,1);
+  const x0=a.x+t*dx,z0=a.z+t*dz;
+  const width=THREE.MathUtils.lerp(a.width,b.width,t);
+  const distance=Math.hypot(x-x0,z-z0);
+  const fraction=distance/width,coverage=1-fraction;
+  if(!chosen||fraction<chosen.relativeDistance){
+   chosen={coverage,relativeDistance:fraction,
+    depth:THREE.MathUtils.lerp(a.depth,b.depth,t)*smoothWater(coverage),
+    flow:THREE.MathUtils.lerp(a.flow,b.flow,t),
+    dirX:dx/length,dirZ:dz/length,width,segment:i,t};
+  }
+ }
+ return chosen;
+}
+function riverSample(x,z){return sampleRiverPath(RIVER_NODES,x,z);}
+function upperRiverSample(x,z){return sampleRiverPath(UPPER_RIVER_NODES,x,z);}
+function waterCoverageAt(x,z){
+ let signed=-Infinity;
+ for(const body of WATER_BODIES){
+  const radial=body.kind==='lake'?lakeRadial(x,z,body):
+   Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
+  signed=Math.max(signed,1-radial);
+ }
+ return Math.max(signed,riverSample(x,z).coverage);
+}
+function waterAt(x,z){
+ const upper=upperRiverSample(x,z);
+ // Top river ends abruptly at the cliff lip. Its lower watercourse
+ // continues as a visible vertical waterfall into the lake below.
+ if(upper.depth>.0001&&z<=-18.15){
+  const surface=mountainBaseHeightAt(x,z)+TERRAIN.floorTop+.055;
+  return {body:{id:'river-headwaters',kind:'upper-river'},
+   depth:upper.depth,surfaceY:surface,floorY:surface-upper.depth};
+ }
+ let best=null,depth=0;
+ for(const body of WATER_BODIES){
+  const d=waterDepthAt(body,x,z);
+  if(d>depth){best=body;depth=d;}
+ }
+ const flow=riverSample(x,z);
+ if(flow.depth>depth){
+  best={id:'river-south',kind:'river'};
+  depth=flow.depth;
+ }
+ if(depth<.00001)return null;
+ // The lake and south river occupy a lower, near-sea-level basin.
+ return {body:best,depth,surfaceY:WATER_SURFACE_Y,
+  floorY:TERRAIN.floorTop-depth};
+}
+function waterCurrentAt(x,z){
+ const wet=waterAt(x,z);
+ if(!wet)return {x:0,z:0,strength:0};
+ const river=wet.body.kind==='upper-river'?
+  upperRiverSample(x,z):riverSample(x,z);
+ const amount=river.flow*smoothWater(river.coverage/.55);
+ return {x:river.dirX*amount,z:river.dirZ*amount,strength:amount};
+}
 const RIVER_DISTANCES=[0];
 for(let i=0;i<RIVER_NODES.length-1;i++){
  const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
  RIVER_DISTANCES.push(RIVER_DISTANCES[i]+Math.hypot(b.x-a.x,b.z-a.z));
 }
 const RIVER_LENGTH=RIVER_DISTANCES[RIVER_DISTANCES.length-1];
-function smoothWater(t){
- const u=THREE.MathUtils.clamp(t,0,1);
- return u*u*(3-2*u);
-}
-function waterDepthAt(body,x,z){
- const r=Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
- return body.maxDepth*smoothWater(1-r);
-}
-function riverSample(x,z){
- let closest=null;
- for(let i=0;i<RIVER_NODES.length-1;i++){
-  const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
-  const dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
-  const t=THREE.MathUtils.clamp(
-   ((x-a.x)*dx+(z-a.z)*dz)/len2,0,1);
-  const cx=a.x+t*dx,cz=a.z+t*dz;
-  const distance=Math.hypot(x-cx,z-cz);
-  const width=THREE.MathUtils.lerp(a.width,b.width,t);
-  const signed=1-distance/width;
-  if(!closest||distance/width<closest.relativeDistance){
-   const length=Math.sqrt(len2);
-   closest={
-    coverage:signed,relativeDistance:distance/width,
-    depth:THREE.MathUtils.lerp(a.depth,b.depth,t)*smoothWater(signed),
-    flow:THREE.MathUtils.lerp(a.flow,b.flow,t),
-    dirX:dx/length,dirZ:dz/length,width
-   };
-  }
- }
- return closest;
-}
-function waterCoverageAt(x,z){
- let signed=-Infinity;
- for(const body of WATER_BODIES){
-  signed=Math.max(signed,1-Math.hypot((x-body.x)/body.rx,
-   (z-body.z)/body.rz));
- }
- return Math.max(signed,riverSample(x,z).coverage);
-}
-function waterAt(x,z){
- let selected=null,depth=0;
- for(const body of WATER_BODIES){
-  const d=waterDepthAt(body,x,z);
-  if(d>depth){depth=d;selected=body;}
- }
- const river=riverSample(x,z);
- if(river.depth>depth){
-  depth=river.depth;
-  selected={id:'river-main',kind:'river'};
- }
- if(depth<=.00001)return null;
- return {body:selected,depth,floorY:TERRAIN.floorTop-depth,
-  surfaceY:WATER_SURFACE_Y};
-}
-// A force field rather than a painted directional texture; current
-// continues even if the player releases the joystick.
-function waterCurrentAt(x,z){
- const water=waterAt(x,z);
- if(!water)return {x:0,z:0,strength:0};
- const river=riverSample(x,z);
- const influence=smoothWater(river.coverage/.55);
- const strength=river.flow*influence;
- return {x:river.dirX*strength,z:river.dirZ*strength,strength};
-}
 function riverPointAtDistance(distance){
  const along=((distance%RIVER_LENGTH)+RIVER_LENGTH)%RIVER_LENGTH;
  let i=0;
  while(i<RIVER_NODES.length-2&&along>RIVER_DISTANCES[i+1])i++;
- const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
- const span=RIVER_DISTANCES[i+1]-RIVER_DISTANCES[i];
- const t=span?(along-RIVER_DISTANCES[i])/span:0;
- const dx=(b.x-a.x)/span,dz=(b.z-a.z)/span;
+ const a=RIVER_NODES[i],b=RIVER_NODES[i+1],
+  span=RIVER_DISTANCES[i+1]-RIVER_DISTANCES[i],
+  t=span?(along-RIVER_DISTANCES[i])/span:0;
  return {x:THREE.MathUtils.lerp(a.x,b.x,t),
-  z:THREE.MathUtils.lerp(a.z,b.z,t),dirX:dx,dirZ:dz,
+  z:THREE.MathUtils.lerp(a.z,b.z,t),
+  dirX:(b.x-a.x)/span,dirZ:(b.z-a.z)/span,
   width:THREE.MathUtils.lerp(a.width,b.width,t)};
 }
 const STEP_HEIGHT=.30,MAX_STEP_UP=.34,MAX_STEP_DOWN=.34;
