@@ -5,15 +5,22 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD moves the avatar; arrow left/right rotates the camera, arrow up/down tilts it; Ctrl+Z (Cmd+Z on Mac) undoes the last manual camera/zoom change. E interacts and grabs a nearby ladder; on the ladder, W climbs and S descends, C exits safely; elsewhere Shift runs, Space / B jumps, tap C crouches/stands and hold C ~0.52s crawls; Escape cancels dialogs.
-- **Touchscreen:** left joystick moves; swipe over the 3D scene to orbit/tilt the camera, pinch with two fingers or +/- to zoom, and ↶ to undo camera adjustments. Near a leaning ladder, A/Action grabs it; joystick up/down climbs or descends, and C/Exit returns safely to a landing. Elsewhere A interacts, B hold runs/tap jumps and C tap crouches/stands or hold ~0.52s crawls/rises. Sprint/jump is disabled during climbing and crawling.
+- **Keyboard:** WASD moves; arrows orbit/tilt the camera; Ctrl+Z/Cmd+Z undoes the last camera adjustment. E interacts; near the north wall ladder, E starts **automatic ascent/descent**. W/S changes climbing direction, C heads for a safe landing. Elsewhere Shift runs, Space/B jumps, tap C crouches, and hold C ~0.52s crawls.
+- **Touchscreen:** left joystick moves; drag to orbit camera, pinch or +/- to zoom, ↶ to undo camera adjustments. Near the north wall ladder, tap **A once** to climb or descend automatically; joystick up/down reverses direction, and C/Exit heads for a safe landing. Elsewhere A interacts, B runs/jumps and C crouches or crawls.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Third-person camera:** smooth camera follows behind after a 40° heading deviation. **+** approaches and **−** pulls back; mouse wheel/two-finger pinch zoom, one-finger/mouse drag orbits, arrow keys control manual camera, and Ctrl+Z/↶ undoes the last manual camera adjustment.
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.22.0 — November 8, 2026
+## Current version: 0.23.0 — November 8, 2026
+- The **existing** leaning wooden ladder was relocated from the deck to a short stone training section of the **north courtyard wall** (X -4.75 to -2.25, Z -12.35 to -10.50). The wall top at Y 2.0 is walkable, with parapets and a central ladder gap. The balcony's missing east railing was restored.
+- **Automatic climb and dismount:** approach the ladder foot and tap A / Action (E on keyboard) once. The avatar climbs and steps onto the stone wall automatically, without holding the joystick or requiring a final push. From the wall top, tap A/E to descend automatically. Manual W/S or joystick up/down can reverse direction.
+- **C / Exit** sends the avatar toward a safe landing through the ladder; when close enough to the wall top it completes the ascent, otherwise it returns to the courtyard. Jump/sprint are still disabled while climbing. The existing skeletal IK, camera and collision systems are reused.
+- **Validation:** JavaScript syntax, initialization order, distinct function definitions, landing coordinates, and step-height protection passed static checks. At 60 FPS a numerical progression test reached both auto-dismount thresholds in about 2.58s, before entry/exit transitions. Real Android animation and camera clearance still need visual QA.
+- All other mechanics and saved progress remain unchanged.
+
+## Previous version: 0.22.0 — November 8, 2026
 - **Leaning wooden ladder** against the outer east side of the courtyard balcony, at Z -3.50; its rails lean inward from X 10.98 at ground to X 10.15 at deck height, continuing above the landing for handholds. Thirteen visible wooden rungs are built from the existing 3D geometry helpers. The balcony's east guardrail is split around a wide opening; the remaining sections retain collision.
 - **Interact to climb:** approach either the ladder foot on the courtyard ground or the landing above and press **A / Action** on mobile, or **E** on a keyboard. The A button changes its subtitle to *Climb* when entry is available. No extra gameplay button is added.
 - **Movement:** while attached, **W / joystick up** climbs and **S / joystick down** descends. The player follows the ladder's inclined path. The existing skeleton drives procedural alternating hands and feet toward actual 3D rung targets using the two-bone arm/leg solvers. Rung targets are interpolated to avoid harsh snapping.
@@ -176,6 +183,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.23.0 (2026-11-08):** moved ladder to the north wall, repaired auto-dismount and simplified A/E single-tap interaction, restored balcony railing.
 - **0.22.0 (2026-11-08):** leaning ladder beside balcony, opening in safety rail, E/A entry, W/S/joystick climb, procedural rung-contact animation, C safe exit and climb camera follow.
 - **0.21.0 (2026-11-08):** 40° deferred smooth-follow camera, WASD movement/arrow-key manual camera, one-finger drag/two-finger pinch, bounded Ctrl+Z/↶ camera undo.
 - **0.20.0 (2026-11-08):** perspective behind-the-avatar camera with smoothed rotation, camera-relative joystick/WASD movement, obstacle-aware follow distance and posture-aware framing.
