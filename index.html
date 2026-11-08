@@ -30,12 +30,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.18.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.18.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.18.2 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.18.2</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.18.1';let pendingBuild=null;
+const BUILD='0.18.2';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -374,8 +374,8 @@ let crouched=false,crawling=false;
 // Straight back legs drag their toes; planted hands alternately pull the body.
 const CRAWL={
  speed:.20,step:.24,stance:.66,drop:.72,torsoPitch:1.56,
- footBack:-.825,kneeTuck:.18,handAhead:1.12,handSide:.32,
- palmHeight:.12,handLift:.038,footLift:.015,
+ footBack:-.825,kneeTuck:.17,kneeOut:.13,handAhead:1.12,handSide:.32,
+ palmHeight:.12,handLift:.038,footLift:.008,
  cycle:0,motionBlend:0,active:false,feet:[],hands:[]
 };
 function toggleCrawl(){
@@ -619,13 +619,14 @@ function stepCrawlContact(character,item,index,isHand,moving,step){
  const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
  const height=isHand?CRAWL.palmHeight:TERRAIN.soleClearance;
  if(!isHand){
-  // Alternating military push-off: one knee draws up toward the abdomen,
-  // the toe presses backward as that knee extends, then the opposite leg
-  // performs the same stroke. Its opposite arm plants/pulls in the same phase.
-  // The toe travels only a short arc above the floor; the KNEE rises visibly.
+  // Frog-style military prone pull: bend each knee OUTSIDE its hip rather
+  // than lifting it vertically above the back. Toes draw forward AND sideways
+  // a little as that knee skims the floor, then extend/push back.
+  // Leg i shares its cycle with the opposite hand (diagonal coordination).
   const phase=THREE.MathUtils.clamp(t/CRAWL.stance,0,1);
   const stroke=t<CRAWL.stance?Math.sin(Math.PI*phase)*CRAWL.motionBlend:0;
-  const target=crawlWorldPoint(character,lateral,
+  const target=crawlWorldPoint(character,
+   lateral+(index===0?-1:1)*CRAWL.kneeOut*stroke,
    CRAWL.footBack+CRAWL.kneeTuck*stroke,height);
   item.position.copy(target);
   item.position.y+=CRAWL.footLift*stroke;
@@ -653,6 +654,52 @@ function stepCrawlContact(character,item,index,isHand,moving,step){
   item.position.y=THREE.MathUtils.lerp(item.from.y,landing.y,ease)+
    Math.sin(Math.PI*q)*CRAWL.handLift;
  }
+}
+// 3-D two-bone IK for PRONE legs only. Instead of the sagittal (front/back)
+// bend used in normal walking, choose an outward knee pole near ground level.
+// Both thigh and shin retain their exact lengths. This makes each knee sweep
+// sideways against the floor while the opposite hand pulls the character.
+// The regular standing, running and tactical crouch solver stays unchanged.
+const PRONE_IK={
+ down:new THREE.Vector3(0,-1,0),target:new THREE.Vector3(),
+ dir:new THREE.Vector3(),pole:new THREE.Vector3(),knee:new THREE.Vector3(),
+ upper:new THREE.Vector3(),lower:new THREE.Vector3(),
+ hipQ:new THREE.Quaternion(),kneeQ:new THREE.Quaternion(),
+ inverseQ:new THREE.Quaternion(),ankleQ:new THREE.Quaternion(),
+ trailingQ:new THREE.Quaternion().setFromAxisAngle(
+  new THREE.Vector3(1,0,0),2.80)
+};
+function solveProneLegSide(leg,lx,ly,lz,side,blend){
+ const ik=PRONE_IK,U=LEG.upper,L=LEG.lower;
+ ik.target.set(lx-leg.hip.position.x,ly-LEG.hipY,lz);
+ const raw=ik.target.length();
+ if(raw<.01)return;
+ const reach=THREE.MathUtils.clamp(raw,Math.abs(U-L)+.008,U+L-.005);
+ ik.dir.copy(ik.target).multiplyScalar(1/raw);
+ const along=(U*U-L*L+reach*reach)/(2*reach);
+ const spread=Math.sqrt(Math.max(0,U*U-along*along));
+ // Outward knee rather than upward knee: allow the hip to abduct. The
+ // negative vertical pole keeps the knee close to the pavement, never
+ // pulling it high above the torso as the old mirrored IK branch did.
+ ik.pole.set(side,-.35,0);
+ ik.pole.addScaledVector(ik.dir,-ik.pole.dot(ik.dir));
+ if(ik.pole.lengthSq()<.0001)ik.pole.set(side,0,0);
+ ik.pole.normalize();
+ ik.knee.copy(ik.dir).multiplyScalar(along)
+  .addScaledVector(ik.pole,spread);
+ ik.upper.copy(ik.knee).normalize();
+ ik.lower.copy(ik.dir).multiplyScalar(reach).sub(ik.knee).normalize();
+ ik.hipQ.setFromUnitVectors(ik.down,ik.upper);
+ ik.inverseQ.copy(ik.hipQ).invert();
+ ik.lower.applyQuaternion(ik.inverseQ);
+ ik.kneeQ.setFromUnitVectors(ik.down,ik.lower);
+ leg.hip.quaternion.slerp(ik.hipQ,blend);
+ leg.knee.quaternion.slerp(ik.kneeQ,blend);
+ // Keep trailing shoes aimed backward rather than twisting up as the thigh
+ // swings sideways. This preserves the flat-on-ground toe silhouette.
+ ik.ankleQ.copy(leg.hip.quaternion).multiply(leg.knee.quaternion)
+  .invert().multiply(ik.trailingQ);
+ leg.ankle.quaternion.slerp(ik.ankleQ,blend);
 }
 const CRAWL_HAND_LOCAL=new THREE.Vector3();
 function poseCrawlCharacter(character,travel,dt,moving){
@@ -685,20 +732,10 @@ function poseCrawlCharacter(character,travel,dt,moving){
   const lx=c*dx-si*dz,ly=foot.position.y-character.position.y;
   const lz=si*dx+c*dz;
   const leg=rig.legs[i];
-  const hx=leg.hip.rotation.x,hz=leg.hip.rotation.z;
-  const kx=leg.knee.rotation.x,ax=leg.ankle.rotation.x;
-  // Mirrored two-bone IK elevates the bent knee (without lowering the pelvis
-  // or placing the kneecap through the ground). sqrt eases into the raise
-  // early enough to clear the floor as the foot is drawn toward the body.
-  solveLegTarget(leg,lx,ly,lz,0,0,Math.sqrt(foot.stroke||0));
-  leg.hip.rotation.x=THREE.MathUtils.lerp(hx,leg.hip.rotation.x,weight);
-  leg.hip.rotation.z=THREE.MathUtils.lerp(hz,leg.hip.rotation.z,weight);
-  leg.knee.rotation.x=THREE.MathUtils.lerp(kx,leg.knee.rotation.x,weight);
-  // Turn the shoe back into a near-horizontal trailing-toe orientation.
-  // The ordinary walking ankle angle would point the toes straight upward
-  // when the shin is lying horizontally.
-  const trailingToe=2.80-leg.hip.rotation.x-leg.knee.rotation.x;
-  leg.ankle.rotation.x=THREE.MathUtils.lerp(ax,trailingToe,weight);
+  // The knee now bends outward (left knee left, right knee right) and stays
+  // near the floor. The moving toe target stays ahead of the ankle only
+  // briefly, creating a pull-and-push without the old skyward knee action.
+  solveProneLegSide(leg,lx,ly,lz,i===0?-1:1,weight);
  }
  // Update world matrices after bending the torso, before converting the
  // world-planted wrist targets into the shoulder's local coordinate space.
