@@ -20,12 +20,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.10.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.10.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.11.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.11.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.10.0';let pendingBuild=null;
+const BUILD='0.11.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -112,12 +112,15 @@ function rod(parent,start,end,radius,material){
  mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
  return mesh;
 }
-// One anatomical torso topology shared by idle/walk/run and the falling ragdoll.
-// Physical bracing links are deliberately not part of these visible bones.
+// Neutral 12–13-year-old reference rig, adjustable for a future 10–15-year-old
+// avatar creator. Sex does not change the joint topology or movement physics.
+const YOUTH_REFERENCE={ageBand:'10-15',referenceAge:13,headRadius:.19,
+ headCenter:.20,shoulderHalfWidth:.44};
+// One anatomical torso topology shared by idle/walk/run and the ragdoll.
 const TORSO_POINTS={
- pelvis:[0,0,0],lowerSpine:[0,.45,0],chest:[0,.90,0],
- neck:[0,1.13,0],shoulder0:[-.52,.90,0],
- shoulder1:[.52,.90,0],hip0:[-.24,0,0],hip1:[.24,0,0]
+ pelvis:[0,0,0],lowerSpine:[0,.31,0],chest:[0,.66,0],
+ neck:[0,.83,0],shoulder0:[-.44,.66,0],
+ shoulder1:[.44,.66,0],hip0:[-.24,0,0],hip1:[.24,0,0]
 };
 const TORSO_BONES=[
  ['pelvis','lowerSpine',.07,'body'],
@@ -128,6 +131,36 @@ const TORSO_BONES=[
  ['pelvis','hip0',.055,'body'],
  ['pelvis','hip1',.055,'body']
 ];
+// Lightweight, recognisable 3D ribs made of six curved rods and a sternum.
+// Only the visual chest carries these meshes: the ragdoll keeps its physics
+// braces invisible. The SAME Three.Group transfers between states.
+const RIB_GEOMETRIES=[0,1,2].flatMap(i=>{
+ const halfWidth=[.255,.285,.245][i],depth=[.155,.178,.163][i];
+ const y=-.10-.092*i;
+ return [-1,1].map(side=>{
+  const points=[
+   new THREE.Vector3(0,y,-.115),
+   new THREE.Vector3(side*.13,y+.015,-.105),
+   new THREE.Vector3(side*halfWidth,y+.01,-.040),
+   new THREE.Vector3(side*(halfWidth+.015),y,depth*.43),
+   new THREE.Vector3(side*halfWidth*.80,y-.02,depth),
+   new THREE.Vector3(side*.048,y-.013,depth+.027)
+  ];
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),12,.022,5,false);
+ });
+});
+const STERNUM_GEOMETRY=new THREE.CylinderGeometry(.027,.027,.245,7);
+function createRibcage(bodyMaterial,sternumMaterial){
+ const chest=new THREE.Group();chest.name='shared-juvenile-ribcage';
+ for(const geom of RIB_GEOMETRIES){
+  const rib=new THREE.Mesh(geom,bodyMaterial);
+  rib.castShadow=true;chest.add(rib);
+ }
+ const sternum=new THREE.Mesh(STERNUM_GEOMETRY,sternumMaterial);
+ sternum.position.set(0,-.192,.198);sternum.castShadow=true;
+ chest.add(sternum);
+ return chest;
+}
 function person(color,accent){
  const root=new THREE.Group();
  const rig={arms:[],legs:[]};
@@ -141,11 +174,14 @@ function person(color,accent){
  joint(torso,.068,accent,...TORSO_POINTS.lowerSpine);
  joint(torso,.09,accent,...TORSO_POINTS.chest);
  joint(torso,.068,accent,...TORSO_POINTS.neck);
- const head=new THREE.Group();head.position.y=1.13;torso.add(head);rig.head=head;
- joint(head,.235,accent,0,.23,0); // Anatomical head; not a helmet or garment.
+ const ribcage=createRibcage(color,accent);
+ ribcage.position.set(...TORSO_POINTS.chest);
+ torso.add(ribcage);rig.ribcage=ribcage;
+ const head=new THREE.Group();head.position.y=TORSO_POINTS.neck[1];torso.add(head);rig.head=head;
+ joint(head,YOUTH_REFERENCE.headRadius,accent,0,YOUTH_REFERENCE.headCenter,0);
  for(const side of [-1,1]){
   // Shoulder -> upper arm -> elbow -> forearm -> wrist -> hand.
-  const shoulder=new THREE.Group();shoulder.position.set(side*.52,.90,0);torso.add(shoulder);
+  const shoulder=new THREE.Group();shoulder.position.set(side*YOUTH_REFERENCE.shoulderHalfWidth,TORSO_POINTS.chest[1],0);torso.add(shoulder);
   joint(shoulder,.082,accent);
   rod(shoulder,[0,0,0],[0,-ARM.upper,0],.055,color);
   const elbow=new THREE.Group();elbow.position.y=-ARM.upper;shoulder.add(elbow);
@@ -419,7 +455,7 @@ function ragdollBlueprint(){
   rigid('lowerSpine',rig.torso,TORSO_POINTS.lowerSpine,.068,skin),
   rigid('chest',rig.torso,TORSO_POINTS.chest,.09,skin),
   rigid('neck',rig.torso,TORSO_POINTS.neck,.068,skin),
-  rigid('head',rig.head,[0,.23,0],.235,skin)
+  rigid('head',rig.head,[0,YOUTH_REFERENCE.headCenter,0],YOUTH_REFERENCE.headRadius,skin)
  ];
  for(let i=0;i<2;i++){
   const a=rig.arms[i],l=rig.legs[i];
@@ -495,7 +531,8 @@ function beginFall(reason='Lost balance'){
  for(const b of ragdollBlueprint()){
   const p=b.source.localToWorld(b.offset.clone());
   p.y=Math.max(p.y,b.radius+.005);
-  const node={id:b.id,p,prev:p.clone().sub(initialVelocity),radius:b.radius,contacts:new Map(),onFloor:false};
+  const node={id:b.id,p,prev:p.clone().sub(initialVelocity),radius:b.radius,
+   collisionRadius:b.id==='chest'?.24:b.radius,contacts:new Map(),onFloor:false};
   // Start the loss of balance with a small, controlled upper-body angular
   // velocity. The legs start slower, so the body tips instead of translating.
   const tip=node.id==='head'?.035:node.id==='neck'?.028:
@@ -520,6 +557,9 @@ function beginFall(reason='Lost balance'){
   }
   FALL.links.push({a:u,b:v,length,mesh,visible:edge.visible,radius:edge.radius||.055});
  }
+ // Move the exact same ribcage meshes out of the invisible standing avatar.
+ // Reattach them on Stand Up instead of rebuilding an altered torso.
+ FALL.group.add(player.userData.rig.ribcage);
  // Prevent elbows/knees from collapsing into impossibly acute angles.
  for(let i=0;i<2;i++){
   FALL.limits.push({a:nodesByName.get('hip'+i),b:nodesByName.get('ankle'+i),min:.39});
@@ -538,20 +578,20 @@ function beginFall(reason='Lost balance'){
 }
 function projectFallNode(n){
   let floorContact=false;
-  if(n.p.y<n.radius+FALL_FLOOR){
-   n.p.y=n.radius+FALL_FLOOR;floorContact=true;n.onFloor=true;
+  if(n.p.y<n.collisionRadius+FALL_FLOOR){
+   n.p.y=n.collisionRadius+FALL_FLOOR;floorContact=true;n.onFloor=true;
   }
   // Walls are planes: cancel penetration, never bounce the body away.
   // The wall normal does not affect downward velocity.
-  const bound=BOUND-n.radius;
+  const bound=BOUND-n.collisionRadius;
   if(n.p.x>bound){n.p.x=bound;n.contacts.set('east',{x:-1,z:0});}
   if(n.p.x< -bound){n.p.x=-bound;n.contacts.set('west',{x:1,z:0});}
   if(n.p.z>bound){n.p.z=bound;n.contacts.set('south',{x:0,z:-1});}
   if(n.p.z< -bound){n.p.z=-bound;n.contacts.set('north',{x:0,z:1});}
   for(const o of FALL_COLLIDERS){
-   if(n.p.y-n.radius>o.height)continue;
+   if(n.p.y-n.collisionRadius>o.height)continue;
    let dx=n.p.x-o.x,dz=n.p.z-o.z;
-   let d=Math.hypot(dx,dz),limit=o.r+n.radius;
+   let d=Math.hypot(dx,dz),limit=o.r+n.collisionRadius;
    if(d>=limit)continue;
    if(d<1e-5){dx=1;dz=0;d=1;}
    const normal={x:dx/d,z:dz/d};
@@ -651,9 +691,33 @@ function physicsFallStep(dt){
   const resting=pelvis&&head&&pelvis.p.y<.58&&head.p.y<.82;
   FALL.quiet=resting&&energy/FALL.nodes.length<.00008?FALL.quiet+dt:0;
 }
+const RIB_WORLD_X=new THREE.Vector3(),RIB_WORLD_Y=new THREE.Vector3(),
+ RIB_WORLD_Z=new THREE.Vector3(),RIB_MATRIX=new THREE.Matrix4();
+function renderFallenRibcage(){
+ const chest=FALL.nodes.find(n=>n.id==='chest');
+ const waist=FALL.nodes.find(n=>n.id==='lowerSpine');
+ const left=FALL.nodes.find(n=>n.id==='shoulder0');
+ const right=FALL.nodes.find(n=>n.id==='shoulder1');
+ if(!chest||!waist||!left||!right)return;
+ const ribcage=player.userData.rig.ribcage;
+ // Longitudinal ribcage axis: waist -> chest. Lateral: left -> right.
+ RIB_WORLD_Y.subVectors(chest.p,waist.p);
+ RIB_WORLD_X.subVectors(right.p,left.p);
+ if(RIB_WORLD_Y.lengthSq()<.0001||RIB_WORLD_X.lengthSq()<.0001)return;
+ RIB_WORLD_Y.normalize();
+ RIB_WORLD_X.addScaledVector(RIB_WORLD_Y,-RIB_WORLD_X.dot(RIB_WORLD_Y));
+ if(RIB_WORLD_X.lengthSq()<.0001)return;
+ RIB_WORLD_X.normalize();
+ RIB_WORLD_Z.crossVectors(RIB_WORLD_X,RIB_WORLD_Y).normalize();
+ RIB_WORLD_Y.crossVectors(RIB_WORLD_Z,RIB_WORLD_X).normalize();
+ RIB_MATRIX.makeBasis(RIB_WORLD_X,RIB_WORLD_Y,RIB_WORLD_Z);
+ ribcage.position.copy(chest.p);
+ ribcage.quaternion.setFromRotationMatrix(RIB_MATRIX);
+}
 function renderFallenBody(){
  const temp=new THREE.Vector3();
  for(const n of FALL.nodes)n.mesh.position.copy(n.p);
+ renderFallenRibcage();
  for(const link of FALL.links){
   if(!link.mesh)continue; // Hidden physics braces must never render.
   const direction=temp.subVectors(link.b.p,link.a.p);
@@ -697,6 +761,11 @@ function standUp(){
  }
  if(!spot)spot={x:0,z:5};
  FALL.active=false;FALL.group.visible=false;
+ // Restore the *same* rib meshes to the standing torso and their rest pose.
+ const ribcage=player.userData.rig.ribcage;
+ player.userData.rig.torso.add(ribcage);
+ ribcage.position.set(...TORSO_POINTS.chest);
+ ribcage.quaternion.identity();ribcage.scale.set(1,1,1);
  runButton.disabled=false;interactButton.disabled=false;
  player.visible=true;player.position.set(spot.x,0,spot.z);
  setIdlePose(player);
