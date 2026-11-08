@@ -5,7 +5,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD moves; camera orientation is fixed; Ctrl+Z/Cmd+Z undoes the last zoom adjustment. E interacts; near the north wall ladder, E starts **automatic ascent/descent**. W/S changes climbing direction, C heads for a safe landing. Elsewhere Shift runs, Space/B jumps, tap C crouches, and hold C ~0.52s crawls.
+- **Keyboard:** WASD moves (A remains left movement), Space is **A/Action** (interact, start ladder ascent/descent), F is **B** (tap to jump, hold to run or swim faster), and Caps Lock is **C** (tap to crouch/stand or exit ladder; hold ~0.52s to crawl). W/S changes climbing direction on the ladder. Camera orientation remains fixed; Ctrl+Z/Cmd+Z undoes zoom. Existing keyboard E, B, C and Shift action shortcuts have been removed.
 - **Touchscreen:** left joystick moves; camera angle is fixed (drag does not orbit), pinch or +/- to zoom, ↶ to undo zoom adjustments. Near the north wall ladder, tap **A once** to climb or descend automatically; joystick up/down reverses direction, and C/Exit heads for a safe landing. Elsewhere A interacts, B runs/jumps and C crouches or crawls.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
@@ -13,7 +13,12 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.31.0 — November 8, 2026
+## Current version: 0.31.1 — November 8, 2026
+- **Keyboard mappings only:** the keyboard now mirrors the touch ABC action buttons: Space = A/Action, F = B/Run-Jump, Caps Lock = C/Crouch-Crawl. KeyA remains WASD leftward movement and is not repurposed. Tap F (<205 ms) to jump, hold F to run/swim faster; tap Caps Lock to crouch/stand and hold for ~520 ms to crawl. Caps Lock exits a ladder on release and cancels an open guardian challenge.
+- **Touch controls and mechanics unchanged:** touch A/B/C, fixed camera, water, slopes, ladder, field tower, XP, animations and collisions remain the same. On-screen legend and ladder instruction text reflect the new keyboard action binding. On browser focus loss, held keyboard B/F and C/CapsLock reset without becoming latched.
+- **Verification:** JavaScript module passes syntax parsing and source-level binding/feature assertions. Live cross-browser keyboard hardware behavior, especially Caps Lock handling, still needs testing.
+
+## Previous version: 0.31.0 — November 8, 2026
 - **Campo de pruebas abierto:** Adventure Academy's active test area has been expanded *threefold* from v0.30.0, taking the playable square from 32.67 × 32.67 to approximately 56.58 × 56.58 game units (half-width `11.55 × √6 ≈ 28.29`). The visible grassy heightfield extends across 70 × 70 units. All exterior castle perimeter walls, their towers, and their invisible physical collision proxies have been removed.
 - **Eight natural hills:** a single mathematical heightfield creates eight hills of varying radius, height, and slope (approximately 15.7°, 18.6°, 20.5°, 21°, 24.8°, 32.8°, 42.4° peak-grade examples), including one intentionally unwalkable rocky hill around 52.6°. The displayed terrain, the collision ground height, and the articulated character's ankle/foot support query the same surface height function. Hills were positioned completely inside the field.
 - **Four artificial ramps:** two wooden ramps and two stone ramps use solid triangular cross-sections and raised landing areas. Ramp angles are approximately 16.2° wood, 33.0° stone, **45.0° wood**, and 52.6° stone as an intentionally unwalkable control case. Both directions on the first three ramps were validated. Ramp top heights and physical collision sampling use the same definitions; side/back approaches cannot bypass the existing step-height limits.
@@ -257,6 +262,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.31.1 (2026-11-08):** map keyboard Space to A/action, F tap/hold to B jump/run, and Caps Lock tap/hold to C crouch/crawl; retain WASD and touch controls.
 - **0.31.0 (2026-11-08):** triple the field area; remove exterior castle walls/colliders; eight sculpted natural hills and four wood/stone ramps with shared 45° grade rule; ten-step watchtower and slope testing HUD; preserve water/current and fixed overhead camera.
 - **0.30.0 (2026-11-08):** double usable square playground area, enlarge lake (~5× old footprint), add a connected winding deep river with two wadeable fords and force-based currents, continuous sculpted terrain/water surface and flow markers.
 - **0.29.0 (2026-11-08):** shallow-water wading and deep-water swimming from physical hip-depth; real depressed basins, ripples, buoyant swim pose, state transitions and shoreline safety, while preserving the fixed aerial camera.
