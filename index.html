@@ -22,7 +22,6 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #zoomControls button:disabled{opacity:.45;cursor:default}
-#zoomControls #debugFall{width:54px;height:35px;font-size:11px}
 #landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
 #landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
 @media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
@@ -31,12 +30,15 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.13.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run, tap to jump, or stand up" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Balance Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Balance</button></div><span id="buildLabel">v0.13.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.14.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.14.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.13.0';let pendingBuild=null;
+const BUILD='0.14.0';let pendingBuild=null;
+// Ragdoll code is retained for possible future gameplay, but inactive.
+// No player input, collision or recovery path can transition to a fall.
+const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -377,7 +379,7 @@ function poseGroundedCharacter(character,travel,dt){
  // Sustained overextension triggers a fall, not one-frame animation noise.
  if(gait.cooldown<=0&&blend>.55){
   gait.strainSeconds=gait.strain>.065?gait.strainSeconds+dt:Math.max(0,gait.strainSeconds-dt*2);
-  if(gait.strainSeconds>.19)beginBalanceRecovery('Lost balance',gait.strain);
+  if(gait.strainSeconds>.19+.065*(balanceLevel-1))beginBalanceRecovery('Steady yourself',gait.strain);
  }else gait.strainSeconds=0;
 }
 // Push-off drives acceleration during foot contact; momentum continues during
@@ -419,10 +421,10 @@ function stepLocomotion(dt,right,forward,runEnabled){
  const impactSpeed=Math.hypot(gait.vx,gait.vz);
  moveWithCollisions(gait.vx*dt,gait.vz*dt);
  const xDelta=player.position.x-startX,zDelta=player.position.z-startZ;
- // A head-on sprint into a solid trunk or wall can also topple the runner.
+ // A hard sprint impact triggers a protective stumble, never a fall.
  if(runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
   Math.hypot(xDelta,zDelta)<expectedTravel*.32){
-  beginBalanceRecovery('Hit an obstacle',Math.max(.44,impactSpeed/8));return;
+  beginBalanceRecovery('Watch the obstacle',Math.max(.44,impactSpeed/8));return;
  }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
@@ -466,11 +468,12 @@ function moveWithCollisions(dx,dz){
 }
 // Counterbalance and a catch-step attempt use the same visible humanoid rig.
 function beginBalanceRecovery(reason,severity){
- if(BALANCE.active||FALL.active||challengeOpen||LOCOMOTION.cooldown>0)return;
+ if(BALANCE.active||challengeOpen||LOCOMOTION.cooldown>0)return;
  BALANCE.active=true;BALANCE.age=0;BALANCE.reason=reason;
  BALANCE.severity=Math.max(0,severity);
- BALANCE.duration=.36+.08*Math.min(balanceLevel,4);
- BALANCE.success=severity<=(.24+(balanceLevel-1)*.12);
+ // Agility shortens the protective reaction and makes its pose more precise.
+ BALANCE.duration=.42/(1+.22*(balanceLevel-1));
+ BALANCE.success=true;
  BALANCE.side=Math.sin(player.rotation.y)>=0?1:-1;
  LOCOMOTION.vx=0;LOCOMOTION.vz=0;LOCOMOTION.strainSeconds=0;
  document.getElementById('message').textContent='Recovering balance...';
@@ -480,29 +483,30 @@ function updateBalanceRecovery(dt){
  BALANCE.age+=dt;
  const p=Math.min(1,BALANCE.age/BALANCE.duration);
  const effort=Math.sin(Math.PI*p),rig=player.userData.rig;
+ const amplitude=(1-.12*(balanceLevel-1))*THREE.MathUtils.clamp(.7+BALANCE.severity*.4,.65,1);
  setIdlePose(player);player.position.y=-.065*effort;
  // Reflex: lean back, flex knees and spread arms, lifting the catch foot.
- rig.torso.rotation.x=-.19*effort;
- rig.torso.rotation.z=BALANCE.side*.14*effort;
- rig.head.rotation.x=.10*effort;
+ rig.torso.rotation.x=-.19*effort*amplitude;
+ rig.torso.rotation.z=BALANCE.side*.14*effort*amplitude;
+ rig.head.rotation.x=.10*effort*amplitude;
  rig.arms.forEach((arm,i)=>{
-  arm.shoulder.rotation.z=(i===0?-1:1)*(.85*effort);
+  arm.shoulder.rotation.z=(i===0?-1:1)*(.85*effort*amplitude);
   arm.shoulder.rotation.x=-.28*effort;arm.elbow.rotation.x=-.35*effort;
  });
  rig.legs.forEach((leg,i)=>{
   const catchStep=i===(BALANCE.side>0?1:0)?1:0;
   leg.hip.rotation.x=-.18*effort;
   leg.hip.rotation.z=(i===0?-1:1)*(.22*catchStep*effort);
-  leg.knee.rotation.x=.38*effort;
+  leg.knee.rotation.x=.38*effort*amplitude;
   leg.ankle.rotation.x=-.20*effort;
  });
  if(p<1)return;
  BALANCE.active=false;
- if(!BALANCE.success){beginFall(BALANCE.reason);return;}
+ // The recovery always ends upright: falling is disabled.
  player.position.y=0;setIdlePose(player);
- Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:1.5});
+ Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:Math.max(.38,1.10-.20*(balanceLevel-1))});
  prepareFeet(player);
- document.getElementById('message').textContent='Balance recovered!';
+ document.getElementById('message').textContent='Steady again!';
 }
 // Lightweight Verlet/PBD ragdoll: real gravity, fixed-length limbs, friction,
 // obstacle contacts and repeated constraint projection. No external physics engine.
@@ -590,7 +594,7 @@ function chooseFallDirection(){
  return new THREE.Vector3(Math.sin(heading),0,Math.cos(heading));
 }
 function beginFall(reason='Lost balance'){
- if(FALL.active||challengeOpen)return;
+ if(!ENABLE_RAGDOLL||FALL.active||challengeOpen)return;
  BALANCE.active=false;
  FALL.active=true;FALL.reason=reason;
  FALL.age=0;FALL.quiet=0;FALL.accumulator=0;
@@ -861,14 +865,7 @@ function standUp(){
  updateButtonHints();keys.clear();resetStick();
  document.getElementById('message').textContent='Back on your feet. Watch your step!';
 }
-// B replaces the old standalone Stand Up button.
-// Optional QA control: ?debug=1 enables a touch-friendly fall test without
-// cluttering the student-facing game.
-const DEBUG_FALL=document.getElementById('debugFall');
-if(new URLSearchParams(location.search).get('debug')==='1'){
- DEBUG_FALL.hidden=false;
- DEBUG_FALL.addEventListener('click',()=>beginFall('Test fall'));
-}
+// Falling disabled. No public or debug entry point; legacy solver remains archived in this file.
 // The A/B/C cluster handles context-menu suppression and pointer cancellation.
 
 const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;
@@ -887,8 +884,8 @@ function saveProgress(){
  try{localStorage.setItem(SAVE_KEY,JSON.stringify({xp,stage,balanceLevel}));}catch(_){}
 }
 function renderProgress(){
- skillStatus.textContent='XP '+xp+' · Balance Lv '+balanceLevel;
- balanceUpgrade.textContent=balanceLevel>=4?'Max Balance':'+ Balance ('+upgradeCost()+' XP)';
+ skillStatus.textContent='XP '+xp+' · Agility Lv '+balanceLevel;
+ balanceUpgrade.textContent=balanceLevel>=4?'Max Agility':'+ Agility ('+upgradeCost()+' XP)';
  balanceUpgrade.disabled=balanceLevel>=4||xp<upgradeCost();
  document.getElementById('xp').textContent='XP: '+xp+(stage?' · Apprentice Trial completed':' · Quest: Talk to the guardian');
 }
@@ -896,7 +893,7 @@ balanceUpgrade.addEventListener('click',()=>{
  const cost=upgradeCost();
  if(balanceLevel>=4||xp<cost||FALL.active||BALANCE.active)return;
  xp-=cost;balanceLevel++;saveProgress();renderProgress();
- document.getElementById('message').textContent='Motor control improved — Balance Lv '+balanceLevel+'!';
+ document.getElementById('message').textContent='Movement control improved — Agility Lv '+balanceLevel+'!';
 });
 renderProgress();
 const keys=new Set();
@@ -905,7 +902,7 @@ const interactButton=document.getElementById('interactButton');
 const cancelButton=document.getElementById('cancelButton');
 let bHeld=false,bPointer=null,bDownAt=0;
 function updateButtonHints(){
- B_HINT.textContent=FALL.active?'Stand Up':bHeld?'Running':'Run / Jump';
+ B_HINT.textContent=bHeld?'Running':'Run / Jump';
  C_HINT.textContent=challengeOpen?'Cancel':crouched?'Stand':'Crouch';
  document.body.classList.toggle('dialog-open',challengeOpen);
  cancelButton.setAttribute('aria-pressed',String(crouched));
@@ -934,7 +931,7 @@ addEventListener('keydown',e=>{
  if(e.code==='KeyE')interact(); // A is already WASD strafe-left.
  if(e.code==='KeyC'||e.code==='Escape')cancelAction();
  if(e.code==='KeyR'||e.code==='KeyB'){
-  if(FALL.active)standUp();else startJump();
+  startJump();
  }
  if(e.code==='Space')startJump();
 });
@@ -956,13 +953,12 @@ touch.addEventListener('pointerdown',e=>{e.preventDefault();if(stickPointer!==nu
 touch.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e)}},{passive:false});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])
  touch.addEventListener(type,e=>{if(e.pointerId===stickPointer)resetStick()});
-// B: held => sprint; quick tap => jump; while fallen => stand up.
+// B: held => sprint; quick tap => jump; no fall/stand action.
 // Pointer capture ensures a release outside the button stops the sprint.
 runButton.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
  e.preventDefault();
  if(bPointer!==null)return;
- if(FALL.active){standUp();updateButtonHints();return;}
  if(BALANCE.active||challengeOpen)return;
  if(crouched)crouched=false;
  bPointer=e.pointerId;bDownAt=performance.now();bHeld=true;
@@ -980,7 +976,7 @@ for(const type of ['pointercancel','lostpointercapture'])
  runButton.addEventListener(type,e=>{if(e.pointerId===bPointer)stopBPointer()});
 runButton.addEventListener('click',e=>{
  if(e.detail!==0)return; // keyboard accessibility; pointer already handled
- if(FALL.active)standUp();else startJump();
+ startJump();
 });
 interactButton.addEventListener('click',interact);
 cancelButton.addEventListener('click',cancelAction);
@@ -1015,8 +1011,8 @@ function showQuestion(){
  questionIndex++;
  if(questionIndex<3){showQuestion();return}
  progress.textContent='Trial completed';question.textContent='You completed all three challenges!';answers.replaceChildren();
- if(stage===0){stage=1;xp+=25;marker.visible=false;saveProgress();renderProgress();feedback.textContent='You earned 25 XP! Upgrade Balance in the corner.';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
- else {xp+=10;saveProgress();renderProgress();feedback.textContent='Practice completed — you earned 10 XP!';msg.textContent='Guardian: Excellent practice! Keep learning to upgrade Balance.';}
+ if(stage===0){stage=1;xp+=25;marker.visible=false;saveProgress();renderProgress();feedback.textContent='You earned 25 XP! Upgrade Agility in the corner.';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
+ else {xp+=10;saveProgress();renderProgress();feedback.textContent='Practice completed — you earned 10 XP!';msg.textContent='Guardian: Excellent practice! Keep learning to upgrade Agility.';}
  });answers.append(b)});
 }
 function interact(){
@@ -1026,7 +1022,7 @@ function interact(){
 }
 let lastReloadAttempt=0;
 function applyUpdateIfSafe(){
- if(!pendingBuild||challengeOpen||FALL.active||BALANCE.active||Math.hypot(stickX,stickY)>.1||keys.size)return;
+ if(!pendingBuild||challengeOpen||BALANCE.active||Math.hypot(stickX,stickY)>.1||keys.size)return;
  if(Date.now()-lastReloadAttempt<10000)return;
  lastReloadAttempt=Date.now();
  const url=new URL(location.href);url.searchParams.set('v',pendingBuild);
@@ -1041,7 +1037,7 @@ function animate(){
  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
  if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;
  if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;
- if(FALL.active){updateFall(dt);}
+ if(ENABLE_RAGDOLL&&FALL.active){updateFall(dt);}
  else if(BALANCE.active){updateBalanceRecovery(dt);}
  else{
   if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
