@@ -13,7 +13,15 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.18.0 — November 8, 2026
+## Current version: 0.18.1 — November 8, 2026
+- **Visible alternating military knee push-offs during prone crawl:** each leg now draws its foot forward toward the hip, raises the corresponding bent knee, then extends its leg backward to push the body along the ground. The other leg repeats half a cycle later.
+- **Diagonal coordination:** each knee push phase is aligned with the opposite hand's plant/pull phase, so the crawl uses right knee + left arm and then left knee + right arm instead of leaving the legs almost motionless.
+- **Prone posture preserved:** chest and pelvis retain the near-ground height from v0.18.0; feet skim the floor with very small lift while the knee rises visibly. The stride is distance-driven, and each leg's motion blends in and out smoothly when starting and stopping.
+- **Knee IK:** the leg solver gained an optional mirrored-knee branch used only during the prone leg stroke. Other locomotion continues using the original IK by default. Geometric sampling of the crawling pose with 0–100% knee tuck placed the lowest kneecap bottom at about -0.045 against the level floor at -0.05 (roughly 5 mm clearance); modeled ankle centers stayed above ground.
+- **Preserved:** flat grass/pavement, crouch/kneel, walking/running/jumping outside crawl, A/B/C (hold C ~0.52s), experience, guardian trial and no-fall gameplay.
+- **Manual QA still needed:** verify raised-knee motion on Android, especially when alternating strokes, starting and stopping, changing direction, and ensuring the foot/leg geometry stays above the terrain. This remains approximate procedural IK, not real force-based human locomotion.
+
+## Previous version: 0.18.0 — November 8, 2026
 - **True prone/chest-to-ground military crawl instead of a high/bear crawl:** the pelvis descends much farther and the rigid but shared juvenile torso rotates to approximately horizontal, keeping ribcage/sternum close to the level grass/stone terrain. The head counter-rotates so the face remains raised toward travel, not buried in the floor.
 - **Extended legs trailing the body:** both ankles target positions nearly a full leg length behind the low pelvis, creating a stretched-out silhouette. Toes point backward with a shallow downward pitch, and each leg performs a small opposite-phase dragging/pushing pulse rather than lifting its knees high in a quadruped gait. The foot targets follow the pelvis as it travels, avoiding impossible rooted-toe overextension.
 - **Alternating palm/forearm propulsion:** hands remain planted during their support phase and advance through low, short swing arcs while the opposite leg provides the counter-pulse. Arm IK uses a low elbow pole to bend elbows beside/near the floor rather than supporting the torso in a high bear crawl.
@@ -121,6 +129,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.18.1 (2026-11-08):** opposing knee-lift/push strokes synchronized with planted/pulling arms; near-ground foot motion and safer mirrored knee IK.
 - **0.18.0 (2026-11-08):** prone chest-to-ground military crawl replaces the raised quadruped gait; ground-near sternum, low hips, extended trailing legs, low elbow IK and sliding toe push-offs.
 - **0.17.0 (2026-11-08):** low military crawl with paired opposite arm/leg stepping, grounded hand/ankle targets and long-press C controls on touch and keyboard.
 - **0.16.1 (2026-11-08):** forward-leaning tactical torso, horizon-oriented head, two-bone arm IK, right hand follows lead knee at crouch rest and left hand balances.
@@ -148,7 +157,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.18.1, feature 0.19.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.18.2, feature 0.19.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
