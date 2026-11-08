@@ -837,7 +837,7 @@ buildFieldTower();
 // timber posts are visibly separate. The interior remains inaccessible.
 const CABIN={
  minX:-17,maxX:-7,minZ:-47,maxZ:-39,
- floorY:11.40,porchMinZ:-39.1,porchMaxZ:-36.8
+ floorY:11.40,porchMinZ:-39.1,porchMaxZ:-37.75
 };
 function buildMountainCabin(){
  const c=CABIN,cx=(c.minX+c.maxX)*.5,cz=(c.minZ+c.maxZ)*.5;
@@ -980,7 +980,7 @@ function groundRibbon(points,width,material){
  scene.add(mesh);return mesh;
 }
 const MOUNTAIN_PATH=[
- [-14,-36],[-14,-31],[-14,-25],[-14,-17],
+ [-20,-37],[-20,-33],[-17,-29],[-14,-24],[-14,-17],
  [-21,-11],[-30,0],[-42,11],[-53,27]
 ];
 const trailMat=new THREE.MeshStandardMaterial({
@@ -989,13 +989,22 @@ const trailMat=new THREE.MeshStandardMaterial({
 groundRibbon(MOUNTAIN_PATH,2.35,trailMat);
 // Flat lajas mark both sides of the 30° route; no solid invisible blocks.
 const flagstoneMat=mat('#a0a09a');
-for(let i=0;i<=20;i++){
- const z=-35+i*.95;
- for(const x of [-15.42,-12.58]){
-  const d=.10*Math.sin(i*1.8+x);
-  const rock=box(.39,.10,.58,flagstoneMat,x+d,
-   naturalSurfaceY(x+d,z)+.038,z);
-  rock.rotation.y=i*.47;
+const LAJA_ROUTE=[
+ [-20,-35],[-20,-32],[-17,-28],[-14,-24],[-14,-17]
+];
+for(let segment=0;segment<LAJA_ROUTE.length-1;segment++){
+ const a=LAJA_ROUTE[segment],b=LAJA_ROUTE[segment+1],
+  dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),
+  nx=-dz/length,nz=dx/length,steps=Math.max(1,Math.floor(length/.85));
+ for(let i=0;i<=steps;i++){
+  const t=i/steps,cx=THREE.MathUtils.lerp(a[0],b[0],t),
+   cz=THREE.MathUtils.lerp(a[1],b[1],t);
+  for(const side of [-1,1]){
+   const x=cx+nx*side*1.28,z=cz+nz*side*1.28;
+   const rock=box(.38,.075,.57,flagstoneMat,
+    x,naturalSurfaceY(x,z)+.029,z);
+   rock.rotation.y=Math.atan2(dx,dz)+side*.13;
+  }
  }
 }
 // Short approach trail from the lowland camp toward the lake stairs.
