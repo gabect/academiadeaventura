@@ -919,7 +919,7 @@ function showQuestion(){
  if(questionIndex<3){showQuestion();return}
  progress.textContent='Trial completed';question.textContent='You completed all three challenges!';answers.replaceChildren();
  if(stage===0){stage=1;xp+=25;marker.visible=false;saveProgress();renderProgress();feedback.textContent='You earned 25 XP! Upgrade Balance in the corner.';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
- else feedback.textContent='Great job! You can practice again, but no additional XP will be awarded.';
+ else {xp+=10;saveProgress();renderProgress();feedback.textContent='Practice completed — you earned 10 XP!';msg.textContent='Guardian: Excellent practice! Keep learning to upgrade Balance.';}
  });answers.append(b)});
 }
 function interact(){
