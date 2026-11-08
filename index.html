@@ -1915,12 +1915,36 @@ function clearPosition(x,z){
   water.surfaceY-1.20:groundTopAt(x,z);
  return bodyVolumeFits(x,z,currentPosture(),floor,true);
 }
+// One 45-degree normal limit applies equally to hills and manufactured
+// ramps. Swimming and the intentional .30-unit stone stair risers are separate.
+function walkableStairAt(x,z){
+ for(const s of WALKABLE_ELEVATIONS){
+  if(s.kind!=='stairs')continue;
+  if(x>=s.minX&&x<=s.maxX&&z>=s.minZ&&z<=s.maxZ)return true;
+ }
+ return false;
+}
+function surfaceGradeAt(x,z){
+ const ramp=rampAt(x,z);
+ return ramp?ramp.grade:naturalGradeAt(x,z);
+}
 function canTraverseStep(x,z){
- const currentTop=groundTopAt(player.position.x,player.position.z);
+ const fromX=player.position.x,fromZ=player.position.z;
+ const currentTop=groundTopAt(fromX,fromZ);
  const candidateTop=groundTopAt(x,z);
  const delta=candidateTop-currentTop;
- // Never climb the balcony's tall side or walk over an unguarded drop.
- // Crawl remains level-ground only to keep the prone chest from clipping.
+ const onStairs=walkableStairAt(fromX,fromZ)||
+  walkableStairAt(x,z);
+ const inWater=waterAt(fromX,fromZ)||waterAt(x,z);
+ if(!onStairs&&!inWater){
+  // Testing the actual surface gradient stops diagonal zigzags from
+  // bypassing a dangerous slope of 53 degrees.
+  const grade=Math.max(surfaceGradeAt(fromX,fromZ),
+   surfaceGradeAt(x,z));
+  if(grade>MAX_WALKABLE_GRADE+.012)return false;
+ }
+ // Large vertical side ledges are still impassable; existing stone stairs
+ // keep their deliberate riser gate.
  const ascent=crawling?.075:MAX_STEP_UP;
  const descent=crawling?.075:MAX_STEP_DOWN;
  return delta<=ascent+.0001&&delta>=-descent-.0001;
