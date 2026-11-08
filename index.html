@@ -324,8 +324,9 @@ function buildTrainingWall(){
 }
 buildTrainingWall();
 function ladderZAtHeight(y){
+ const top=Math.min(y,LADDER.deckY);
  return LADDER.bottomZ+(LADDER.topZ-LADDER.bottomZ)*
-  (y-LADDER.bottomY)/(LADDER.deckY-LADDER.bottomY);
+  (top-LADDER.bottomY)/(LADDER.deckY-LADDER.bottomY);
 }
 function buildLeaningLadder(){
  const group=new THREE.Group();
