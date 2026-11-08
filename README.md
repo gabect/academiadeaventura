@@ -13,7 +13,14 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.25.0 — November 8, 2026
+## Current version: 0.26.0 — November 8, 2026
+- **Natural top dismount:** the climb stops just below the stone lip, where the character braces on the short upper handholds and pushes upward before stepping a short distance onto the wall. The finish is positioned only 0.19 units inside the ledge (instead of 0.64 units), without passing through upper cross-rungs.
+- **Back-first, foot-first descent:** at the wall edge, A/E begins a separate 1.18s mounting animation. The avatar faces the wall, bends forward, lowers one foot onto a rung, then the other while backing out through the open gap. Only after the body clears the stone wall does it descend and return to continuous automatic ladder climbing. Holding or tapping C while mounting returns safely to the upper landing.
+- **No ladder above the exit path:** the highest rung is below platform height; short rail ends provide handholds but no crossbar blocks the transfer. Ladder geometry, rung-height IK, and collision all share the same height cutoff. The climb track is closer to the wall for feasible leg reach and the landing sits near the rim.
+- **Preserved:** the vertical bracket-mounted ladder, solid wall/ladder collisions, front-only A grab, Agility XP, guardian challenges, stone stairs, balcony, camera and all original touchscreen input.
+- **Verification:** JavaScript syntax passed. An extracted controller simulation passed 10 assertions for the upper push-off, height clearance when crossing the ladder plane, lower foot-first mount, wall-clearance before descending, continuous automatic descent and safe C reversal. Real touchscreen 3D animation and IK quality remain to be checked visually.
+
+## Previous version: 0.25.0 — November 8, 2026
 - **Permanent vertical north-wall ladder:** replaced the sloping rails/rungs with a truly vertical, single-plane ladder, using metal brackets anchored directly into the north wall. The ladder runs parallel to the masonry at a fixed 0.16-unit toe clearance; it is no longer a portable ladder leaning against the wall.
 - **Straight climb track and wall-safe dismount:** the character's climb position has a constant Z relative to the fixed ladder and is kept in front of the masonry. A/E remains the only way to grab and climb automatically. At the top the avatar climbs nearly all the way to the lip, then rises before stepping onto the rampart; descent returns to a clear courtyard point.
 - **Consistent physical obstacle:** replaced the former slope-dependent rail/rung collision with fixed vertical rail capsules and cross-rung checks. Standing, tactical crouch and crawling still respect body volumes; the narrow wall-to-ladder gap is not a shortcut through the masonry. The bottom interaction zone is restricted to the front of the ladder.
@@ -206,6 +213,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.26.0 (2026-11-08):** short upper lip push-off, ledge handholds, first-foot backward descent with staggered IK, clear top rung transfer, no crossbar traversal and safe C cancellation.
 - **0.25.0 (2026-11-08):** permanent vertical north-wall ladder with wall brackets, constant-Z climb/IK and solid rail/rung collisions; top/bottom safe dismounts and front-only A/E interaction.
 - **0.24.0 (2026-11-08):** posture-dependent ladder/wall/deck collision with body headroom tests, prohibited stand-up in tight gaps, angled-rail and rung solids, guarded crawl turns and safe climb exits.
 - **0.23.1 (2026-11-08):** fixed left/right hands and legs crossing on the north-facing ladder; prevented feet sampling an unreachable wall top and visually lifting the body without A.
