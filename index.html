@@ -621,9 +621,9 @@ function buildRampSlice(ramp,start,end,startY,endY,material){
   ...point(start,-1,floor),...point(start,1,floor),
   ...point(end,-1,floor),...point(end,1,floor)
  ];
- const triangles=[0,2,1,1,2,3,4,5,6,5,7,6,
-  0,4,2,2,4,6,1,3,5,3,7,5,
-  0,1,4,1,5,4,2,6,3,3,6,7];
+ const triangles=[0,1,2,1,3,2,4,6,5,5,6,7,
+  0,2,4,2,6,4,1,5,3,3,5,7,
+  0,4,1,1,4,5,2,3,6,3,7,6];
  const geometry=new THREE.BufferGeometry();
  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
  geometry.setIndex(triangles);geometry.computeVertexNormals();
@@ -1825,10 +1825,10 @@ function followPlayerCamera(dt){
 // Lightweight collision footprints, independent of meshes and shadows.
 const PLAYER_RADIUS=.43;
 const obstacles=[
-  ...[[-9,-8],[9,-8],[-9,8],[9,8]].map(([x,z])=>({x,z,r:.48})),
+  ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.48})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.32})),
   {x:guardian.position.x,z:guardian.position.z,r:.76},
-  ...[-OUTER_WALL,OUTER_WALL].flatMap(x=>[-OUTER_WALL,OUTER_WALL].map(z=>({x,z,r:1.82})))
+  // No outside castle walls or corner obstructions.
 ];
 const BOUND=11.55*Math.sqrt(6); // Exactly 3× v0.30.0 playable area.
 const BODY_CLEARANCE={
@@ -1858,6 +1858,10 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
   if(bottom<WALL_TRAINING.topY-.005&&top>TERRAIN.floorTop&&
      circleTouchesBox(px,pz,r,WALL_TRAINING.minX,WALL_TRAINING.maxX,
       WALL_TRAINING.minZ,WALL_TRAINING.maxZ))return false;
+  // Solid tower walls: the platform is reached by its stairs, not phasing.
+  if(bottom<FIELD_TOWER.topY-.005&&top>TERRAIN.floorTop&&
+     circleTouchesBox(px,pz,r,FIELD_TOWER.minX,FIELD_TOWER.maxX,
+      FIELD_TOWER.minZ,FIELD_TOWER.maxZ))return false;
   // The underside of the timber deck is solid: tall stances cannot walk
   // through it, while genuinely low profiles can fit underneath.
   const deckTop=TERRAIN.floorTop+BALCONY.steps*STEP_HEIGHT;
@@ -2039,10 +2043,10 @@ function ragdollEdges(){
 }
 function fallObstacleList(){
  return [
-  ...[[-9,-8],[9,-8],[-9,8],[9,8]].map(([x,z])=>({x,z,r:.34,height:2.6})),
+  ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.34,height:2.6})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.16,height:3})),
   {x:guardian.position.x,z:guardian.position.z,r:.65,height:2.7},
-  ...[-OUTER_WALL,OUTER_WALL].flatMap(x=>[-OUTER_WALL,OUTER_WALL].map(z=>({x,z,r:1.82,height:8})))
+  // No outdoor corner towers.
  ];
 }
 const FALL_COLLIDERS=fallObstacleList();
