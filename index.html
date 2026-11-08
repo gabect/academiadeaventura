@@ -182,7 +182,7 @@ const LADDER={
  bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
  railTopY:WALL_TRAINING.topY+1.20,
  width:.70,rungSpacing:.27,climbSpeed:.79,
- bottomExitZ:-8.93,topExitZ:-11.14
+ bottomExitZ:-8.65,topExitZ:-11.14
 };
 const BALCONY_RAIL_COLLIDERS=[];
 const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
@@ -584,8 +584,9 @@ const LADDER_TMP=new THREE.Vector3();
 const LADDER_LOCAL=new THREE.Vector3();
 function ladderRootAt(progress,out){
  const height=(LADDER.deckY-LADDER.bottomY)*progress;
- return out.set(LADDER.x,height,
-  ladderZAtHeight(LADDER.bottomY+height+.62)+.27);
+ return out.set(LADDER.x,height,Math.max(
+  ladderZAtHeight(LADDER.bottomY+height+.62)+.27,
+  WALL_TRAINING.maxZ+.455));
 }
 function ladderEntry(){
  if(LADDER_STATE.active)return null;
@@ -714,8 +715,18 @@ function stepLadder(dt,verticalInput){
   climb.time+=dt;
   const t=THREE.MathUtils.clamp(climb.time/.58,0,1);
   const ease=t*t*(3-2*t);
-  player.position.lerpVectors(climb.from,climb.target,ease);
-  if(!climb.toTop)player.rotation.y=Math.PI;
+  if(climb.toTop){
+   // First rise above the masonry, then step across its top edge.
+   const up=THREE.MathUtils.clamp(t/.45,0,1);
+   const across=THREE.MathUtils.clamp((t-.45)/.55,0,1);
+   const rise=up*up*(3-2*up),step=across*across*(3-2*across);
+   player.position.set(climb.from.x,
+    THREE.MathUtils.lerp(climb.from.y,climb.target.y,rise),
+    THREE.MathUtils.lerp(climb.from.z,climb.target.z,step));
+  }else{
+   player.position.lerpVectors(climb.from,climb.target,ease);
+   player.rotation.y=Math.PI;
+  }
   poseLadder(dt,1-ease,false);
   if(t>=1)finishLadder();
   return;
@@ -733,7 +744,7 @@ function stepLadder(dt,verticalInput){
  ladderRootAt(climb.progress,player.position);
  player.rotation.y=Math.PI;
  poseLadder(dt,1,Math.abs(delta)>.00001);
- if(climb.direction>0&&climb.progress>=.995)startLadderExit(true);
+ if(climb.direction>0&&climb.progress>=.91)startLadderExit(true);
  if(climb.direction<0&&climb.progress<=.005)startLadderExit(false);
 }
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
