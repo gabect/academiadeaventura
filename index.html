@@ -89,17 +89,26 @@ function setCameraZoom(next){
  zoomInButton.disabled=cameraZoom>=ZOOM_MAX-.001;
  zoomOutButton.disabled=cameraZoom<=ZOOM_MIN+.001;
 }
-zoomInButton.addEventListener('click',()=>setCameraZoom(cameraZoom*1.25));
-zoomOutButton.addEventListener('click',()=>setCameraZoom(cameraZoom/1.25));
+zoomInButton.addEventListener('click',()=>{
+ recordCameraChange();setCameraZoom(cameraZoom*1.25);
+});
+zoomOutButton.addEventListener('click',()=>{
+ recordCameraChange();setCameraZoom(cameraZoom/1.25);
+});
 for(const button of [zoomInButton,zoomOutButton]){
  for(const eventName of ['contextmenu','selectstart','dragstart']){
   button.addEventListener(eventName,e=>e.preventDefault());
  }
 }
 renderer.domElement.style.touchAction='none';
+let lastZoomWheelAt=-1000;
 renderer.domElement.addEventListener('wheel',e=>{
  e.preventDefault();
- if(e.deltaY!==0)setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
+ if(e.deltaY===0)return;
+ const now=performance.now();
+ if(now-lastZoomWheelAt>350)recordCameraChange();
+ lastZoomWheelAt=now;
+ setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
 },{passive:false});
 // On the canvas, one finger/mouse drag orbits; two fingers pinch to zoom.
 // These pointers are separate from the left joystick and A/B/C buttons.
@@ -962,7 +971,8 @@ function followPlayerCamera(dt){
  const manual=performance.now()<cameraManualUntil;
  // Begin automatic recentering only beyond 40°, then finish the gentle turn
  // while moving. Manual orbit holds the camera independently for 2.5 seconds.
- if(!manual&&Math.abs(difference)>CAMERA_DEADZONE)cameraAutoTurn=true;
+ if(!manual&&Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz)>.08&&
+    Math.abs(difference)>CAMERA_DEADZONE)cameraAutoTurn=true;
  if(manual)cameraAutoTurn=false;
  const desiredRate=cameraAutoTurn?
   THREE.MathUtils.clamp(difference*1.35,-CAMERA_RATE,CAMERA_RATE):0;
