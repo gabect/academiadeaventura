@@ -253,7 +253,7 @@ function summitMesaHeightAt(x,z){
  let elevation=SUMMIT_PASS.height*smoothWater((1-radius)/.105);
  const corridor=passageWeight(z,SUMMIT_PASS.z,
   SUMMIT_PASS.halfWidth,SUMMIT_PASS.feather);
- if(corridor>0&&x>SUMMIT_PASS.fromX-1&&x<SUMMIT_MESA.x+17){
+ if(corridor>0&&x>SUMMIT_MESA.x-1&&x<SUMMIT_PASS.fromX+2){
   // Ascend from x=-41 (valley) to x=-49 (summit) at <=45 degrees.
   const progress=THREE.MathUtils.clamp(
    (SUMMIT_PASS.fromX-x)/8,0,1);
