@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Adventure Academy — Playground de pruebas</title><style>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Academia Aventura — Campo de pruebas</title><style>
 html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
@@ -33,18 +33,18 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.30.0 · Playground de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Playground · v0.30.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.0 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.30.0';let pendingBuild=null;
+const BUILD='0.31.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
-const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',35,85);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',55,125);
 const camera=new THREE.PerspectiveCamera(34,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 // Link's Awakening-style top-down diorama camera: NORTH remains at screen top.
 // The view is a steep, slightly tilted aerial shot, NOT a diagonal 45° isometric.
@@ -141,7 +141,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
  });
 }
 setCameraZoom(1);
-scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=22;sun.shadow.camera.bottom=-22;scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);
 const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
 const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${n}`;if(!cylCache.has(k))cylCache.set(k,new THREE.CylinderGeometry(rt,rb,h,n));const o=new THREE.Mesh(cylCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
@@ -283,12 +283,79 @@ function addWalkable(name,minX,maxX,minZ,maxZ,topY,kind){
 function addRailCollider(minX,maxX,minZ,maxZ){
  BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
 }
+// All natural hills use the same smooth analytical height model as terrain
+// rendering, collision, avatar body lift, and grounded IK. Vary footprint,
+// rise and grade without creating separate hand-tuned movement mechanics.
+const FIELD_HILLS=[
+ {id:'gentle-west',x:-17,z:-3,radius:6.0,height:1.35},
+ {id:'broad-west',x:-21,z:-19,radius:7.1,height:3.05},
+ {id:'south-swell',x:0,z:23,radius:6.0,height:1.85},
+ {id:'eastern-hill',x:17,z:-22,radius:6.0,height:3.65},
+ {id:'rocky-steep',x:24,z:-12,radius:4.7,height:4.10},
+ {id:'little-rise',x:-2,z:-25,radius:4.0,height:.75},
+ {id:'northwest-meadow',x:-23,z:19,radius:5.3,height:1.32},
+ {id:'far-east-hummock',x:24,z:21,radius:4.5,height:1.15}
+];
+const MAX_WALKABLE_GRADE=1; // tan(45°): anything steeper is impassable.
+const MAX_WALKABLE_ANGLE=Math.PI/4;
+function naturalHillHeightAt(x,z){
+ let elevation=0;
+ for(const hill of FIELD_HILLS){
+  const r=Math.hypot(x-hill.x,z-hill.z)/hill.radius;
+  if(r>=1)continue;
+  const t=1-r;
+  const value=hill.height*t*t*(3-2*t);
+  elevation=Math.max(elevation,value);
+ }
+ return elevation;
+}
+function naturalSurfaceY(x,z){
+ const water=waterAt(x,z);
+ return TERRAIN.floorTop+naturalHillHeightAt(x,z)-(water?water.depth:0);
+}
+function naturalGradeAt(x,z){
+ const epsilon=.07;
+ const slopeX=(naturalSurfaceY(x+epsilon,z)-
+  naturalSurfaceY(x-epsilon,z))/(2*epsilon);
+ const slopeZ=(naturalSurfaceY(x,z+epsilon)-
+  naturalSurfaceY(x,z-epsilon))/(2*epsilon);
+ return Math.hypot(slopeX,slopeZ);
+}
+// Ramp geometry, normal, clearance and foot placement will all use these
+// shared definitions; the original stairs keep their discrete 0.30 risers.
+const FIELD_RAMPS=[
+ {id:'wood-16',kind:'wood',x:-6,z:-17,dx:0,dz:-1,
+  length:5.0,width:2.7,rise:1.45,landing:1.2},
+ {id:'stone-33',kind:'stone',x:0,z:-16,dx:0,dz:-1,
+  length:4.7,width:2.7,rise:3.05,landing:1.3},
+ {id:'wood-45',kind:'wood',x:7,z:-15,dx:0,dz:-1,
+  length:3.2,width:2.7,rise:3.2,landing:1.3},
+ {id:'stone-53',kind:'stone',x:-11,z:-18,dx:0,dz:-1,
+  length:3.25,width:2.7,rise:4.25,landing:1.3}
+];
+function rampSampleAt(ramp,x,z){
+ const offsetX=x-ramp.x,offsetZ=z-ramp.z;
+ const along=offsetX*ramp.dx+offsetZ*ramp.dz;
+ const lateral=offsetX*(-ramp.dz)+offsetZ*ramp.dx;
+ if(Math.abs(lateral)>ramp.width*.5||
+    along<0||along>ramp.length+ramp.landing)return null;
+ return {ramp,along,lateral,
+  topY:TERRAIN.floorTop+
+   ramp.rise*Math.min(along/ramp.length,1),
+  grade:along<ramp.length?ramp.rise/ramp.length:0};
+}
+function rampAt(x,z){
+ for(const ramp of FIELD_RAMPS){
+  const hit=rampSampleAt(ramp,x,z);
+  if(hit)return hit;
+ }
+ return null;
+}
 const FLOOR_DECAL_OFFSET=.002;
-// Double the WALKABLE playground area while retaining the old castle and
-// staircase. Terrain is a single continuous heightfield, so the joined river
-// and lake cannot leave overlapping-hole seams or invisible solid grass.
-const TERRAIN_HALF_SIZE=21;
-const terrainResolution=126;
+// Three times the usable area of v0.30.0, with open grassy field and
+// continuous hill and underwater elevations. No arena perimeter walls.
+const TERRAIN_HALF_SIZE=35;
+const terrainResolution=224;
 const terrainGeometry=new THREE.PlaneGeometry(
  TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
  terrainResolution,terrainResolution);
@@ -300,9 +367,14 @@ const terrainShade=new THREE.Color();
 for(let i=0;i<groundPositions.count;i++){
  const x=groundPositions.getX(i),z=-groundPositions.getY(i);
  const water=waterAt(x,z),depth=water?water.depth:0;
- groundPositions.setZ(i,-depth);
+ const hill=naturalHillHeightAt(x,z);
+ groundPositions.setZ(i,hill-depth);
  terrainShade.copy(dryGrass).lerp(wetBed,
   THREE.MathUtils.clamp(depth/1.8,0,1));
+ if(hill>0){
+  const hillColor=new THREE.Color('#8aa579');
+  terrainShade.lerp(hillColor,THREE.MathUtils.clamp(hill/4,0,.7));
+ }
  groundColors.push(terrainShade.r,terrainShade.g,terrainShade.b);
 }
 terrainGeometry.setAttribute('color',
@@ -397,8 +469,9 @@ for(let i=-5;i<=5;i++)for(let j=-7;j<=7;j++)if((i+j)%7===0){
 // Non-walkable decorative/interactive solids still use their own collision
 // footprints and never become steps just because a visible mesh is tall.
 function groundTopAt(x,z){
- const water=waterAt(x,z);
- let top=water?water.floorY:TERRAIN.floorTop;
+ let top=naturalSurfaceY(x,z);
+ const ramp=rampAt(x,z);
+ if(ramp)top=Math.max(top,ramp.topY);
  for(const surface of WALKABLE_ELEVATIONS){
   if(!surface.walkable)continue;
   if(x>=surface.minX&&x<=surface.maxX&&
@@ -1680,7 +1753,7 @@ const obstacles=[
   {x:guardian.position.x,z:guardian.position.z,r:.76},
   ...[-OUTER_WALL,OUTER_WALL].flatMap(x=>[-OUTER_WALL,OUTER_WALL].map(z=>({x,z,r:1.82})))
 ];
-const BOUND=11.55*Math.SQRT2; // Exactly twice the former playable AREA.
+const BOUND=11.55*Math.sqrt(6); // Exactly 3× v0.30.0 playable area.
 const BODY_CLEARANCE={
  stand:{radius:.40,height:2.13,points:[0]},
  crouch:{radius:.38,height:1.72,points:[0]},
