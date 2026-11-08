@@ -1325,7 +1325,7 @@ function poseGroundedCharacter(character,travel,dt){
  // Contact ankles remain at their separate exact world-space surface heights.
  const supportTop=groundTopAt(character.position.x,character.position.z);
  gait.terrainLift=THREE.MathUtils.damp(
-  gait.terrainLift,supportTop-TERRAIN.floorTop,15,dt);
+  gait.terrainLift,supportTop-TERRAIN.floorTop,21,dt);
  if(blend<.008&&crouch<.008&&gait.crawlBlend<.008&&gait.kneelTime>=CROUCH.settleSeconds){
   setIdlePose(character);
   character.position.y=gait.terrainLift;
@@ -1727,9 +1727,17 @@ function stepLocomotion(dt,right,forward,runEnabled){
  const walkingSpeed=crawling?gait.walkSpeed*CRAWL.speed:
   crouched?gait.walkSpeed*CROUCH.speed:
   runEnabled?gait.runSpeed:gait.walkSpeed;
+ const aheadRise=len>.03&&!waterAt(player.position.x,player.position.z)?
+  groundTopAt(player.position.x+dx*.40,
+   player.position.z+dz*.40)-
+  groundTopAt(player.position.x,player.position.z):0;
+ const gradeEffort=THREE.MathUtils.clamp(aheadRise/.40,-1,1);
+ // Up slopes cost effort; traversable downward slopes are slightly faster.
+ const hillsideSpeed=gradeEffort>0?1-gradeEffort*.28:
+  1-gradeEffort*.07;
  const swimSpeed=runEnabled?2.65:1.85;
  const target=len>.03?(WATER_STATE.mode==='swim'?
-  swimSpeed:walkingSpeed*wadeFactor):0;
+  swimSpeed:walkingSpeed*wadeFactor*hillsideSpeed):0;
  const tx=dx*target,tz=dz*target;
  const dvx=tx-gait.vx,dvz=tz-gait.vz;
  const change=Math.hypot(dvx,dvz);
