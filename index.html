@@ -833,6 +833,174 @@ function buildFieldTower(){
  }
 }
 buildFieldTower();
+// Raised closed cabin in the mountain's grassy upper valley. The four
+// timber posts are visibly separate. The interior remains inaccessible.
+const CABIN={
+ minX:-17,maxX:-7,minZ:-47,maxZ:-39,
+ floorY:11.40,porchMinZ:-39.1,porchMaxZ:-36.8
+};
+function buildMountainCabin(){
+ const c=CABIN,cx=(c.minX+c.maxX)*.5,cz=(c.minZ+c.maxZ)*.5;
+ const timber=mat('#87613e'),siding=mat('#ca9a69'),
+  roofWood=mat('#654e49'),porchPlank=mat('#aa7c50'),
+  darkWindow=mat('#506b71');
+ const underGround=9.95;
+ for(const x of [c.minX+.42,c.maxX-.42])
+  for(const z of [c.minZ+.42,c.maxZ-.42]){
+   box(.35,c.floorY-underGround,.35,timber,x,
+    (c.floorY+underGround)*.5,z);
+  }
+ box(10,.18,8.5,timber,cx,c.floorY-.1,cz);
+ box(10,2.5,8,siding,cx,c.floorY+1.25,cz);
+ // Simple gabled twin-board roof; slanted, not a flat toy cube.
+ const roofA=box(6.4,.22,9,roofWood,cx-2.35,
+  c.floorY+3.18,cz);
+ const roofB=box(6.4,.22,9,roofWood,cx+2.35,
+  c.floorY+3.18,cz);
+ roofA.rotation.z=-.45;roofB.rotation.z=.45;
+ box(1.1,1.3,.044,darkWindow,cx-2.0,c.floorY+1.25,
+  c.maxZ+.03);
+ box(1.1,1.3,.044,darkWindow,cx+2.0,c.floorY+1.25,
+  c.maxZ+.03);
+ box(1.25,2.15,.048,timber,cx,c.floorY+1.08,
+  c.maxZ+.044); // closed exterior door
+ // The accessible porch meets the 1.45-unit ramp exactly.
+ const porchZ=(c.porchMinZ+c.porchMaxZ)*.5;
+ box(10,.18,c.porchMaxZ-c.porchMinZ,porchPlank,
+  cx,c.floorY-.10,porchZ);
+ addWalkable('cabins-raised-porch',c.minX,c.maxX,
+  c.porchMinZ,c.porchMaxZ,c.floorY,'porch');
+ for(const x of [c.minX+.5,c.maxX-.5])
+  for(const z of [c.porchMinZ+.18,c.porchMaxZ-.18])
+   box(.19,c.floorY-underGround,.19,timber,x,
+    (c.floorY+underGround)*.5,z);
+ // Guard only the sides, leaving the ramp entry and closed cabin door clear.
+ for(const x of [c.minX+.08,c.maxX-.08]){
+  box(.10,.11,c.porchMaxZ-c.porchMinZ,roofWood,
+   x,c.floorY+.73,porchZ);
+  addRailCollider(x-.07,x+.07,c.porchMinZ,c.porchMaxZ);
+ }
+}
+// High rustic timber jump-test deck partly over the east lake shoreline.
+// Wooden stairs, rather than a vertical ladder, provide the access.
+const LAKE_PLATFORM={
+ minX:12,maxX:25,minZ:18,maxZ:26,
+ extensionMaxX:28,extensionMinZ:20.1,extensionMaxZ:23.9,
+ topY:4.15,stairsX:3.6,stepWidth:.60,steps:14,
+ stairsMinZ:20.7,stairsMaxZ:23.3
+};
+function buildLakePlatform(){
+ const p=LAKE_PLATFORM,deck=mat('#936b49'),
+  edge=mat('#684c39'),stepMat=mat('#ab8158');
+ const cx=(p.minX+p.maxX)*.5,cz=(p.minZ+p.maxZ)*.5,
+  depth=p.maxZ-p.minZ;
+ box(p.maxX-p.minX,.24,depth,deck,cx,p.topY-.12,cz);
+ box(p.extensionMaxX-p.maxX,.24,
+  p.extensionMaxZ-p.extensionMinZ,deck,
+  (p.maxX+p.extensionMaxX)*.5,p.topY-.12,
+  (p.extensionMinZ+p.extensionMaxZ)*.5);
+ addWalkable('lake-jump-platform',p.minX,p.maxX,
+  p.minZ,p.maxZ,p.topY,'pier');
+ addWalkable('lake-jump-extension',p.maxX,p.extensionMaxX,
+  p.extensionMinZ,p.extensionMaxZ,p.topY,'pier');
+ // Planks and irregular extension suggest a built timber structure.
+ for(let x=p.minX+.25;x<p.extensionMaxX-.15;x+=.56){
+  const z0=x<p.maxX?p.minZ:p.extensionMinZ;
+  const z1=x<p.maxX?p.maxZ:p.extensionMaxZ;
+  box(.51,.023,z1-z0-.12,stepMat,x,p.topY+.014,
+   (z0+z1)*.5);
+ }
+ // Posts continue down to the *actual* underwater bed.
+ for(const x of [p.minX+.4,p.maxX-.45,p.extensionMaxX-.45]){
+  for(const z of [p.minZ+.4,p.maxZ-.4]){
+   if(x>p.maxX&&
+    (z<p.extensionMinZ||z>p.extensionMaxZ))continue;
+   const low=naturalSurfaceY(x,z),height=p.topY-low;
+   if(height>.2)
+    box(.27,height,.27,edge,x,low+height*.5,z);
+  }
+ }
+ const start= p.stairsX;
+ for(let i=0;i<p.steps;i++){
+  const x0=start+i*p.stepWidth,x1=x0+p.stepWidth;
+  const y=TERRAIN.floorTop+(i+1)*STEP_HEIGHT;
+  const centerZ=(p.stairsMinZ+p.stairsMaxZ)*.5;
+  box(p.stepWidth,y-TERRAIN.floorTop,
+   p.stairsMaxZ-p.stairsMinZ,stepMat,(x0+x1)*.5,
+   (y+TERRAIN.floorTop)*.5,centerZ);
+  box(p.stepWidth-.055,.025,p.stairsMaxZ-p.stairsMinZ-.1,
+   deck,(x0+x1)*.5,y+.01,centerZ);
+  addWalkable('pier-step-'+(i+1),x0,x1,
+   p.stairsMinZ,p.stairsMaxZ,y,'stairs');
+ }
+ // Protective railings on shore-facing edges only. The long lake side
+ // stays OPEN for a future physical jump mechanic.
+ for(const z of [p.minZ,p.maxZ]){
+  for(const [x0,x1] of [[p.minX,p.maxX]]){
+   box(x1-x0,.11,.13,edge,(x0+x1)*.5,p.topY+.76,z);
+   addRailCollider(x0,x1,z-.06,z+.06);
+  }
+ }
+ for(const [z0,z1] of [[p.minZ,p.stairsMinZ-.16],
+  [p.stairsMaxZ+.16,p.maxZ]]){
+  box(.13,.11,z1-z0,edge,p.minX,p.topY+.76,(z0+z1)*.5);
+  addRailCollider(p.minX-.06,p.minX+.06,z0,z1);
+ }
+}
+buildMountainCabin();
+buildLakePlatform();
+// A real terrain-following path, with each segment tessellated onto the
+// mountain, rather than a flat decoration floating above the hillside.
+function groundRibbon(points,width,material){
+ const verts=[];
+ for(let i=0;i<points.length-1;i++){
+  const a=points[i],b=points[i+1],
+   dx=b[0]-a[0],dz=b[1]-a[1],length=Math.hypot(dx,dz),
+   nx=-dz/length,nz=dx/length,count=Math.ceil(length/.65);
+  for(let j=0;j<count;j++){
+   const quad=[];
+   for(const t of [j/count,(j+1)/count]){
+    const cx=THREE.MathUtils.lerp(a[0],b[0],t),
+     cz=THREE.MathUtils.lerp(a[1],b[1],t);
+    for(const side of [-1,1]){
+     const x=cx+nx*width*.5*side,z=cz+nz*width*.5*side;
+     quad.push([x,naturalSurfaceY(x,z)+.035,z]);
+    }
+   }
+   for(const point of [quad[0],quad[1],quad[2],
+    quad[1],quad[3],quad[2]])verts.push(...point);
+  }
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',
+  new THREE.Float32BufferAttribute(verts,3));
+ geometry.computeVertexNormals();
+ const mesh=new THREE.Mesh(geometry,material);
+ mesh.receiveShadow=true;mesh.material.side=THREE.DoubleSide;
+ scene.add(mesh);return mesh;
+}
+const MOUNTAIN_PATH=[
+ [-14,-36],[-14,-31],[-14,-25],[-14,-17],
+ [-21,-11],[-30,0],[-42,11],[-53,27]
+];
+const trailMat=new THREE.MeshStandardMaterial({
+ color:'#a99b7d',roughness:1,side:THREE.DoubleSide
+});
+groundRibbon(MOUNTAIN_PATH,2.35,trailMat);
+// Flat lajas mark both sides of the 30° route; no solid invisible blocks.
+const flagstoneMat=mat('#a0a09a');
+for(let i=0;i<=20;i++){
+ const z=-35+i*.95;
+ for(const x of [-15.42,-12.58]){
+  const d=.10*Math.sin(i*1.8+x);
+  const rock=box(.39,.10,.58,flagstoneMat,x+d,
+   naturalSurfaceY(x+d,z)+.038,z);
+  rock.rotation.y=i*.47;
+ }
+}
+// Short approach trail from the lowland camp toward the lake stairs.
+groundRibbon([[0,7],[4,15],[5,22],[8,22]],1.45,trailMat);
+
 // The same coordinates drive vegetation and its collision proxies.
 const FIELD_TREE_POSITIONS=[
  [-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15],
