@@ -13,7 +13,15 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.17.0 — November 8, 2026
+## Current version: 0.18.0 — November 8, 2026
+- **True prone/chest-to-ground military crawl instead of a high/bear crawl:** the pelvis descends much farther and the rigid but shared juvenile torso rotates to approximately horizontal, keeping ribcage/sternum close to the level grass/stone terrain. The head counter-rotates so the face remains raised toward travel, not buried in the floor.
+- **Extended legs trailing the body:** both ankles target positions nearly a full leg length behind the low pelvis, creating a stretched-out silhouette. Toes point backward with a shallow downward pitch, and each leg performs a small opposite-phase dragging/pushing pulse rather than lifting its knees high in a quadruped gait. The foot targets follow the pelvis as it travels, avoiding impossible rooted-toe overextension.
+- **Alternating palm/forearm propulsion:** hands remain planted during their support phase and advance through low, short swing arcs while the opposite leg provides the counter-pulse. Arm IK uses a low elbow pole to bend elbows beside/near the floor rather than supporting the torso in a high bear crawl.
+- **Physical-height checks:** with grass and paving top at Y = -0.05, representative resting pose calculations place the sternum bottom at about -0.038 (roughly 1.2 cm above the floor), head bottom at +0.001, and rear knee bottoms about -0.045 to -0.014, with both ankles inside the rig's reach. These are geometric checks only, not a guarantee of no mesh clipping at every angle or in motion.
+- **Controls and other states unchanged:** hold C for ~0.52s to crawl; tap C while crawling to return to the tactical crouch; another tap stands. A/B, walking, running, jumping outside crawl, Agility XP, guardian quiz, flat pavement and disabled falls remain as before. Crawl speed is further reduced to 20% of normal walking speed.
+- **Device QA:** the new near-ground body posture must be examined on Android from multiple camera zoom levels; verify that ribs, palms, shins, shoes and head do not clip terrain, and that alternating pull/push motions are visible, especially at crawl start/stop and turns. This is procedural skeletal animation, not a fully physically simulated rigid-body crawl.
+
+## Previous version: 0.17.0 — November 8, 2026
 - **New unarmed low military crawl:** a distinct procedural crawl locomotion state, not a stretched crouch animation. The pelvis and chest descend toward the ground, the torso pitches forward, and the hands and bent knees/legs alternate in diagonally coordinated support/swing pairs.
 - **Distance-driven contacts:** each hand and foot has a world-anchored planted position and a lifted, interpolated swing phase. Opposite arms and legs share a movement phase. The cycle advances with real courtyard distance traveled, rather than an in-place timer; idle limbs rest against the ground. This is a kinematic simulation, **not** force-driven rigid-body locomotion.
 - **Control C:** short tap toggles crouch/stand, while holding **C** for about 0.52 seconds toggles low crawl. From crawl, either tap or hold C rises back to tactical crouch; another tap stands. Supported via Android pointer capture and keyboard C key holds (Escape still cancels dialogs). A/B are unchanged, but B run/jump is disabled while crawling.
@@ -113,6 +121,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.18.0 (2026-11-08):** prone chest-to-ground military crawl replaces the raised quadruped gait; ground-near sternum, low hips, extended trailing legs, low elbow IK and sliding toe push-offs.
 - **0.17.0 (2026-11-08):** low military crawl with paired opposite arm/leg stepping, grounded hand/ankle targets and long-press C controls on touch and keyboard.
 - **0.16.1 (2026-11-08):** forward-leaning tactical torso, horizon-oriented head, two-bone arm IK, right hand follows lead knee at crouch rest and left hand balances.
 - **0.16.0 (2026-11-08):** deeper asymmetric unarmed tactical crouch: right foot forward, left knee touching ground when stopped, shuffled foot transitions and short low steps.
@@ -139,7 +148,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.17.1, feature 0.18.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.18.1, feature 0.19.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
