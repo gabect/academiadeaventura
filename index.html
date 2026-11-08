@@ -2274,7 +2274,12 @@ for(const obj of scene.children){
  });
 }
 function followPlayerCamera(dt){
- // Keep the camera angle immutable while following the avatar.
+ // Look stays strictly north-up; only an explicit view-toggle changes pitch.
+ cameraPitch=THREE.MathUtils.damp(cameraPitch,
+  rollingHorizon?CAMERA_PITCH_ROLLING:CAMERA_PITCH_DIOrama,3.8,dt);
+ CURVED_HORIZON.focus.value.set(player.position.x,player.position.z);
+ CURVED_HORIZON.amount.value=THREE.MathUtils.damp(
+  CURVED_HORIZON.amount.value,rollingHorizon?.0135:0,4.0,dt);
  const ground=groundTopAt(player.position.x,player.position.z);
  const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
  // Gentle look-ahead in the walking direction reveals the upcoming terrain.
@@ -2283,10 +2288,11 @@ function followPlayerCamera(dt){
   THREE.MathUtils.clamp(LOCOMOTION.vx*.17,-.60,.60);
  const leadZ=LADDER_STATE.active?0:
   THREE.MathUtils.clamp(LOCOMOTION.vz*.17,-.60,.60);
+ const farLook=rollingHorizon?-3.2:0;
  cameraTarget.set(player.position.x+leadX,
   LADDER_STATE.active?player.position.y+height:
    WATER_STATE.mode==='swim'?(WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.55:ground+height,
-  player.position.z+leadZ);
+  player.position.z+leadZ+farLook);
  // More distant camera and narrower FOV achieve the miniature diorama view.
  // No abrupt zoom when climbing: keep the same base distance in all states.
  const distance=18.0/cameraZoom;
@@ -2308,6 +2314,7 @@ function followPlayerCamera(dt){
   cameraLookAt.lerp(cameraTarget,1-Math.exp(-6*dt));
  }
  camera.lookAt(cameraLookAt);
+ skyDome.position.copy(camera.position);
  // In this much larger world, follow the avatar with the light's local
  // shadow region. The visual camera heading/pitch remain unchanged.
  sun.position.set(player.position.x-16,ground+30,player.position.z+17);
@@ -3256,7 +3263,7 @@ const curvedDepthMaterial=new THREE.MeshDepthMaterial({
 });
 bendBuiltInMaterial(curvedDepthMaterial);
 scene.traverse(node=>{
- if(!node.isMesh||node===skyDome)return;
+ if(!node.isMesh)return; // Sky gets created after this traversal.
  const mats=Array.isArray(node.material)?node.material:[node.material];
  for(const material of mats)bendBuiltInMaterial(material);
  if(node.castShadow)node.customDepthMaterial=curvedDepthMaterial;
