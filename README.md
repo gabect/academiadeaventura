@@ -13,7 +13,12 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.27.0 — November 8, 2026
+## Current version: 0.27.1 — November 8, 2026
+- **Fixed-angle camera correction:** keep the v0.27.0 semi-isometric camera at exactly the same 225° heading and ~54° elevation, but remove ALL player-controlled yaw/pitch rotation: single-finger touch drag, mouse drag, and keyboard arrows cannot move the camera orientation. Player movement and ladder climbing likewise never rotate the view.
+- **Retained functions:** camera still smoothly follows the avatar, remains in perspective, handles architecture occlusions and allows zoom through +/- buttons, mouse wheel or two-finger pinch. Undo button/Ctrl+Z now undoes zoom only; the on-screen hint reads "Fixed view."
+- **Scope:** camera-input behavior and related HUD text only; no changes to world, avatar, ladder, animation, collisions, saved progress, XP, or other gameplay controls. Visual QA on Android remains outstanding.
+
+## Previous version: 0.27.0 — November 8, 2026
 - **Camera-only change:** elevated, diagonal, semi-isometric view inspired by the toy-diorama framing of *The Legend of Zelda: Link's Awakening* (Nintendo Switch), while retaining the Three.js perspective camera. Initial elevation is ~54° above the horizontal plane; starting camera heading is 225° and the field of view narrows from 58° to 48°.
 - **Stable framing:** the camera follows the player position smoothly but does not automatically orbit with avatar turns or ladder use. Existing drag, arrow orbit, pinch/+/− zoom, camera undo and obstruction avoidance remain usable; elevation can still be adjusted manually (~27–70°).
 - **Scope:** no changes to the game world, ladder geometry, climbing, locomotion, collision, interactions, XP or saved progress. This is a first camera framing pass; visual QA on Android remains necessary.
@@ -218,6 +223,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.27.1 (2026-11-08):** lock the semi-isometric camera's heading/elevation, remove gesture and keyboard orbit, retain smooth tracking and all zoom controls, and repurpose undo for zoom only.
 - **0.27.0 (2026-11-08):** semi-isometric elevated diagonal perspective with stable follow, manual orbit, existing zoom/undo and camera collision. Gameplay unchanged.
 - **0.26.0 (2026-11-08):** short upper lip push-off, ledge handholds, first-foot backward descent with staggered IK, clear top rung transfer, no crossbar traversal and safe C cancellation.
 - **0.25.0 (2026-11-08):** permanent vertical north-wall ladder with wall brackets, constant-Z climb/IK and solid rail/rung collisions; top/bottom safe dismounts and front-only A/E interaction.
