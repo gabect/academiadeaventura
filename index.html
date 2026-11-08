@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.21.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps to the wooden balcony on the right.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.21.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.22.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps to the wooden balcony on the right.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.22.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.21.0';let pendingBuild=null;
+const BUILD='0.22.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -174,6 +174,13 @@ const BALCONY={
  stairsMinX:4.70,stairsMinZ:-4.80,stairsMaxZ:-2.20,
  stepDepth:.60,steps:4
 };
+const LADDER={
+ bottomX:10.98,topX:10.15,z:-3.50,
+ bottomY:TERRAIN.floorTop,deckY:TERRAIN.floorTop+STEP_HEIGHT*4,
+ railTopY:TERRAIN.floorTop+STEP_HEIGHT*4+.88,
+ width:.68,rungSpacing:.17,climbSpeed:.59,
+ bottomExitX:11.10,topExitX:9.50
+};
 const BALCONY_RAIL_COLLIDERS=[];
 const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
  BALCONY_EDGE=mat('#593a29'),STAIR_STONE=mat('#b7b4a5'),
@@ -259,7 +266,10 @@ function buildBalconyAndStoneSteps(){
  for(const x of [b.xMin,b.xMax])for(const z of [b.zMin,b.zMax])post(x,z);
  for(const z of [b.zMin,b.zMax])post(deckCenterX,z);
  railX(b.xMin,b.xMax,b.zMin);railX(b.xMin,b.xMax,b.zMax);
- railZ(b.xMax,b.zMin,b.zMax);
+ const gap=.82;
+ railZ(b.xMax,b.zMin,LADDER.z-gap);
+ railZ(b.xMax,LADDER.z+gap,b.zMax);
+ post(b.xMax,LADDER.z-gap);post(b.xMax,LADDER.z+gap);
  for(const [lo,hi] of [[b.zMin,b.stairsMinZ],
                        [b.stairsMaxZ,b.zMax]]){
   post(b.xMin,lo===b.zMin?hi:lo);
@@ -283,6 +293,25 @@ function buildBalconyAndStoneSteps(){
  }
 }
 buildBalconyAndStoneSteps();
+function ladderXAtHeight(y){
+ return LADDER.bottomX+(LADDER.topX-LADDER.bottomX)*
+  (y-LADDER.bottomY)/(LADDER.deckY-LADDER.bottomY);
+}
+function buildLeaningLadder(){
+ const group=new THREE.Group();
+ group.userData.ignoreCameraRay=true;
+ scene.add(group);
+ const left=LADDER.z-LADDER.width*.5,right=LADDER.z+LADDER.width*.5;
+ const baseY=LADDER.bottomY+.06,topY=LADDER.railTopY;
+ const side=mat('#825735'),rungMat=mat('#b88a4d');
+ for(const z of [left,right])
+  rod(group,[ladderXAtHeight(baseY),baseY,z],
+   [ladderXAtHeight(topY),topY,z],.052,side);
+ for(let y=LADDER.bottomY+.18;y<LADDER.railTopY-.11;y+=LADDER.rungSpacing)
+  rod(group,[ladderXAtHeight(y),y,left],[ladderXAtHeight(y),y,right],
+   .044,rungMat);
+}
+buildLeaningLadder();
 for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
 for(let z=-10;z<=10;z+=2.1){box(2,2,1.5,wall,-13,1,z);box(2,2,1.5,wall,13,1,z)}for(let x=-11;x<=11;x+=2.1){box(1.5,2,2,wall,x,1,-13);box(1.5,2,2,wall,x,1,13)}
 function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864');cylinder(0,1.65,3,leaves,x,3.3,z,scene,7);cylinder(0,1.2,2.2,leaves,x,4.6,z,scene,7)}
