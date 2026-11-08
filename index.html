@@ -347,15 +347,13 @@ function addRailCollider(minX,maxX,minZ,maxZ){
 // All natural hills use the same smooth analytical height model as terrain
 // rendering, collision, avatar body lift, and grounded IK. Vary footprint,
 // rise and grade without creating separate hand-tuned movement mechanics.
+// Small ground undulations accompany the giant continuous mountainside.
+// The old isolated test hills are preserved in the historical map.
 const FIELD_HILLS=[
- {id:'gentle-west',x:-17,z:-3,radius:6.0,height:1.35},
- {id:'broad-west',x:-21,z:-19,radius:7.1,height:3.05},
- {id:'south-swell',x:0,z:21,radius:6.0,height:1.85},
- {id:'eastern-hill',x:17,z:-21,radius:6.0,height:3.65},
- {id:'rocky-steep',x:23,z:-12,radius:4.7,height:4.10},
- {id:'little-rise',x:-2,z:-23,radius:4.0,height:.75},
- {id:'northwest-meadow',x:-22,z:19,radius:5.3,height:1.32},
- {id:'far-east-hummock',x:23,z:21,radius:4.5,height:1.15}
+ {id:'southwest-meadow',x:-48,z:35,radius:10,height:1.4},
+ {id:'central-knoll',x:-17,z:31,radius:8,height:1.1},
+ {id:'low-woodland',x:-53,z:-3,radius:9,height:1.6},
+ {id:'southern-bank',x:-13,z:46,radius:7,height:.9}
 ];
 const MAX_WALKABLE_GRADE=1; // tan(45°): anything steeper is impassable.
 const MAX_WALKABLE_ANGLE=Math.PI/4;
@@ -368,11 +366,11 @@ function naturalHillHeightAt(x,z){
   const value=hill.height*t*t*(3-2*t);
   elevation=Math.max(elevation,value);
  }
- return elevation;
+ return mountainBaseHeightAt(x,z)+elevation;
 }
 function naturalSurfaceY(x,z){
  const water=waterAt(x,z);
- return TERRAIN.floorTop+naturalHillHeightAt(x,z)-(water?water.depth:0);
+ return water?water.floorY:TERRAIN.floorTop+naturalHillHeightAt(x,z);
 }
 function naturalGradeAt(x,z){
  const epsilon=.07;
@@ -384,15 +382,19 @@ function naturalGradeAt(x,z){
 }
 // Ramp geometry, normal, clearance and foot placement will all use these
 // shared definitions; the original stairs keep their discrete 0.30 risers.
+// Existing artificial slope tests return as a distinct lowland station.
 const FIELD_RAMPS=[
- {id:'wood-16',kind:'wood',x:-6,z:-17,dx:0,dz:-1,
-  length:5.0,width:2.7,rise:1.45,landing:1.2},
- {id:'stone-33',kind:'stone',x:0,z:-16,dx:0,dz:-1,
+ {id:'wood-16',kind:'wood',x:-30,z:31,dx:0,dz:-1,
+  length:5,width:2.7,rise:1.45,landing:1.2},
+ {id:'stone-33',kind:'stone',x:-24,z:31,dx:0,dz:-1,
   length:4.7,width:2.7,rise:3.05,landing:1.3},
- {id:'wood-45',kind:'wood',x:7,z:-15,dx:0,dz:-1,
+ {id:'wood-45',kind:'wood',x:-18,z:31,dx:0,dz:-1,
   length:3.2,width:2.7,rise:3.2,landing:1.3},
- {id:'stone-53',kind:'stone',x:-11,z:-18,dx:0,dz:-1,
-  length:3.25,width:2.7,rise:4.25,landing:1.3}
+ {id:'stone-53',kind:'stone',x:-12,z:31,dx:0,dz:-1,
+  length:3.25,width:2.7,rise:4.25,landing:1.3},
+ // Cabin access is a shared ramp on the upper valley rather than a teleport.
+ {id:'cabin-entry',kind:'wood',x:-12,z:-33,dx:0,dz:-1,
+  length:4,width:2.5,rise:1.45,landing:1.3,baseY:9.95}
 ];
 function rampSampleAt(ramp,x,z){
  const offsetX=x-ramp.x,offsetZ=z-ramp.z;
@@ -401,7 +403,7 @@ function rampSampleAt(ramp,x,z){
  if(Math.abs(lateral)>ramp.width*.5||
     along<0||along>ramp.length+ramp.landing)return null;
  return {ramp,along,lateral,
-  topY:TERRAIN.floorTop+
+  topY:(ramp.baseY??TERRAIN.floorTop)+
    ramp.rise*Math.min(along/ramp.length,1),
   grade:along<ramp.length?ramp.rise/ramp.length:0};
 }
@@ -415,8 +417,8 @@ function rampAt(x,z){
 const FLOOR_DECAL_OFFSET=.002;
 // Three times the usable area of v0.30.0, with open grassy field and
 // continuous hill and underwater elevations. No arena perimeter walls.
-const TERRAIN_HALF_SIZE=35;
-const terrainResolution=224;
+const TERRAIN_HALF_SIZE=WORLD.half;
+const terrainResolution=288;
 const terrainGeometry=new THREE.PlaneGeometry(
  TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
  terrainResolution,terrainResolution);
@@ -429,13 +431,20 @@ for(let i=0;i<groundPositions.count;i++){
  const x=groundPositions.getX(i),z=-groundPositions.getY(i);
  const water=waterAt(x,z),depth=water?water.depth:0;
  const hill=naturalHillHeightAt(x,z);
- groundPositions.setZ(i,hill-depth);
+ const actualHeight=water?water.floorY-TERRAIN.floorTop:hill;
+ groundPositions.setZ(i,actualHeight);
  terrainShade.copy(dryGrass).lerp(wetBed,
-  THREE.MathUtils.clamp(depth/1.8,0,1));
- if(hill>0){
-  const hillColor=new THREE.Color('#8aa579');
-  terrainShade.lerp(hillColor,THREE.MathUtils.clamp(hill/4,0,.7));
+  THREE.MathUtils.clamp(depth/2.8,0,1));
+ if(hill>.3){
+  const summitGrass=new THREE.Color('#70966e');
+  const coldStone=new THREE.Color('#888d89');
+  const profile=mountainFaceAngle(x);
+  const rocky=z<WORLD.faceZ&&hill>2&&
+   (profile>=49||z<WORLD.crestZ||hill>13);
+  terrainShade.lerp(rocky?coldStone:summitGrass,
+   THREE.MathUtils.clamp(hill/7,.1,.88));
  }
+
  groundColors.push(terrainShade.r,terrainShade.g,terrainShade.b);
 }
 terrainGeometry.setAttribute('color',
@@ -472,7 +481,7 @@ function addWaterTriangle(a,b,c){
    waterTriangles.push(v.x,WATER_SURFACE_Y,v.z);
  }
 }
-const waterStep=.24;
+const waterStep=.60;
 const waterBounds=WATER_RENDER_BOUNDS;
 const xCount=Math.ceil((waterBounds.maxX-waterBounds.minX)/waterStep);
 const zCount=Math.ceil((waterBounds.maxZ-waterBounds.minZ)/waterStep);
@@ -493,6 +502,67 @@ waterGeometry.computeVertexNormals();
 const waterSurface=new THREE.Mesh(waterGeometry,waterMat);
 waterSurface.renderOrder=2;scene.add(waterSurface);
 WATER_VISUALS.push({body:WATER_BODIES[1],waterPlane:waterSurface});
+// High headwater ribbon follows the mountain's actual height, not the
+// low lake surface; it visibly reaches the lip of the vertical waterfall.
+const upperWaterPositions=[];
+for(let i=0;i<UPPER_RIVER_NODES.length-1;i++){
+ const a=UPPER_RIVER_NODES[i],b=UPPER_RIVER_NODES[i+1];
+ const span=Math.hypot(b.x-a.x,b.z-a.z);
+ const nx=-(b.z-a.z)/span,nz=(b.x-a.x)/span;
+ const pieces=Math.ceil(span/.36);
+ for(let j=0;j<pieces;j++){
+  const quad=[];
+  for(const t of [j/pieces,(j+1)/pieces]){
+   const cx=THREE.MathUtils.lerp(a.x,b.x,t);
+   const cz=THREE.MathUtils.lerp(a.z,b.z,t);
+   const width=THREE.MathUtils.lerp(a.width,b.width,t);
+   for(const side of [-1,1]){
+    const x=cx+nx*width*side*.99,z=cz+nz*width*side*.99;
+    quad.push([x,mountainBaseHeightAt(x,z)+TERRAIN.floorTop+.08,z]);
+   }
+  }
+  for(const q of [quad[0],quad[2],quad[1],quad[1],quad[2],quad[3]])
+   upperWaterPositions.push(...q);
+ }
+}
+const upperWaterGeometry=new THREE.BufferGeometry();
+upperWaterGeometry.setAttribute('position',
+ new THREE.Float32BufferAttribute(upperWaterPositions,3));
+upperWaterGeometry.computeVertexNormals();
+const upperWaterSurface=new THREE.Mesh(upperWaterGeometry,waterMat.clone());
+upperWaterSurface.renderOrder=2;scene.add(upperWaterSurface);
+WATER_VISUALS.push({body:{x:34,kind:'upper-river'},waterPlane:upperWaterSurface});
+// A continuous vertical semi-transparent waterfall with animated foam.
+const waterfallMat=new THREE.MeshStandardMaterial({
+ color:'#c4eef0',side:THREE.DoubleSide,transparent:true,
+ opacity:.81,depthWrite:false,roughness:.22,metalness:.02
+});
+const FALL_CREST={x:34,z:-17.1,width:6.5,top:WORLD.plateauHeight};
+const waterfallPlane=new THREE.Mesh(
+ new THREE.PlaneGeometry(FALL_CREST.width,FALL_CREST.top+.7,14,28),
+ waterfallMat);
+waterfallPlane.position.set(FALL_CREST.x,FALL_CREST.top*.5,
+ FALL_CREST.z);
+waterfallPlane.renderOrder=5;scene.add(waterfallPlane);
+const waterfallSpray=[];
+const sprayMaterial=new THREE.MeshBasicMaterial({
+ color:'#e3fbf4',transparent:true,opacity:.52,
+ depthWrite:false,side:THREE.DoubleSide
+});
+for(let i=0;i<18;i++){
+ const strip=new THREE.Mesh(new THREE.PlaneGeometry(.055,.75),
+  sprayMaterial.clone());
+ strip.position.set(FALL_CREST.x-2.9+i*.34,
+  FALL_CREST.top*.45,FALL_CREST.z+.14);
+ strip.renderOrder=6;scene.add(strip);waterfallSpray.push(strip);
+}
+const baseMist=new THREE.Mesh(new THREE.RingGeometry(1.6,3.2,28),
+ new THREE.MeshBasicMaterial({color:'#e9f9f3',
+  side:THREE.DoubleSide,transparent:true,opacity:.36,depthWrite:false}));
+baseMist.rotation.x=-Math.PI/2;
+baseMist.position.set(FALL_CREST.x,.095,FALL_CREST.z+2.0);
+baseMist.scale.set(1.1,.56,1);
+baseMist.renderOrder=6;scene.add(baseMist);
 const swimRipple=new THREE.Mesh(new THREE.RingGeometry(.23,.29,32),
  new THREE.MeshBasicMaterial({
   color:'#c8f0e9',transparent:true,opacity:.55,depthWrite:false,
@@ -1762,8 +1832,8 @@ function updateWaterVisual(dt){
  if(wet.mode!=='swim')wet.cycle+=dt*.4;
  swimRipple.visible=wet.mode!=='dry'&&wet.water!==null;
  if(swimRipple.visible){
-  swimRipple.position.set(player.position.x,WATER_SURFACE_Y+.025,
-   player.position.z);
+  swimRipple.position.set(player.position.x,
+   (wet.water?.surfaceY??WATER_SURFACE_Y)+.025,player.position.z);
   const radius=(.75+.12*Math.sin(wet.cycle*2))*
    (wet.mode==='swim'?1.5:1);
   swimRipple.scale.set(radius,radius,1);
@@ -1773,6 +1843,14 @@ function updateWaterVisual(dt){
   water.waterPlane.material.opacity=.69+
    .035*Math.sin(wet.cycle+water.body.x*.3);
  streamTime+=dt;
+ for(let i=0;i<waterfallSpray.length;i++){
+  const stripe=waterfallSpray[i];
+  stripe.position.y=FALL_CREST.top*.5+
+   Math.sin(streamTime*3.1+i*.7)*.18;
+  stripe.scale.y=1+.28*Math.sin(streamTime*4.2+i*1.3);
+  stripe.material.opacity=.22+.2*Math.sin(streamTime*2+i*.8)**2;
+ }
+ baseMist.material.opacity=.23+.09*Math.sin(streamTime*1.8)**2;
  for(let i=0;i<streamFoam.length;i++){
   const mark=streamFoam[i];
   const distance=streamTime*(1.0+(i%3)*.24)+
@@ -1899,7 +1977,7 @@ function followPlayerCamera(dt){
   THREE.MathUtils.clamp(LOCOMOTION.vz*.17,-.60,.60);
  cameraTarget.set(player.position.x+leadX,
   LADDER_STATE.active?player.position.y+height:
-   WATER_STATE.mode==='swim'?WATER_SURFACE_Y+.55:ground+height,
+   WATER_STATE.mode==='swim'?(WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.55:ground+height,
   player.position.z+leadZ);
  // More distant camera and narrower FOV achieve the miniature diorama view.
  // No abrupt zoom when climbing: keep the same base distance in all states.
@@ -1931,7 +2009,7 @@ const obstacles=[
   {x:guardian.position.x,z:guardian.position.z,r:.76},
   // No outside castle walls or corner obstructions.
 ];
-const BOUND=11.55*Math.sqrt(6); // Exactly 3× v0.30.0 playable area.
+const BOUND=WORLD.limit; // Broad main map, no perimeter walls.
 const BODY_CLEARANCE={
  stand:{radius:.40,height:2.13,points:[0]},
  crouch:{radius:.38,height:1.72,points:[0]},
