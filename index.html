@@ -30,12 +30,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.17.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.17.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.18.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.18.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.17.0';let pendingBuild=null;
+const BUILD='0.18.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -304,7 +304,7 @@ const ARM_IK={
  kneeWorld:new THREE.Vector3(),kneeLocal:new THREE.Vector3(),
  handGoal:new THREE.Vector3()
 };
-function aimArmAt(arm,target,side,weight){
+function aimArmAt(arm,target,side,weight,crawlWeight=0){
  const ik=ARM_IK,upperLength=ARM.upper,lowerLength=ARM.lower;
  ik.to.set(
   target.x-arm.shoulder.position.x,
@@ -323,7 +323,9 @@ function aimArmAt(arm,target,side,weight){
  );
  const alpha=Math.acos(cosine);
  // Keep both elbows toward the outside/back, never folded through the torso.
- ik.pole.set(side*.72,-.10,-.30);
+ // In prone crawl, elbows bend toward the floor beside the ribcage.
+ // In tactical crouch retain the original outward/back elbow pole.
+ ik.pole.set(side*.72,-.10,THREE.MathUtils.lerp(-.30,.26,crawlWeight));
  ik.pole.addScaledVector(ik.direction,-ik.pole.dot(ik.direction));
  if(ik.pole.lengthSq()<1e-5)ik.pole.set(side,0,0);
  ik.pole.normalize();
@@ -361,9 +363,15 @@ const JUMP={active:false,height:0,velocity:0};
 let crouched=false,crawling=false;
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
 // support and swing phases. Hands and ankles have ground-anchored contacts.
-const CRAWL={speed:.28,step:.32,stance:.66,drop:.44,torsoPitch:1.43,
- footBack:-.32,handAhead:.95,handSide:.41,
- cycle:0,active:false,feet:[],hands:[]};
+// Chest-to-ground / prone military crawl. The low hip and almost-horizontal
+// spine are calibrated to the existing juvenile skeleton and shared ribcage.
+// Straight back legs drag their toes; planted hands alternately pull the body.
+const CRAWL={
+ speed:.20,step:.24,stance:.66,drop:.72,torsoPitch:1.56,
+ footBack:-.825,footPulse:.010,handAhead:1.12,handSide:.32,
+ palmHeight:.12,handLift:.038,footLift:.008,
+ cycle:0,active:false,feet:[],hands:[]
+};
 function toggleCrawl(){
  if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
  crawling=!crawling;
@@ -373,7 +381,7 @@ function toggleCrawl(){
  LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
  updateButtonHints();
  document.getElementById('message').textContent=crawling?
-  'Low crawl — move with the joystick. Tap or hold C to rise.':
+  'Prone crawl — chest to ground. Move slowly; C to rise.':
   'Back to tactical crouch.';
 }
 function startJump(){
@@ -577,9 +585,9 @@ function poseGroundedCharacter(character,travel,dt){
   if(gait.strainSeconds>.19+.065*(balanceLevel-1))beginBalanceRecovery('Steady yourself',gait.strain);
  }else gait.strainSeconds=0;
 }
-// CRAWLING: low abdomen, weight on hands and flexed knees. The base
-// animation runs first, then we blend a distinct set of world-space support
-// points onto the SAME articulated skeleton (no duplicate bones).
+// PRONE CRAWLING: chest/abdomen almost against ground, hips low, long legs
+// behind the pelvis. Alternating palms anchor/pull while opposite toes drag
+// and push. Blend onto the same rig, keeping the crouch transition intact.
 function crawlWorldPoint(character,lateral,forward,soleHeight){
  const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
  const x=character.position.x+c*lateral+si*forward;
@@ -590,7 +598,7 @@ function crawlContact(character,index,isHand){
  const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
  const forward=isHand?CRAWL.handAhead:CRAWL.footBack;
  const p=crawlWorldPoint(character,lateral,forward,
-  isHand?.15:TERRAIN.soleClearance);
+  isHand?CRAWL.palmHeight:TERRAIN.soleClearance);
  return {position:p.clone(),anchor:p.clone(),from:p.clone(),
   contact:true,heading:character.rotation.y};
 }
@@ -600,28 +608,42 @@ function initializeCrawl(character){
  CRAWL.hands=[0,1].map(i=>crawlContact(character,i,true));
 }
 function stepCrawlContact(character,item,index,isHand,moving,step){
+ // Right hand and left leg alternate with left hand and right leg.
  const t=((CRAWL.cycle+(isHand?(1-index):index)*.5)%1+1)%1;
- const contact=!moving||t<CRAWL.stance;
  const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
- const height=isHand?.15:TERRAIN.soleClearance;
+ const height=isHand?CRAWL.palmHeight:TERRAIN.soleClearance;
+ if(!isHand){
+  // Low crawl legs do NOT perform a high quadruped knee step. The toes
+  // scrape/push gently while remaining almost fully extended behind the hips.
+  // Track the moving pelvis so an anchored toe cannot stretch the leg beyond
+  // its physical length and pull the knee below the terrain.
+  const pulse=moving?Math.max(0,Math.sin(t*Math.PI*2)):0;
+  const target=crawlWorldPoint(character,lateral,
+   CRAWL.footBack-CRAWL.footPulse*pulse,height);
+  item.position.copy(target);
+  item.position.y+=moving?CRAWL.footLift*pulse:0;
+  item.anchor.copy(item.position);
+  item.contact=true;
+  return;
+ }
+ const contact=!moving||t<CRAWL.stance;
  if(contact&&!item.contact){
   item.anchor.copy(item.position);
   item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
  }else if(!contact&&item.contact)item.from.copy(item.position);
  item.contact=contact;
  if(contact){
+  // A planted palm stays fixed horizontally while the torso advances over it.
   item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
   item.position.copy(item.anchor);
  }else{
   const q=(t-CRAWL.stance)/(1-CRAWL.stance);
   const ease=q*q*(3-2*q);
-  // Forward hand reaches, opposite knee/foot retracts and pushes off.
-  const forward=(isHand?CRAWL.handAhead:CRAWL.footBack)+
-   CRAWL.stance*2*step*.38+(1-t)*2*step;
-  const landing=crawlWorldPoint(character,lateral,forward,height);
+  const landing=crawlWorldPoint(character,lateral,
+   CRAWL.handAhead+CRAWL.stance*step*.28+(1-t)*step,height);
   item.position.lerpVectors(item.from,landing,ease);
   item.position.y=THREE.MathUtils.lerp(item.from.y,landing.y,ease)+
-   Math.sin(Math.PI*q)*(isHand?.10:.07);
+   Math.sin(Math.PI*q)*CRAWL.handLift;
  }
 }
 const CRAWL_HAND_LOCAL=new THREE.Vector3();
@@ -633,14 +655,17 @@ function poseCrawlCharacter(character,travel,dt,moving){
  const floor=groundTopAt(character.position.x,character.position.z);
  const terrainOffset=floor-TERRAIN.floorTop;
  character.position.y=THREE.MathUtils.lerp(
-  character.position.y,terrainOffset-CRAWL.drop,weight);
+  character.position.y,terrainOffset-CRAWL.drop+
+   (moving?Math.sin(CRAWL.cycle*Math.PI*4)*.003:0),weight);
+ // The ribs, sternum and abdomen run nearly parallel to the terrain.
+ // Head remains slightly raised and oriented forward, never face-down.
  rig.torso.rotation.x=THREE.MathUtils.lerp(
   rig.torso.rotation.x,CRAWL.torsoPitch+
-   (moving?Math.sin(CRAWL.cycle*Math.PI*2)*.035:0),weight);
+   (moving?Math.sin(CRAWL.cycle*Math.PI*2)*.012:0),weight);
  rig.torso.rotation.z=THREE.MathUtils.lerp(
-  rig.torso.rotation.z,moving?Math.sin(CRAWL.cycle*Math.PI*2)*.025:0,weight);
+  rig.torso.rotation.z,moving?Math.sin(CRAWL.cycle*Math.PI*2)*.012:0,weight);
  rig.head.rotation.x=THREE.MathUtils.lerp(
-  rig.head.rotation.x,-1.22,weight);
+  rig.head.rotation.x,-1.27,weight);
  const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
  for(let i=0;i<2;i++){
   const foot=CRAWL.feet[i];
@@ -656,7 +681,11 @@ function poseCrawlCharacter(character,travel,dt,moving){
   leg.hip.rotation.x=THREE.MathUtils.lerp(hx,leg.hip.rotation.x,weight);
   leg.hip.rotation.z=THREE.MathUtils.lerp(hz,leg.hip.rotation.z,weight);
   leg.knee.rotation.x=THREE.MathUtils.lerp(kx,leg.knee.rotation.x,weight);
-  leg.ankle.rotation.x=THREE.MathUtils.lerp(ax,leg.ankle.rotation.x,weight);
+  // Turn the shoe back into a near-horizontal trailing-toe orientation.
+  // The ordinary walking ankle angle would point the toes straight upward
+  // when the shin is lying horizontally.
+  const trailingToe=2.80-leg.hip.rotation.x-leg.knee.rotation.x;
+  leg.ankle.rotation.x=THREE.MathUtils.lerp(ax,trailingToe,weight);
  }
  // Update world matrices after bending the torso, before converting the
  // world-planted wrist targets into the shoulder's local coordinate space.
@@ -666,9 +695,9 @@ function poseCrawlCharacter(character,travel,dt,moving){
   stepCrawlContact(character,hand,i,true,moving,CRAWL.step);
   CRAWL_HAND_LOCAL.copy(hand.position);
   rig.torso.worldToLocal(CRAWL_HAND_LOCAL);
-  aimArmAt(rig.arms[i],CRAWL_HAND_LOCAL,i===0?-1:1,weight);
+  aimArmAt(rig.arms[i],CRAWL_HAND_LOCAL,i===0?-1:1,weight,weight);
   rig.arms[i].wrist.rotation.x=THREE.MathUtils.lerp(
-   rig.arms[i].wrist.rotation.x,-.10,weight);
+   rig.arms[i].wrist.rotation.x,-.18,weight);
  }
 }
 // Push-off drives acceleration during foot contact; momentum continues during
