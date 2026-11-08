@@ -5,7 +5,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD or arrow keys to move; E / A to interact; hold Shift to run; Space / B to jump; C to crouch/cancel; R to stand after falling.
+- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; C to crouch/cancel; R to stand after falling.
 - **Touchscreen:** left analog joystick for movement, and three compact contextual buttons at bottom right: **A** = interact / talk; **B** = press and hold to run, tap to jump, or press after a fall to stand up; **C** = cancel an active conversation or toggle crouch when no dialog is open. Hold C is not required. B's quick-tap jump and press-and-hold run are mutually exclusive.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
