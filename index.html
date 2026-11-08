@@ -224,19 +224,71 @@ function mountainFaceAngle(x){
   [4,35],[19,35],[25,89.4],[80,89.4]
  ]);
 }
+// Clear Zelda-like elevation tiers: a low field, an upper grassy plateau,
+// a HIGH western summit mesa, then an inaccessible source cordillera.
+// The broad rock escarpment is impassable except for TWO intentionally
+// sculpted lanes. These are openings in the same physical heightfield.
+const MOUNTAIN_LEVELS={low:0,valley:10,summit:18};
+const PRIMARY_PASS={x:-17.5,halfWidth:5.1,feather:1.6,angle:30};
+const EASTERN_PASS={x:12.6,halfWidth:2.7,feather:1.25,angle:35};
+const SUMMIT_PASS={z:-43,halfWidth:1.55,feather:.85,
+ fromX:-41,toX:-51,height:8};
+const SUMMIT_MESA={x:-61,z:-43,rx:12,rz:10};
+function passageWeight(value,center,halfWidth,feather){
+ const offset=Math.abs(value-center);
+ if(offset<=halfWidth)return 1;
+ return 1-smoothWater((offset-halfWidth)/feather);
+}
+function mountainCliffLipZ(x){
+ // Small notches break the perfectly straight line without hiding it.
+ return WORLD.faceZ + .24*Math.sin(x*.17)+.16*Math.sin(x*.41);
+}
+function summitMesaHeightAt(x,z){
+ const mesa=SUMMIT_MESA;
+ const rx=(x-mesa.x)/mesa.rx,rz=(z-mesa.z)/mesa.rz;
+ const theta=Math.atan2(rz,rx);
+ const radius=Math.hypot(rx,rz)/(1+.025*Math.sin(theta*5));
+ // Only about 1 world-unit of horizontal run across the edge: near-vertical
+ // rock with a genuinely flat GREEN plateau above, not a cone.
+ let elevation=SUMMIT_PASS.height*smoothWater((1-radius)/.105);
+ const corridor=passageWeight(z,SUMMIT_PASS.z,
+  SUMMIT_PASS.halfWidth,SUMMIT_PASS.feather);
+ if(corridor>0&&x>SUMMIT_PASS.fromX-1&&x<SUMMIT_MESA.x+17){
+  // Ascend from x=-41 (valley) to x=-49 (summit) at <=45 degrees.
+  const progress=THREE.MathUtils.clamp(
+   (SUMMIT_PASS.fromX-x)/8,0,1);
+  elevation=THREE.MathUtils.lerp(
+   elevation,SUMMIT_PASS.height*progress,corridor);
+ }
+ return elevation;
+}
 function mountainBaseHeightAt(x,z){
- const grade=Math.tan(mountainFaceAngle(x)*Math.PI/180);
- const run=WORLD.plateauHeight/grade;
- const progress=THREE.MathUtils.clamp((WORLD.faceZ-z)/run,0,1);
- let height=WORLD.plateauHeight*progress;
- // The western high summit slopes at 45° into the upper grassy valley.
- const peakDistance=Math.hypot(x+60,z+43);
- height+=Math.max(0,8-peakDistance)*
-  smoothWater((height-7)/3);
- // The source ridge is intentionally too steep for normal locomotion.
- const north=Math.max(0,-z+WORLD.crestZ);
- const ridgeRise=Math.min(17,north*1.7);
- height+=ridgeRise*(.91+.09*Math.cos(x*.14));
+ const cliffZ=mountainCliffLipZ(x);
+ const wallRise=MOUNTAIN_LEVELS.valley*
+  smoothWater((cliffZ-z)/1.5);
+ const westLane=passageWeight(x,PRIMARY_PASS.x,
+  PRIMARY_PASS.halfWidth,PRIMARY_PASS.feather);
+ const eastLane=passageWeight(x,EASTERN_PASS.x,
+  EASTERN_PASS.halfWidth,EASTERN_PASS.feather);
+ const westRun=MOUNTAIN_LEVELS.valley/
+  Math.tan(PRIMARY_PASS.angle*Math.PI/180);
+ const eastRun=MOUNTAIN_LEVELS.valley/
+  Math.tan(EASTERN_PASS.angle*Math.PI/180);
+ const westElevation=MOUNTAIN_LEVELS.valley*
+  THREE.MathUtils.clamp((cliffZ-z)/westRun,0,1);
+ const eastElevation=MOUNTAIN_LEVELS.valley*
+  THREE.MathUtils.clamp((cliffZ-z)/eastRun,0,1);
+ let height=THREE.MathUtils.lerp(wallRise,westElevation,westLane);
+ height=THREE.MathUtils.lerp(height,eastElevation,eastLane);
+ // A second obvious horizontal terrace is crowned by the western summit.
+ // Suppress the mesa on a low cliff approach, never conjure a floating peak.
+ height+=summitMesaHeightAt(x,z)*
+  smoothWater((height-6.0)/4.0);
+ // The source ridge is still a non-traversable final stone wall.
+ const ridgeProgress=THREE.MathUtils.clamp(
+  (-z+WORLD.crestZ)/2.15,0,1);
+ height+=17*smoothWater(ridgeProgress)*
+  (.93+.07*Math.cos(x*.14));
  return height;
 }
 function lakeRadial(x,z,body){
@@ -437,7 +489,7 @@ const FLOOR_DECAL_OFFSET=.002;
 // Three times the usable area of v0.30.0, with open grassy field and
 // continuous hill and underwater elevations. No arena perimeter walls.
 const TERRAIN_HALF_SIZE=WORLD.half;
-const terrainResolution=288;
+const terrainResolution=320;
 const terrainGeometry=new THREE.PlaneGeometry(
  TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
  terrainResolution,terrainResolution);
@@ -460,8 +512,14 @@ for(let i=0;i<groundPositions.count;i++){
   const coldStone=new THREE.Color('#858b88');
   const paleRock=new THREE.Color('#b5b2a2');
   const profile=mountainFaceAngle(x);
-  const rocky=z<WORLD.faceZ&&hill>2&&
-   (profile>=49||z<WORLD.crestZ||hill>13);
+  // The broad upper valley and western summit are clearly GREEN.
+  // Only steep exposed faces and the impassable cordillera are stone.
+  const slopeZ=Math.abs(mountainBaseHeightAt(x,z-.20)-
+   mountainBaseHeightAt(x,z+.20))/.40;
+  const slopeX=Math.abs(mountainBaseHeightAt(x-.20,z)-
+   mountainBaseHeightAt(x+.20,z))/.40;
+  const rocky=Math.hypot(slopeX,slopeZ)>1.10||
+   (z<WORLD.crestZ&&hill>16);
   terrainShade.lerp(rocky?coldStone:summitGrass,
    THREE.MathUtils.clamp(hill/7,.1,.88));
   // Exposed pale rock at the mountain FOOT is readable from a low camera;
