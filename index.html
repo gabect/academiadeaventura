@@ -30,12 +30,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.16.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.16.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.17.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.17.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.16.1';let pendingBuild=null;
+const BUILD='0.17.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -351,16 +351,31 @@ const CROUCH={
 const LOCOMOTION={
  walkSpeed:3.2,runSpeed:6.0,walkStep:.72,runStep:1.16,
  walkStance:.63,runStance:.42,walkLift:.12,runLift:.29,
- vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,crouchBlend:0,terrainLift:0,
+ vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,crouchBlend:0,crawlBlend:0,terrainLift:0,
  kneelMode:null,kneelTime:0,kneelFrom:[],
  feet:[],strain:0,strainSeconds:0,cooldown:0
 };
 // Shared protective reflexes for all avatars. XP can improve motor control.
 const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
 const JUMP={active:false,height:0,velocity:0};
-let crouched=false;
+let crouched=false,crawling=false;
+// Low military crawl is deliberate: opposite arm/leg pairs alternate their
+// support and swing phases. Hands and ankles have ground-anchored contacts.
+const CRAWL={speed:.28,step:.32,stance:.66,drop:.44,torsoPitch:1.43,
+ footBack:-.32,handAhead:.95,handSide:.41,
+ cycle:0,active:false,feet:[],hands:[]};
+function toggleCrawl(){
+ if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
+ crawling=!crawling;
+ crouched=true; // exiting crawl returns to tactical crouch, not standing.
+ LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
+ updateButtonHints();
+ document.getElementById('message').textContent=crawling?
+  'Low crawl — move with the joystick. Tap or hold C to rise.':
+  'Back to tactical crouch.';
+}
 function startJump(){
- if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched)return;
+ if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched||crawling)return;
  JUMP.active=true;JUMP.height=0;JUMP.velocity=3.1;
 }
 function stepJump(dt){
@@ -391,12 +406,13 @@ function poseGroundedCharacter(character,travel,dt){
  const moving=speed>.035&&travel>.00001;
  gait.moveBlend=THREE.MathUtils.damp(gait.moveBlend,moving?1:0,11,dt);
  gait.crouchBlend=THREE.MathUtils.damp(gait.crouchBlend,crouched?1:0,10,dt);
+ gait.crawlBlend=THREE.MathUtils.damp(gait.crawlBlend,crawling?1:0,9,dt);
  const blend=gait.moveBlend,mix=gait.runBlend,crouch=gait.crouchBlend;
  // When stopping in crouch, reposition the feet in two deliberate, lifted
  // half-steps rather than instantly sliding to a wide split stance.
  // Standing back up likewise brings both feet to neutral before idle resets.
  if(!moving){
-  const wanted=crouched?'kneel':'stand';
+  const wanted=crawling?'crawl':crouched?'kneel':'stand';
   if(gait.kneelMode!==wanted){
    gait.kneelMode=wanted;gait.kneelTime=0;
    gait.kneelFrom=gait.feet.map(foot=>foot.position.clone());
@@ -419,7 +435,7 @@ function poseGroundedCharacter(character,travel,dt){
  }
  gait.terrainLift=THREE.MathUtils.damp(
   gait.terrainLift,supportTop-TERRAIN.floorTop,15,dt);
- if(blend<.008&&crouch<.008&&gait.kneelTime>=CROUCH.settleSeconds){
+ if(blend<.008&&crouch<.008&&gait.crawlBlend<.008&&gait.kneelTime>=CROUCH.settleSeconds){
   setIdlePose(character);
   character.position.y=gait.terrainLift;
   gait.cycle=0;
@@ -547,6 +563,10 @@ function poseGroundedCharacter(character,travel,dt){
    arm.wrist.rotation.x=-.07*crouch;
   }
  });
+ // Override the crouch with a low, supported crawl only as the crawl blend
+ // rises. Its grounded contacts are independent from the upright gait.
+ if(gait.crawlBlend>.003)poseCrawlCharacter(character,travel,dt,moving);
+ else CRAWL.active=false;
  // A rear knee has a physical ground contact at full crouched rest, with
  // the shin folded backward. Keep the torso and knee distinct and grounded.
  // Tactical crouch is a voluntary pose, not overextension or a fall.
@@ -554,6 +574,99 @@ function poseGroundedCharacter(character,travel,dt){
   gait.strainSeconds=gait.strain>.065?gait.strainSeconds+dt:Math.max(0,gait.strainSeconds-dt*2);
   if(gait.strainSeconds>.19+.065*(balanceLevel-1))beginBalanceRecovery('Steady yourself',gait.strain);
  }else gait.strainSeconds=0;
+}
+// CRAWLING: low abdomen, weight on hands and flexed knees. The base
+// animation runs first, then we blend a distinct set of world-space support
+// points onto the SAME articulated skeleton (no duplicate bones).
+function crawlWorldPoint(character,lateral,forward,soleHeight){
+ const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
+ const x=character.position.x+c*lateral+si*forward;
+ const z=character.position.z-si*lateral+c*forward;
+ return new THREE.Vector3(x,groundTopAt(x,z)+soleHeight,z);
+}
+function crawlContact(character,index,isHand){
+ const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
+ const forward=isHand?CRAWL.handAhead:CRAWL.footBack;
+ const p=crawlWorldPoint(character,lateral,forward,
+  isHand?.15:TERRAIN.soleClearance);
+ return {position:p.clone(),anchor:p.clone(),from:p.clone(),
+  contact:true,heading:character.rotation.y};
+}
+function initializeCrawl(character){
+ CRAWL.active=true;CRAWL.cycle=0;
+ CRAWL.feet=[0,1].map(i=>crawlContact(character,i,false));
+ CRAWL.hands=[0,1].map(i=>crawlContact(character,i,true));
+}
+function stepCrawlContact(character,item,index,isHand,moving,step){
+ const t=((CRAWL.cycle+(isHand?(1-index):index)*.5)%1+1)%1;
+ const contact=!moving||t<CRAWL.stance;
+ const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
+ const height=isHand?.15:TERRAIN.soleClearance;
+ if(contact&&!item.contact){
+  item.anchor.copy(item.position);
+  item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
+ }else if(!contact&&item.contact)item.from.copy(item.position);
+ item.contact=contact;
+ if(contact){
+  item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
+  item.position.copy(item.anchor);
+ }else{
+  const q=(t-CRAWL.stance)/(1-CRAWL.stance);
+  const ease=q*q*(3-2*q);
+  // Forward hand reaches, opposite knee/foot retracts and pushes off.
+  const forward=(isHand?CRAWL.handAhead:CRAWL.footBack)+
+   CRAWL.stance*2*step*.38+(1-t)*2*step;
+  const landing=crawlWorldPoint(character,lateral,forward,height);
+  item.position.lerpVectors(item.from,landing,ease);
+  item.position.y=THREE.MathUtils.lerp(item.from.y,landing.y,ease)+
+   Math.sin(Math.PI*q)*(isHand?.10:.07);
+ }
+}
+const CRAWL_HAND_LOCAL=new THREE.Vector3();
+function poseCrawlCharacter(character,travel,dt,moving){
+ const gait=LOCOMOTION,weight=gait.crawlBlend,rig=character.userData.rig;
+ if(!CRAWL.active)initializeCrawl(character);
+ if(moving)CRAWL.cycle+=travel/(2*CRAWL.step);
+ // Support is the flat grass/stone surface (or an explicitly walkable top).
+ const floor=groundTopAt(character.position.x,character.position.z);
+ const terrainOffset=floor-TERRAIN.floorTop;
+ character.position.y=THREE.MathUtils.lerp(
+  character.position.y,terrainOffset-CRAWL.drop,weight);
+ rig.torso.rotation.x=THREE.MathUtils.lerp(
+  rig.torso.rotation.x,CRAWL.torsoPitch+
+   (moving?Math.sin(CRAWL.cycle*Math.PI*2)*.035:0),weight);
+ rig.torso.rotation.z=THREE.MathUtils.lerp(
+  rig.torso.rotation.z,moving?Math.sin(CRAWL.cycle*Math.PI*2)*.025:0,weight);
+ rig.head.rotation.x=THREE.MathUtils.lerp(
+  rig.head.rotation.x,-1.22,weight);
+ const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
+ for(let i=0;i<2;i++){
+  const foot=CRAWL.feet[i];
+  stepCrawlContact(character,foot,i,false,moving,CRAWL.step);
+  const dx=foot.position.x-character.position.x;
+  const dz=foot.position.z-character.position.z;
+  const lx=c*dx-si*dz,ly=foot.position.y-character.position.y;
+  const lz=si*dx+c*dz;
+  const leg=rig.legs[i];
+  const hx=leg.hip.rotation.x,hz=leg.hip.rotation.z;
+  const kx=leg.knee.rotation.x,ax=leg.ankle.rotation.x;
+  solveLegTarget(leg,lx,ly,lz,0,0);
+  leg.hip.rotation.x=THREE.MathUtils.lerp(hx,leg.hip.rotation.x,weight);
+  leg.hip.rotation.z=THREE.MathUtils.lerp(hz,leg.hip.rotation.z,weight);
+  leg.knee.rotation.x=THREE.MathUtils.lerp(kx,leg.knee.rotation.x,weight);
+  leg.ankle.rotation.x=THREE.MathUtils.lerp(ax,leg.ankle.rotation.x,weight);
+ }
+ // Update world matrices after bending the torso, before converting the
+ // world-planted wrist targets into the shoulder's local coordinate space.
+ character.updateMatrixWorld(true);
+ for(let i=0;i<2;i++){
+  const hand=CRAWL.hands[i];
+  stepCrawlContact(character,hand,i,true,moving,CRAWL.step);
+  CRAWL_HAND_LOCAL.copy(rig.torso.worldToLocal(hand.position.clone()));
+  aimArmAt(rig.arms[i],CRAWL_HAND_LOCAL,i===0?-1:1,weight);
+  rig.arms[i].wrist.rotation.x=THREE.MathUtils.lerp(
+   rig.arms[i].wrist.rotation.x,-.10,weight);
+ }
 }
 // Push-off drives acceleration during foot contact; momentum continues during
 // sprint flight, as it should in real physics. Contact and collisions govern
@@ -576,7 +689,7 @@ function stepLocomotion(dt,right,forward,runEnabled){
   gait.cycle=gait.walkStance*.5;
  }
  const grounded=!JUMP.active&&(gait.feet.some(f=>f.contact)||wasStopped);
- const target=len>.03?(crouched?gait.walkSpeed*CROUCH.speed:runEnabled?gait.runSpeed:gait.walkSpeed):0;
+ const target=len>.03?(crawling?gait.walkSpeed*CRAWL.speed:crouched?gait.walkSpeed*CROUCH.speed:runEnabled?gait.runSpeed:gait.walkSpeed):0;
  const tx=dx*target,tz=dz*target;
  const dvx=tx-gait.vx,dvz=tz-gait.vz;
  const change=Math.hypot(dvx,dvz);
@@ -601,7 +714,7 @@ function stepLocomotion(dt,right,forward,runEnabled){
  }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
- gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled&&!crouched?1:0,8,dt);
+ gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled&&!crouched&&!crawling?1:0,8,dt);
  poseGroundedCharacter(player,Math.hypot(xDelta,zDelta),dt);
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
