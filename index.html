@@ -265,7 +265,7 @@ function summitMesaHeightAt(x,z){
 function mountainBaseHeightAt(x,z){
  const cliffZ=mountainCliffLipZ(x);
  const wallRise=MOUNTAIN_LEVELS.valley*
-  smoothWater((cliffZ-z)/1.5);
+  smoothWater((cliffZ-z)/.46);
  const westLane=passageWeight(x,PRIMARY_PASS.x,
   PRIMARY_PASS.halfWidth,PRIMARY_PASS.feather);
  const eastLane=passageWeight(x,EASTERN_PASS.x,
@@ -680,6 +680,120 @@ for(let i=0;i<22;i++){
  streamFoam.push(mark);
 }
 let streamTime=0;
+// Visible, actually stratified CLIF​​F walls, not merely a dark strip of
+// steep green ground. The north-facing plateau above stays lush and flat.
+// Same world coordinates as mountainBaseHeightAt; no collision shortcut.
+const cliffWallColors=[
+ new THREE.Color('#7b807e'),
+ new THREE.Color('#949592'),
+ new THREE.Color('#6f7775'),
+ new THREE.Color('#afb0a4'),
+ new THREE.Color('#858986'),
+ new THREE.Color('#b1ad9e')
+];
+function buildLayeredCliffFaces(){
+ const vertices=[],colors=[];
+ const stone=(band,offset)=>cliffWallColors[
+  (band+offset+cliffWallColors.length)%cliffWallColors.length];
+ function triangle(points,shade){
+  for(const p of points){
+   vertices.push(p[0],p[1],p[2]);
+   colors.push(shade.r,shade.g,shade.b);
+  }
+ }
+ function wallSegment(ax,az,bx,bz,lower,upper,seed){
+  const levels=6,step=(upper-lower)/levels;
+  for(let j=0;j<levels;j++){
+   const bottom=lower+j*step,top=bottom+step,
+    stoneShade=stone(j,Math.abs(seed)%4);
+   const nudge=.027*Math.sin(j*2.6+seed*1.17);
+   const a=[ax,bottom,az+nudge],b=[bx,bottom,bz+nudge],
+    c=[ax,top,az+nudge],d=[bx,top,bz+nudge];
+   triangle([a,b,c],stoneShade);
+   triangle([b,d,c],stoneShade);
+  }
+ }
+ // Wide front wall from lowland to upper valley, with unmistakable gaps
+ // for the 30° and 35° passes, and for the real waterfall at x≈34.
+ for(let x=-78,segment=0;x<77;x+=.67,segment++){
+  const x2=Math.min(x+.67,77),mid=(x+x2)/2;
+  const hasPassage=
+   passageWeight(mid,PRIMARY_PASS.x,PRIMARY_PASS.halfWidth,
+    PRIMARY_PASS.feather)>.025||
+   passageWeight(mid,EASTERN_PASS.x,EASTERN_PASS.halfWidth,
+    EASTERN_PASS.feather)>.025;
+  if(hasPassage||Math.abs(mid-34)<4.3)continue;
+  const za=mountainCliffLipZ(x)+.005;
+  const zb=mountainCliffLipZ(x2)+.005;
+  wallSegment(x,za,x2,zb,TERRAIN.floorTop,
+   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley,segment);
+ }
+ // The summit is another obvious GREEN terrace with its OWN rock skirt,
+ // interrupted only on the east where the 45° ascent corridor reaches it.
+ const mesa=SUMMIT_MESA,segments=144;
+ for(let k=0;k<segments;k++){
+  const a=k*2*Math.PI/segments,b=(k+1)*2*Math.PI/segments;
+  const mid=(a+b)/2;
+  if(Math.cos(mid)>0&&Math.abs(Math.sin(mid))<.29)continue;
+  const r=.95;
+  const point=theta=>{
+   const wobble=1+.025*Math.sin(theta*5);
+   return [mesa.x+Math.cos(theta)*mesa.rx*r*wobble,
+    mesa.z+Math.sin(theta)*mesa.rz*r*wobble];
+  };
+  const p=point(a),q=point(b);
+  wallSegment(p[0],p[1],q[0],q[1],
+   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley,
+   TERRAIN.floorTop+MOUNTAIN_LEVELS.summit,k);
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',
+  new THREE.Float32BufferAttribute(vertices,3));
+ geo.setAttribute('color',
+  new THREE.Float32BufferAttribute(colors,3));
+ geo.computeVertexNormals();
+ const facade=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
+  vertexColors:true,roughness:.99,metalness:0,
+  flatShading:true,side:THREE.DoubleSide
+ }));
+ facade.name='visible-layered-mountain-rock-walls';
+ facade.castShadow=true;facade.receiveShadow=true;
+ facade.frustumCulled=false;
+ scene.add(facade);
+}
+buildLayeredCliffFaces();
+// Thin high-contrast limestone lips define where a cliff ENDS and the
+// next green walkable terrace BEGINS. They do not create artificial steps.
+const plateauEdgeMat=new THREE.MeshStandardMaterial({
+ color:'#c0bba7',roughness:1,side:THREE.DoubleSide
+});
+function buildLayeredCliffRims(){
+ const points=[];
+ function ribbon(x1,z1,x2,z2,y,width){
+  const v=[[x1,y,z1],[x2,y,z2],[x1,y,z1-width],
+   [x2,y,z2],[x2,y,z2-width],[x1,y,z1-width]];
+  for(const p of v)points.push(...p);
+ }
+ for(let x=-78;x<77;x+=1.25){
+  const x2=Math.min(x+1.25,77),mid=(x+x2)/2;
+  if(passageWeight(mid,PRIMARY_PASS.x,PRIMARY_PASS.halfWidth,
+      PRIMARY_PASS.feather)>.03||
+     passageWeight(mid,EASTERN_PASS.x,EASTERN_PASS.halfWidth,
+      EASTERN_PASS.feather)>.03||
+     Math.abs(mid-34)<4.3)continue;
+  const z1=mountainCliffLipZ(x)-.55,z2=mountainCliffLipZ(x2)-.55;
+  ribbon(x,z1,x2,z2,
+   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley+.043,.18);
+ }
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',
+  new THREE.Float32BufferAttribute(points,3));
+ geometry.computeVertexNormals();
+ const edge=new THREE.Mesh(geometry,plateauEdgeMat);
+ edge.name='grass-to-cliff-edge-highlight';
+ edge.frustumCulled=false;scene.add(edge);
+}
+buildLayeredCliffRims();
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
 pavement.rotation.x=-Math.PI/2;
 pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
