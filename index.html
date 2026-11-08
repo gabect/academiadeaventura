@@ -457,12 +457,20 @@ for(let i=0;i<groundPositions.count;i++){
   THREE.MathUtils.clamp(depth/2.8,0,1));
  if(hill>.3){
   const summitGrass=new THREE.Color('#70966e');
-  const coldStone=new THREE.Color('#888d89');
+  const coldStone=new THREE.Color('#858b88');
+  const paleRock=new THREE.Color('#b5b2a2');
   const profile=mountainFaceAngle(x);
   const rocky=z<WORLD.faceZ&&hill>2&&
    (profile>=49||z<WORLD.crestZ||hill>13);
   terrainShade.lerp(rocky?coldStone:summitGrass,
    THREE.MathUtils.clamp(hill/7,.1,.88));
+  // Exposed pale rock at the mountain FOOT is readable from a low camera;
+  // the plateau edge gets another thin bright contour. Physics unchanged.
+  if(z<WORLD.faceZ+1&&z>WORLD.faceZ-24){
+   const foot=Math.max(0,1-Math.abs(hill-1.45)/1.55);
+   const rim=Math.max(0,1-Math.abs(hill-9.70)/.8);
+   terrainShade.lerp(paleRock,Math.min(.53,foot*.43+rim*.24));
+  }
  }
 
  // Subtle low-frequency color variation avoids a featureless giant field.
@@ -1060,6 +1068,35 @@ function tree(x,z){
  cylinder(0,1.2,2.2,leaves,x,lift+4.6,z,scene,7);
 }
 FIELD_TREE_POSITIONS.forEach(p=>tree(...p));
+// Silhouette of the WESTERN SUMMIT: this is one peak on the giant massif,
+// not a detached hill. Its small rocky crown remains identifiable as it
+// emerges above the rolling horizon while approaching from the west.
+const summitCrownMat=mat('#a6afae');
+for(const [x,z,height,radius] of [
+ [-60,-43,3.7,1.15],[-61.8,-44.2,2.6,.84],
+ [-58.35,-44.4,2.35,.75],[-59.3,-41.2,1.9,.90]
+]){
+ const crown=new THREE.Mesh(
+  new THREE.ConeGeometry(radius,height,6),summitCrownMat);
+ crown.position.set(x,naturalSurfaceY(x,z)+height*.40,z);
+ crown.rotation.y=x*.37; crown.castShadow=true;
+ crown.receiveShadow=true;scene.add(crown);
+}
+// Small glacial stones trace the *base* of the mountain where the lowland
+// rises; gaps preserve the 30-degree flagstone entrance and waterfall.
+const footRockMat=mat('#a3a6a0');
+const footRockGeo=new THREE.DodecahedronGeometry(.57,0);
+for(let x=-74;x<=69;x+=4.25){
+ if(x>-25&&x< -6||x>30&&x<39)continue;
+ const z=-15.1+Math.sin(x*.45)*.42;
+ const rock=new THREE.Mesh(footRockGeo,footRockMat);
+ const size=.65+.32*(.5+.5*Math.cos(x*.94));
+ rock.scale.set(size,.64*size,size*.88);
+ rock.position.set(x,naturalSurfaceY(x,z)+.16,z);
+ rock.rotation.y=x*.21;
+ rock.castShadow=true;rock.receiveShadow=true;scene.add(rock);
+}
+
 // Light instanced botanical details keep mobile draw-call cost low even
 // throughout a 166x166 field. Small decor does not become walkable geometry.
 let foliageSeed=0xBADA557;
@@ -1345,6 +1382,7 @@ function updateRegionStatus(){
  const water=WATER_STATE.water;
  let region='Campo bajo';
  if(z< -59)region='Cordillera norte';
+ else if(x< -49&&z< -29&&z> -56)region='Cumbre occidental';
  else if(water?.body.kind==='upper-river')region='Río de la cumbre';
  else if(z< -32)region='Valle alto';
  else if(x>23&&z< -14&&z> -35)region='Acantilado';
