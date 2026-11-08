@@ -13,7 +13,14 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.16.0 — November 8, 2026
+## Current version: 0.16.1 — November 8, 2026
+- **Tactical crouch upper body:** a more pronounced forward lean from the pelvis in the low posture (roughly 25–31 degrees) and counter-rotated neck/head so the face remains oriented forward rather than looking down.
+- **Anatomically controlled hands:** a lightweight two-segment arm IK solver places each wrist near a reachable 3D goal. In a stationary one-knee kneel, the **right wrist follows the forward right knee** and the hand settles close to it; the **left arm stays bent, forward of the chest for balance**. No props or firearms are added.
+- **Moving tactical pose:** as the player shuffles crouched, both arms hold naturally bent guard/balance positions with small gait-linked motion. The right hand blends toward the actual knee only when the low kneeling pause settles, avoiding rigidly attaching it to the knee while walking.
+- **Smooth transition back:** arm IK blends with the original standing/walking arm animation, preserving the existing skeleton, shoulder/elbow articulation, A/B/C controls, leap/run motions, collision, Agility XP and flat ground.
+- **Verification:** JavaScript syntax and structural checks passed; manual Android visual QA remains needed, especially front and side camera views of the elbows, hand contact, torso lean and return to standing.
+
+## Previous version: 0.16.0 — November 8, 2026
 - **Authentic asymmetrical unarmed tactical crouch:** the character keeps the **right foot forward and left foot behind** during pauses. The front knee remains high in a supported lunge, while the rear knee lowers until its joint's bottom meets the ground. Torso leans farther forward (about 18–21 degrees) and the arms stay bent in an unarmed balance-ready posture.
 - **Crouched movement:** short, deliberate, low steps with a slight forward/back foot offset; lower center of mass, smaller bounce and reduced speed. The pose transitions to a deeper one-knee kneel when movement stops.
 - **Deliberate pause transitions:** feet re-position in sequence, lifting briefly during each shuffle step rather than snapping or sliding instantaneously to the resting split stance. Standing back up likewise brings both feet to their neutral positions.
@@ -98,6 +105,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.16.1 (2026-11-08):** forward-leaning tactical torso, horizon-oriented head, two-bone arm IK, right hand follows lead knee at crouch rest and left hand balances.
 - **0.16.0 (2026-11-08):** deeper asymmetric unarmed tactical crouch: right foot forward, left knee touching ground when stopped, shuffled foot transitions and short low steps.
 - **0.15.1 (2026-11-08):** flattened stone pavement and paving detail to grass ground level; separated rendered markings from physical walkable elevation.
 - **0.15.0 (2026-11-08):** terrain-aware feet on grass, stone and raised tiles; IK-grounded unarmed tactical crouch, shorter crouched strides, no fake sinking.
@@ -122,7 +130,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.16.1, feature 0.17.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.16.2, feature 0.17.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
