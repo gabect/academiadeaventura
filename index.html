@@ -806,9 +806,15 @@ function updateWaterState(){
   LOCOMOTION.kneelMode=null;
   prepareFeet(player);
  }
+ // Expose flow strength in the test playground without adding controls.
+ waterStatus.hidden=WATER_STATE.mode==='dry';
+ if(!waterStatus.hidden){
+  const flow=waterCurrentAt(player.position.x,player.position.z);
+  waterStatus.textContent=
+   (WATER_STATE.mode==='swim'?'Swimming':'Wading')+
+   (flow.strength>.18?' · Current '+flow.strength.toFixed(1):'');
+ }
  if(WATER_STATE.mode!==prior){
-  waterStatus.hidden=WATER_STATE.mode==='dry';
-  waterStatus.textContent=WATER_STATE.mode==='swim'?'Swimming':'Wading';
   updateButtonHints();
   if(WATER_STATE.mode==='swim')
    document.getElementById('message').textContent=
