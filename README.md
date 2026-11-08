@@ -13,7 +13,15 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.14.0 — November 8, 2026
+## Current version: 0.15.0 — November 8, 2026
+- **True multi-surface ground sampling:** ground contact is now taken from the exact top faces of the scene's grass (-0.05), central stone slab (+0.08), and raised stone tiles (+0.125) rather than a universal ground height. Ankles target the sampled surface plus a sole-clearance offset; a smoothed terrain lift adjusts pelvis/root height.
+- **Tactical crouch replaces fake sinking:** pressing C transitions into a coordinated low stance with the pelvis lowered through the same grounded inverse-kinematics leg solver. The old post-animation `player.position.y -= .13` and ad-hoc knee angle offsets were removed.
+- **Stable foot placement on grass and stone:** crouching while still uses leg IK even when walking blend is zero. Supporting feet preserve their world x/z anchor and continually resample the height below them. Swing feet interpolate between measured ground heights, improving stone-edge and tile transitions.
+- **Unarmed tactical movement:** lowered center of mass, bent knees/ankles from ankle IK, a modest forward torso lean, elbows flexed with hands ahead for balance, controlled short steps and lower foot lift. Crouched movement is approximately 47% of normal walk speed; running and jumping remain disabled while crouched.
+- **Consistent recovery:** the non-falling balance reflex uses terrain lift instead of resetting the character to the grass elevation. Existing XP/Agility, joystick, A/B/C controls, educational trial, wall/tree collisions, juvenile skeleton and disabled ragdoll remain intact.
+- **Validation:** structural checks, JavaScript syntax parsing, and representative leg-reach calculations passed. **Live mobile/Chromebook QA is still required** for exact visible sole contact, transitions over tiles, turning, crouch gait and jumping; the simple IK is not a full rigid-body biomechanics engine.
+
+## Previous version: 0.14.0 — November 8, 2026
 - **Falls disabled throughout the playable RPG:** the legacy ragdoll solver is retained as dormant source for possible future use, but has a hard `ENABLE_RAGDOLL=false` guard, no fall-triggering recovery branch and no active physics update.
 - **Removed the QA Fall button** even when loading `?debug=1`; the main game and debugging URL behave consistently.
 - **Automatic protective recovery for everyone:** a catch-step, arm counterbalance and knee flexion resolve back to a standing/walking pose, without transitioning to a falling state.
@@ -75,6 +83,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.15.0 (2026-11-08):** terrain-aware feet on grass, stone and raised tiles; IK-grounded unarmed tactical crouch, shorter crouched strides, no fake sinking.
 - **0.14.0 (2026-11-08):** fall feature disabled; permanent reflex recovery; Agility XP progression preserving legacy Balance levels; removed debug Fall and stand-up actions.
 - **0.13.0 (2026-11-08):** compact working contextual A/B/C touch controls, B sprint hold and tap jump/fall recovery, C cancel/crouch, Shift sprint and Space jump.
 - **0.12.0 (2026-11-08):** automatic protective balance/catch-step animation; upgradeable motor skill (Balance levels 1–4) using XP; repeatable quiz XP; softer ragdoll limb settling and safer sleep gating.
@@ -96,7 +105,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.14.1, feature 0.15.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.15.1, feature 0.16.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
