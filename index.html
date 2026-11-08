@@ -1269,9 +1269,15 @@ function circleTouchesBox(x,z,r,minX,maxX,minZ,maxZ){
  const dz=z-THREE.MathUtils.clamp(z,minZ,maxZ);
  return dx*dx+dz*dz<(r+.015)*(r+.015);
 }
-function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z)){
+function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
+  duringTransition=false){
  const body=BODY_CLEARANCE[posture];
- const bottom=floor+.025,top=floor+body.height;
+ const animatedHeight=THREE.MathUtils.lerp(
+  THREE.MathUtils.lerp(BODY_CLEARANCE.stand.height,
+   BODY_CLEARANCE.crouch.height,LOCOMOTION.crouchBlend),
+  BODY_CLEARANCE.crawl.height,LOCOMOTION.crawlBlend);
+ const height=duringTransition?Math.max(body.height,animatedHeight):body.height;
+ const bottom=floor+.025,top=floor+height;
  const yaw=player.rotation.y,fx=Math.sin(yaw),fz=Math.cos(yaw);
  for(const forward of body.points){
   const px=x+fx*forward,pz=z+fz*forward,r=body.radius;
@@ -1330,7 +1336,7 @@ function clearPosition(x,z){
   const dx=x-nearX,dz=z-nearZ;
   if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return false;
  }
- return bodyVolumeFits(x,z);
+ return bodyVolumeFits(x,z,currentPosture(),groundTopAt(x,z),true);
 }
 function canTraverseStep(x,z){
  const currentTop=groundTopAt(player.position.x,player.position.z);
