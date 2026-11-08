@@ -13,7 +13,15 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.15.1 — November 8, 2026
+## Current version: 0.16.0 — November 8, 2026
+- **Authentic asymmetrical unarmed tactical crouch:** the character keeps the **right foot forward and left foot behind** during pauses. The front knee remains high in a supported lunge, while the rear knee lowers until its joint's bottom meets the ground. Torso leans farther forward (about 18–21 degrees) and the arms stay bent in an unarmed balance-ready posture.
+- **Crouched movement:** short, deliberate, low steps with a slight forward/back foot offset; lower center of mass, smaller bounce and reduced speed. The pose transitions to a deeper one-knee kneel when movement stops.
+- **Deliberate pause transitions:** feet re-position in sequence, lifting briefly during each shuffle step rather than snapping or sliding instantaneously to the resting split stance. Standing back up likewise brings both feet to their neutral positions.
+- **Contact calculation:** rear-knee clearance was checked against actual joint length and terrain height. In the idle crouch the modeled rear knee touches the grass/flush pavement (within ~1 mm of the floor); the front knee remains above the terrain. The full visible result still needs actual device QA.
+- **Preserved** the flat grass/pavement ground, ankle IK, no-fall mode, A/B/C controls, agility XP, camera and educational challenge. No weapons were added.
+- **QA:** inspect on mobile from front/side, and test walking crouched, pausing into kneel, stopping beside trees and walls, and standing up. This remains procedural IK and is not full rigid-body physics.
+
+## Previous version: 0.15.1 — November 8, 2026
 - **Paving at ground level:** the main courtyard pavement is a flat horizontal surface on the same physical plane as the grass (both **Y = −0.05**). The previous elevated stone slab was removed. Stone paving markers are also flat visual decals, rather than raised blocks.
 - **Visual layers versus physics:** ultra-thin rendering offsets avoid flickering where the paving and grass are drawn together; they are not steps or collision heights. Crouch, walk, run, jump and foot IK all reference one continuous ground height across the grass/pavement boundary.
 - **Future elevated structures:** introduced an empty `WALKABLE_ELEVATIONS` registry for explicitly walkable stairs, stages and platforms. A future object only raises foot support when its surface is registered with `walkable: true` and bounds/top height. Decorative and non-walkable interactive objects remain separate obstacles; no stairs or stages are being added by this patch.
@@ -90,6 +98,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.16.0 (2026-11-08):** deeper asymmetric unarmed tactical crouch: right foot forward, left knee touching ground when stopped, shuffled foot transitions and short low steps.
 - **0.15.1 (2026-11-08):** flattened stone pavement and paving detail to grass ground level; separated rendered markings from physical walkable elevation.
 - **0.15.0 (2026-11-08):** terrain-aware feet on grass, stone and raised tiles; IK-grounded unarmed tactical crouch, shorter crouched strides, no fake sinking.
 - **0.14.0 (2026-11-08):** fall feature disabled; permanent reflex recovery; Agility XP progression preserving legacy Balance levels; removed debug Fall and stand-up actions.
@@ -113,7 +122,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.15.2, feature 0.16.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.16.1, feature 0.17.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
