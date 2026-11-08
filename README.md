@@ -13,7 +13,16 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.18.2 — November 8, 2026
+## Current version: 0.19.0 — November 8, 2026
+- **New courtyard feature — wooden balcony and four stone steps.** A timber viewing deck is placed on the eastern/right side of the courtyard (X 7.10–10.10, Z 1.20–5.80). Four 2.6-unit-wide stone steps approach it along +X (X 4.70–7.10, Z 2.20–4.80), with a 0.30 rise each. Their tops are 0.25, 0.55, 0.85, 1.15 world Y; the deck shares the fourth riser's 1.15 elevation (1.20 above the grass and pavement). Wooden support pillars, individual deck planks, balcony guardrails and sloping stair handrails are visible 3D geometry.
+- **Real step-up and step-down constraints.** The previously empty `WALKABLE_ELEVATIONS` is now populated by the deck and four stone treads. `groundTopAt(x,z)` samples their registered, walkable rectangular footprints rather than assuming a flat floor or treating visual objects as climbable. Movement collision resolves in small steps and permits up to 0.34 world-units of vertical change per step; direct ascent through a tall deck side and steep drop-offs are blocked. Prone crawling is restricted to a maximum 0.075 vertical change to avoid pushing the chest through a riser. Stand and tactical crouch use the regular step-up behavior.
+- **Solid balcony and stair safety.** Guardrails and both staircase side rails use collision rectangles expanded by the player's radius. Only the west-side staircase opening connects the courtyard to the deck; the other edges have railings or vertical-change blocking. Existing circular obstacles, courtyard walls and guardian remain active.
+- **Animated terrain-aware foot placement.** Swinging ankles continue to target the actual local `groundTopAt` height; a stair-specific swing lift clears higher stone risers. The torso/base elevation smoothly follows the supporting surfaces. The third-person camera now tracks the avatar's vertical position as well as X/Z, so elevated platform traversal stays in frame.
+- **Onboarding.** The initial HUD message points players to the stone staircase leading to the balcony on the right. The main character begins at the same existing courtyard spawn point. No new button is needed: use the joystick or WASD to approach and walk up.
+- **Preserved:** original level stone paving/grass at Y -0.05, guarded courtyard, action buttons A/B/C, tactical kneeling, side-to-side prone military crawl, the guardian trial, saved Agility XP and disabled falls.
+- **Verification:** JavaScript module syntax, source consistency, a numerical ascending route across all four risers, rail/capsule clearance and the balcony endpoint were checked. Not yet visually tested in a live Android browser; watch foot/stone intersections, downward stepping, rail corners and camera tracking.
+
+## Previous version: 0.18.2 — November 8, 2026
 - **Sideways floor-hugging prone knees:** the previous up-and-down mirrored knee IK was replaced *for crawling only* by 3D two-segment leg IK with a horizontal **outward pole**. The left knee bends out to the left and the right knee out to the right, sliding close to the terrain as the legs tuck and push. It no longer raises each knee vertically toward the back.
 - **Alternating diagonal push:** leg targets draw forward ~0.17 and slightly out to their respective side ~0.13 during each stroke, then retract/extend. Each knee alternates with the other and remains phase-matched to its opposite planted/pulling arm.
 - **Near-surface knee clearance:** sample geometric calculations across the stroke found a ~0.225 lateral knee movement with kneecap bottoms approximately -0.036 to +0.010 against a floor top of -0.05 (about 1.4–6 cm of clearance), rather than large vertical knee lifts. These checks are static geometry; full motion still requires visual QA.
@@ -136,6 +145,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.19.0 (2026-11-08):** wooden courtyard balcony, four walkable stone stairs, radius-checked railings, collision-aware 30-cm automatic step-up/down, elevated foot IK and camera tracking.
 - **0.18.2 (2026-11-08):** changed prone leg IK to lateral, floor-hugging knee tuck/push; left and right knees open to their respective sides in phase with the opposite pulling hand.
 - **0.18.1 (2026-11-08):** opposing knee-lift/push strokes synchronized with planted/pulling arms; near-ground foot motion and safer mirrored knee IK.
 - **0.18.0 (2026-11-08):** prone chest-to-ground military crawl replaces the raised quadruped gait; ground-near sternum, low hips, extended trailing legs, low elbow IK and sliding toe push-offs.
@@ -165,7 +175,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.18.3, feature 0.19.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.19.1, feature 0.20.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
