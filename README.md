@@ -13,7 +13,14 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.24.0 — November 8, 2026
+## Current version: 0.25.0 — November 8, 2026
+- **Permanent vertical north-wall ladder:** replaced the sloping rails/rungs with a truly vertical, single-plane ladder, using metal brackets anchored directly into the north wall. The ladder runs parallel to the masonry at a fixed 0.16-unit toe clearance; it is no longer a portable ladder leaning against the wall.
+- **Straight climb track and wall-safe dismount:** the character's climb position has a constant Z relative to the fixed ladder and is kept in front of the masonry. A/E remains the only way to grab and climb automatically. At the top the avatar climbs nearly all the way to the lip, then rises before stepping onto the rampart; descent returns to a clear courtyard point.
+- **Consistent physical obstacle:** replaced the former slope-dependent rail/rung collision with fixed vertical rail capsules and cross-rung checks. Standing, tactical crouch and crawling still respect body volumes; the narrow wall-to-ladder gap is not a shortcut through the masonry. The bottom interaction zone is restricted to the front of the ladder.
+- **Preserved:** stone steps, raised timber balcony, wall opening, Agility/XP, guardian challenges, camera, A/B/C buttons, crawl/crouch, and no-fall mode.
+- **Verification:** module JavaScript syntax parsed; checked that the old slope coordinates are gone, vertical Z is shared by geometry/climbing/physics, wall mounts are defined, the A/E interaction is unique, and posture and step checks remain present. In-browser visual, mobile IK and climb-transition checks still need device QA.
+
+## Previous version: 0.24.0 — November 8, 2026
 - **Posture-aware solid collisions:** standing, tactical crouch and chest-down crawl now have separate 3D clearance volumes, approximately 2.13, 1.72 and 0.62 units high. The prone body also checks three points along its length, rather than treating it as a standing circle. These are conservative procedural collision proxies, not mesh-perfect rigid-body physics.
 - **Solid leaning ladder:** the existing single ladder has geometric collision against both sloping timber side rails and every cross-rung; normal movement cannot walk through the ladder or push through it by repeating input. The only authorized passage onto it is the A/E ladder-climbing state, which is still governed by the existing climb controller.
 - **Solid masonry wall and timber platform:** a player on the courtyard floor cannot partly penetrate the stone training-wall mass. The raised wooden platform's underside also blocks too-tall postures; a low crawl may enter only where the body actually fits. Existing balcony stone steps remain climbable, and the wall is still accessible only through its ladder.
@@ -199,6 +206,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.25.0 (2026-11-08):** permanent vertical north-wall ladder with wall brackets, constant-Z climb/IK and solid rail/rung collisions; top/bottom safe dismounts and front-only A/E interaction.
 - **0.24.0 (2026-11-08):** posture-dependent ladder/wall/deck collision with body headroom tests, prohibited stand-up in tight gaps, angled-rail and rung solids, guarded crawl turns and safe climb exits.
 - **0.23.1 (2026-11-08):** fixed left/right hands and legs crossing on the north-facing ladder; prevented feet sampling an unreachable wall top and visually lifting the body without A.
 - **0.23.0 (2026-11-08):** moved ladder to the north wall, repaired auto-dismount and simplified A/E single-tap interaction, restored balcony railing.
