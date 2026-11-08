@@ -13,7 +13,13 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.19.0 — November 8, 2026
+## Current version: 0.19.1 — November 8, 2026
+- Repositioned the existing balcony and four-step staircase north/backward along the Z axis to improve visibility from the fixed isometric camera; no movement or physics subsystem was replaced.
+- New balcony bounds: X 7.10–10.10, Z -5.80 to -1.20. The staircase remains on its west side, now Z -4.80 to -2.20. Height, risers, rails, geometry and all controls are unchanged.
+- Static verification: module syntax valid; all four risers remain traversable at 0.30 rise; no overlap within player-radius clearance of existing trees, lamp, guardian or corner towers. Each key terrain/movement function occurs once. This is not live Android visual validation.
+- Removed two outdated source comments while keeping edits limited to relocation and versioning.
+
+## Previous version: 0.19.0 — November 8, 2026
 - **New courtyard feature — wooden balcony and four stone steps.** A timber viewing deck is placed on the eastern/right side of the courtyard (X 7.10–10.10, Z 1.20–5.80). Four 2.6-unit-wide stone steps approach it along +X (X 4.70–7.10, Z 2.20–4.80), with a 0.30 rise each. Their tops are 0.25, 0.55, 0.85, 1.15 world Y; the deck shares the fourth riser's 1.15 elevation (1.20 above the grass and pavement). Wooden support pillars, individual deck planks, balcony guardrails and sloping stair handrails are visible 3D geometry.
 - **Real step-up and step-down constraints.** The previously empty `WALKABLE_ELEVATIONS` is now populated by the deck and four stone treads. `groundTopAt(x,z)` samples their registered, walkable rectangular footprints rather than assuming a flat floor or treating visual objects as climbable. Movement collision resolves in small steps and permits up to 0.34 world-units of vertical change per step; direct ascent through a tall deck side and steep drop-offs are blocked. Prone crawling is restricted to a maximum 0.075 vertical change to avoid pushing the chest through a riser. Stand and tactical crouch use the regular step-up behavior.
 - **Solid balcony and stair safety.** Guardrails and both staircase side rails use collision rectangles expanded by the player's radius. Only the west-side staircase opening connects the courtyard to the deck; the other edges have railings or vertical-change blocking. Existing circular obstacles, courtyard walls and guardian remain active.
@@ -145,6 +151,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.19.1 (2026-11-08):** relocated balcony/steps away from the foreground tower; static checked collisions and kept existing stair system intact.
 - **0.19.0 (2026-11-08):** wooden courtyard balcony, four walkable stone stairs, radius-checked railings, collision-aware 30-cm automatic step-up/down, elevated foot IK and camera tracking.
 - **0.18.2 (2026-11-08):** changed prone leg IK to lateral, floor-hugging knee tuck/push; left and right knees open to their respective sides in phase with the opposite pulling hand.
 - **0.18.1 (2026-11-08):** opposing knee-lift/push strokes synchronized with planted/pulling arms; near-ground foot motion and safer mirrored knee IK.
