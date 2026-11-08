@@ -17,7 +17,7 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}
 #skillPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:8px;z-index:6;display:flex;gap:7px;align-items:center;flex-wrap:wrap;max-width:60%;color:#17323c;background:#ffffffe0;border:1px solid #ffffffad;border-radius:9px;padding:5px 8px;font:600 12px system-ui,sans-serif}
 #balanceUpgrade{border:1px solid #678080;border-radius:7px;background:#284c54;color:white;font:600 12px system-ui,sans-serif;padding:6px 8px;touch-action:manipulation}
-#balanceUpgrade:disabled{opacity:.5}#waterStatus{background:#d3eff1;color:#225a68;border-radius:6px;padding:4px 6px;font-weight:700}
+#balanceUpgrade:disabled{opacity:.5}#waterStatus{background:#d3eff1;color:#225a68;border-radius:6px;padding:4px 6px;font-weight:700}#slopeStatus{background:#e9edd6;color:#4b6038;border-radius:6px;padding:4px 6px;font-weight:700}
 @media(max-height:430px){#actionCluster{width:149px;height:113px;right:max(11px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}#interactButton{width:53px;height:53px}#runButton{width:65px;height:65px}#cancelButton{width:43px;height:43px;right:51px;bottom:69px}#actionCluster button{font-size:24px}#actionCluster button small{font-size:9px}}
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
@@ -33,7 +33,7 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.0 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.0 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Campo de pruebas: explora lomas, rampas, torre, lago y río.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -648,11 +648,11 @@ function buildFieldRamps(){
  }
 }
 buildFieldRamps();
-// A usable lookout tower with SIX actual stone risers and an open deck.
+// A usable lookout tower with TEN actual stone risers and an open deck.
 const FIELD_TOWER={
  minX:20.9,maxX:25.3,minZ:-2.2,maxZ:2.2,
- topY:TERRAIN.floorTop+6*STEP_HEIGHT,
- stepStartX:17.3,stepWidth:.60,stairMinZ:-1.25,stairMaxZ:1.25
+ topY:TERRAIN.floorTop+10*STEP_HEIGHT,
+ stepStartX:14.9,stepWidth:.60,stairMinZ:-1.25,stairMaxZ:1.25
 };
 function buildFieldTower(){
  const t=FIELD_TOWER,base=TERRAIN.floorTop;
@@ -662,7 +662,7 @@ function buildFieldTower(){
   t.topY-.045,0);
  addWalkable('field-tower-deck',t.minX,t.maxX,t.minZ,t.maxZ,
   t.topY,'tower');
- for(let i=0;i<6;i++){
+ for(let i=0;i<10;i++){
   const x0=t.stepStartX+i*t.stepWidth,x1=x0+t.stepWidth;
   const rise=(i+1)*STEP_HEIGHT,top=base+rise;
   box(t.stepWidth,rise,t.stairMaxZ-t.stairMinZ,STAIR_STONE,
@@ -936,7 +936,41 @@ const JUMP={active:false,height:0,velocity:0};
 const WATER_STATE={mode:'dry',depth:0,blend:0,cycle:0,water:null};
 const HIP_WATER_DEPTH=LEG.hipY;
 const waterStatus=document.getElementById('waterStatus');
+const slopeStatus=document.getElementById('slopeStatus');
+let lastSlopeNotice=-100000;
 let crouched=false,crawling=false;
+function updateSlopeStatus(){
+ const x=player.position.x,z=player.position.z;
+ if(LADDER_STATE.active||WATER_STATE.mode!=='dry'){
+  slopeStatus.hidden=true;return;
+ }
+ let ramp=rampAt(x,z);
+ if(!ramp){
+  // Identify the artificial grade before climbing onto its first plank.
+  for(const candidate of FIELD_RAMPS){
+   if(Math.hypot(x-candidate.x,z-candidate.z)<1.5){
+    ramp={ramp:candidate,grade:candidate.rise/candidate.length};break;
+   }
+  }
+ }
+ if(ramp){
+  const degrees=Math.atan(ramp.rise===undefined?ramp.grade:
+   ramp.rise/ramp.length)*180/Math.PI;
+  // rampSampleAt returns {ramp,grade}; near-foot samples use the same.
+  const angle=Math.round(Math.atan(
+   ramp.ramp.rise/ramp.ramp.length)*180/Math.PI);
+  const blocked=angle>45;
+  slopeStatus.hidden=false;
+  slopeStatus.textContent=(ramp.ramp.kind==='wood'?'Wood ramp':'Stone ramp')+
+   ' · '+angle+'°'+(blocked?' · Too steep':'');
+ }else{
+  const grade=naturalGradeAt(x,z);
+  slopeStatus.hidden=grade<.075;
+  if(!slopeStatus.hidden)
+   slopeStatus.textContent='Hill · '+
+    Math.round(Math.atan(grade)*180/Math.PI)+'°';
+ }
+}
 function updateWaterState(){
  const water=waterAt(player.position.x,player.position.z);
  WATER_STATE.water=water;
@@ -1949,7 +1983,15 @@ function canTraverseStep(x,z){
   // bypassing a dangerous slope of 53 degrees.
   const grade=Math.max(surfaceGradeAt(fromX,fromZ),
    surfaceGradeAt(x,z));
-  if(grade>MAX_WALKABLE_GRADE+.012)return false;
+  if(grade>MAX_WALKABLE_GRADE+.012){
+   const now=performance.now();
+   if(now-lastSlopeNotice>1400){
+    lastSlopeNotice=now;
+    document.getElementById('message').textContent=
+     'Too steep to walk: maximum slope is 45°.';
+   }
+   return false;
+  }
  }
  // Large vertical side ledges are still impassable; existing stone stairs
  // keep their deliberate riser gate.
@@ -2659,6 +2701,7 @@ function animate(){
   stepJump(dt);
  }
  updateLadderPrompt();
+ updateSlopeStatus();
  followPlayerCamera(dt);
  updateWaterVisual(dt);
  marker.rotation.y+=dt;renderer.render(scene,camera);
