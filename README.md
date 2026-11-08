@@ -9,11 +9,17 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Touchscreen:** left joystick moves; camera angle is fixed (drag does not orbit), pinch or +/- to zoom, ↶ to undo zoom adjustments. Near the north wall ladder, tap **A once** to climb or descend automatically; joystick up/down reverses direction, and C/Exit heads for a safe landing. Elsewhere A interacts, B runs/jumps and C crouches or crawls.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
-- **Fixed semi-isometric camera:** smooth 3D follow at a constant high diagonal angle (~54° elevation, 225° heading). **+** approaches and **−** pulls back; mouse wheel/two-finger pinch controls zoom. Single-finger/mouse drags and arrow keys do not rotate the camera. Ctrl+Z/↶ undoes zoom.
+- **Fixed Link's Awakening-style top-down camera:** smooth 3D follow, north-up aligned composition (~66.5° elevation, 180° heading), gentle movement look-ahead, with zoom only. **+** approaches and **−** pulls back; mouse wheel or two-finger pinch changes zoom. Single-finger/mouse drags and arrow keys cannot rotate the view. Ctrl+Z/↶ undoes zoom.
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.27.1 — November 8, 2026
+## Current version: 0.28.0 — November 8, 2026
+- **Recalibrated to actual Link's Awakening (Switch) visual reference:** documentation, 2019 gameplay walkthroughs, game screenshots and Nintendo's own developer commentary describe a slightly tilted, top-down overworld view, not a camera looking diagonally across the world's X/Z grid.
+- **North-up, steep aerial camera:** fixed 180° world heading (north at top of screen), approximately 66.5° elevation above horizontal, 34° perspective FOV and 16.5-unit default camera distance. These numbers are an implementation estimate based on visual comparison, *not* published Nintendo specifications.
+- **Minimized perspective distortion and sudden framing changes:** narrower lens + more distance resembles a miniature-world shot. Character movement adds only up to 0.6 world units of gentle look-ahead; the camera no longer jumps closer when an architectural object intersects its sight ray. The camera keeps the same base distance when climbing.
+- **Same zoom and gameplay:** keyboard/touch cannot orbit; +/- buttons, pinch and mouse wheel still adjust distance; smooth world-space tracking remains. The avatar, world geometry, collisions, ladders, animation and game mechanics are untouched. Real-world Android visual QA remains necessary.
+
+## Previous version: 0.27.1 — November 8, 2026
 - **Fixed-angle camera correction:** keep the v0.27.0 semi-isometric camera at exactly the same 225° heading and ~54° elevation, but remove ALL player-controlled yaw/pitch rotation: single-finger touch drag, mouse drag, and keyboard arrows cannot move the camera orientation. Player movement and ladder climbing likewise never rotate the view.
 - **Retained functions:** camera still smoothly follows the avatar, remains in perspective, handles architecture occlusions and allows zoom through +/- buttons, mouse wheel or two-finger pinch. Undo button/Ctrl+Z now undoes zoom only; the on-screen hint reads "Fixed view."
 - **Scope:** camera-input behavior and related HUD text only; no changes to world, avatar, ladder, animation, collisions, saved progress, XP, or other gameplay controls. Visual QA on Android remains outstanding.
@@ -223,6 +229,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.28.0 (2026-11-08):** correct the camera from diagonal pseudo-isometric to a north-up, mostly top-down, slightly tilted Link's Awakening-like framing (narrower FOV, longer distance, subtle look-ahead, stable size).
 - **0.27.1 (2026-11-08):** lock the semi-isometric camera's heading/elevation, remove gesture and keyboard orbit, retain smooth tracking and all zoom controls, and repurpose undo for zoom only.
 - **0.27.0 (2026-11-08):** semi-isometric elevated diagonal perspective with stable follow, manual orbit, existing zoom/undo and camera collision. Gameplay unchanged.
 - **0.26.0 (2026-11-08):** short upper lip push-off, ledge handholds, first-foot backward descent with staggered IK, clear top rung transfer, no crossbar traversal and safe C cancellation.
