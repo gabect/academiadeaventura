@@ -13,7 +13,12 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.26.0 — November 8, 2026
+## Current version: 0.27.0 — November 8, 2026
+- **Camera-only change:** elevated, diagonal, semi-isometric view inspired by the toy-diorama framing of *The Legend of Zelda: Link's Awakening* (Nintendo Switch), while retaining the Three.js perspective camera. Initial elevation is ~54° above the horizontal plane; starting camera heading is 225° and the field of view narrows from 58° to 48°.
+- **Stable framing:** the camera follows the player position smoothly but does not automatically orbit with avatar turns or ladder use. Existing drag, arrow orbit, pinch/+/− zoom, camera undo and obstruction avoidance remain usable; elevation can still be adjusted manually (~27–70°).
+- **Scope:** no changes to the game world, ladder geometry, climbing, locomotion, collision, interactions, XP or saved progress. This is a first camera framing pass; visual QA on Android remains necessary.
+
+## Previous version: 0.26.0 — November 8, 2026
 - **Natural top dismount:** the climb stops just below the stone lip, where the character braces on the short upper handholds and pushes upward before stepping a short distance onto the wall. The finish is positioned only 0.19 units inside the ledge (instead of 0.64 units), without passing through upper cross-rungs.
 - **Back-first, foot-first descent:** at the wall edge, A/E begins a separate 1.18s mounting animation. The avatar faces the wall, bends forward, lowers one foot onto a rung, then the other while backing out through the open gap. Only after the body clears the stone wall does it descend and return to continuous automatic ladder climbing. Holding or tapping C while mounting returns safely to the upper landing.
 - **No ladder above the exit path:** the highest rung is below platform height; short rail ends provide handholds but no crossbar blocks the transfer. Ladder geometry, rung-height IK, and collision all share the same height cutoff. The climb track is closer to the wall for feasible leg reach and the landing sits near the rim.
@@ -213,6 +218,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.27.0 (2026-11-08):** semi-isometric elevated diagonal perspective with stable follow, manual orbit, existing zoom/undo and camera collision. Gameplay unchanged.
 - **0.26.0 (2026-11-08):** short upper lip push-off, ledge handholds, first-foot backward descent with staggered IK, clear top rung transfer, no crossbar traversal and safe C cancellation.
 - **0.25.0 (2026-11-08):** permanent vertical north-wall ladder with wall brackets, constant-Z climb/IK and solid rail/rung collisions; top/bottom safe dismounts and front-only A/E interaction.
 - **0.24.0 (2026-11-08):** posture-dependent ladder/wall/deck collision with body headroom tests, prohibited stand-up in tight gaps, angled-rail and rung solids, guarded crawl turns and safe climb exits.
