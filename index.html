@@ -1600,7 +1600,12 @@ function clearPosition(x,z){
   const dx=x-nearX,dz=z-nearZ;
   if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return false;
  }
- return bodyVolumeFits(x,z,currentPosture(),groundTopAt(x,z),true);
+ // Floaters collide at their real buoyant height, not at the lakebed.
+ // Walking and wading continue to use the actual sloping underwater floor.
+ const water=waterAt(x,z);
+ const floor=water&&water.depth>HIP_WATER_DEPTH?
+  water.surfaceY-1.20:groundTopAt(x,z);
+ return bodyVolumeFits(x,z,currentPosture(),floor,true);
 }
 function canTraverseStep(x,z){
  const currentTop=groundTopAt(player.position.x,player.position.z);
