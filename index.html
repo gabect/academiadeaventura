@@ -20,12 +20,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.9.2 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.9.2</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.10.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.10.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.9.2';let pendingBuild=null;
+const BUILD='0.10.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -112,17 +112,35 @@ function rod(parent,start,end,radius,material){
  mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
  return mesh;
 }
+// One anatomical torso topology shared by idle/walk/run and the falling ragdoll.
+// Physical bracing links are deliberately not part of these visible bones.
+const TORSO_POINTS={
+ pelvis:[0,0,0],lowerSpine:[0,.45,0],chest:[0,.90,0],
+ neck:[0,1.13,0],shoulder0:[-.52,.90,0],
+ shoulder1:[.52,.90,0],hip0:[-.24,0,0],hip1:[.24,0,0]
+};
+const TORSO_BONES=[
+ ['pelvis','lowerSpine',.07,'body'],
+ ['lowerSpine','chest',.07,'body'],
+ ['chest','neck',.055,'skin'],
+ ['chest','shoulder0',.055,'body'],
+ ['chest','shoulder1',.055,'body'],
+ ['pelvis','hip0',.055,'body'],
+ ['pelvis','hip1',.055,'body']
+];
 function person(color,accent){
  const root=new THREE.Group();
  const rig={arms:[],legs:[]};
- // Pelvis and spinal column move together; hips remain grounded in the leg chain.
+ // A split spine, anatomical shoulder connections and an articulated pelvis.
+ // Exactly these same visible bones are rebuilt on the ragdoll during a fall.
  const torso=new THREE.Group();torso.position.y=LEG.hipY;root.add(torso);rig.torso=torso;
- rod(torso,[0,0,0],[0,.90,0],.07,color);
- rod(torso,[-.25,0,0],[.25,0,0],.055,color);
- rod(torso,[-.52,.90,0],[.52,.90,0],.055,color);
+ for(const [a,b,radius,kind] of TORSO_BONES){
+  rod(torso,TORSO_POINTS[a],TORSO_POINTS[b],radius,kind==='skin'?accent:color);
+ }
  joint(torso,.10,accent,0,0,0);
- joint(torso,.09,accent,0,.90,0);
- rod(torso,[0,.90,0],[0,1.13,0],.055,accent);
+ joint(torso,.068,accent,...TORSO_POINTS.lowerSpine);
+ joint(torso,.09,accent,...TORSO_POINTS.chest);
+ joint(torso,.068,accent,...TORSO_POINTS.neck);
  const head=new THREE.Group();head.position.y=1.13;torso.add(head);rig.head=head;
  joint(head,.235,accent,0,.23,0); // Anatomical head; not a helmet or garment.
  for(const side of [-1,1]){
@@ -152,6 +170,7 @@ function person(color,accent){
   rig.legs.push({hip,knee,ankle});
  }
  root.userData.rig=rig;
+ root.userData.materials={body:color,skin:accent,legs:wood};
  setIdlePose(root);
  return root;
 }
@@ -394,40 +413,48 @@ const rigid=(id,source,offset,radius,material)=>({
 });
 function ragdollBlueprint(){
  const rig=player.userData.rig;
+ const skin=player.userData.materials.skin;
  const blueprint=[
-  rigid('pelvis',rig.torso,[0,0,0],.10,gold),
-  rigid('spine',rig.torso,[0,.52,0],.07,blue),
-  rigid('neck',rig.torso,[0,1.13,0],.085,gold),
-  rigid('head',rig.head,[0,.23,0],.235,gold)
+  rigid('pelvis',rig.torso,TORSO_POINTS.pelvis,.10,skin),
+  rigid('lowerSpine',rig.torso,TORSO_POINTS.lowerSpine,.068,skin),
+  rigid('chest',rig.torso,TORSO_POINTS.chest,.09,skin),
+  rigid('neck',rig.torso,TORSO_POINTS.neck,.068,skin),
+  rigid('head',rig.head,[0,.23,0],.235,skin)
  ];
  for(let i=0;i<2;i++){
   const a=rig.arms[i],l=rig.legs[i];
   blueprint.push(
-   rigid('shoulder'+i,a.shoulder,[0,0,0],.085,gold),
-   rigid('elbow'+i,a.elbow,[0,0,0],.075,gold),
-   rigid('wrist'+i,a.wrist,[0,0,0],.067,gold),
-   rigid('hand'+i,a.wrist,[0,-.11,0],.070,gold),
-   rigid('hip'+i,l.hip,[0,0,0],.09,gold),
-   rigid('knee'+i,l.knee,[0,0,0],.085,gold),
-   rigid('ankle'+i,l.ankle,[0,0,0],.075,gold),
-   rigid('toe'+i,l.ankle,[0,-.045,.23],.060,gold)
+   rigid('shoulder'+i,a.shoulder,[0,0,0],.082,skin),
+   rigid('elbow'+i,a.elbow,[0,0,0],.075,skin),
+   rigid('wrist'+i,a.wrist,[0,0,0],.065,skin),
+   rigid('hand'+i,a.wrist,[0,-.11,0],.070,skin),
+   rigid('hip'+i,l.hip,[0,0,0],.09,skin),
+   rigid('knee'+i,l.knee,[0,0,0],.082,skin),
+   rigid('ankle'+i,l.ankle,[0,0,0],.067,skin),
+   rigid('toe'+i,l.ankle,[0,-.045,.23],.055,skin)
   );
  }
  return blueprint;
 }
 function ragdollEdges(){
- const edges=[['pelvis','spine'],['spine','neck'],['neck','head'],
-  ['neck','shoulder0'],['neck','shoulder1'],
-  ['shoulder0','shoulder1'],
-  ['pelvis','hip0'],['pelvis','hip1'],['hip0','hip1'],
-  ['shoulder0','hip0'],['shoulder1','hip1'],
-  ['shoulder0','hip1'],['shoulder1','hip0']];
- for(let i=0;i<2;i++)edges.push(
-  ['shoulder'+i,'elbow'+i],['elbow'+i,'wrist'+i],
-  ['wrist'+i,'hand'+i],['hip'+i,'knee'+i],
-  ['knee'+i,'ankle'+i],['ankle'+i,'toe'+i]
+ // The visible ragdoll torso is constructed from the exact same topology
+ // used by person(). Extra constraints preserve stability but draw no mesh.
+ const visible=TORSO_BONES.map(([a,b,radius,kind])=>({a,b,radius,kind,visible:true}));
+ visible.push({a:'neck',b:'head',radius:.055,kind:'skin',visible:true});
+ for(let i=0;i<2;i++)visible.push(
+  {a:'shoulder'+i,b:'elbow'+i,radius:.055,kind:'body',visible:true},
+  {a:'elbow'+i,b:'wrist'+i,radius:.05,kind:'body',visible:true},
+  {a:'wrist'+i,b:'hand'+i,radius:.045,kind:'skin',visible:true},
+  {a:'hip'+i,b:'knee'+i,radius:.065,kind:'legs',visible:true},
+  {a:'knee'+i,b:'ankle'+i,radius:.055,kind:'legs',visible:true},
+  {a:'ankle'+i,b:'toe'+i,radius:.06,kind:'legs',visible:true}
  );
- return edges;
+ const hidden=[
+  ['shoulder0','shoulder1'],['hip0','hip1'],
+  ['shoulder0','hip0'],['shoulder1','hip1'],
+  ['shoulder0','hip1'],['shoulder1','hip0']
+ ].map(([a,b])=>({a,b,visible:false}));
+ return [...visible,...hidden];
 }
 function fallObstacleList(){
  return [
@@ -472,22 +499,26 @@ function beginFall(reason='Lost balance'){
   // Start the loss of balance with a small, controlled upper-body angular
   // velocity. The legs start slower, so the body tips instead of translating.
   const tip=node.id==='head'?.035:node.id==='neck'?.028:
-   node.id.startsWith('shoulder')?.025:node.id==='spine'?.020:
-   node.id==='pelvis'?.006:node.id.startsWith('knee')?.009:0;
+   node.id.startsWith('shoulder')?.025:node.id==='chest'?.022:
+   node.id==='lowerSpine'?.018:node.id==='pelvis'?.006:
+   node.id.startsWith('knee')?.009:0;
   node.prev.addScaledVector(FALL.direction,-tip);
   const m=new THREE.Mesh(jointGeometry,b.material);
   m.scale.setScalar(b.radius);m.castShadow=true;FALL.group.add(m);
   node.mesh=m;FALL.nodes.push(node);nodesByName.set(b.id,node);
  }
- for(const [a,b] of ragdollEdges()){
-  const u=nodesByName.get(a),v=nodesByName.get(b);
-  if(!u||!v)continue;
+ for(const edge of ragdollEdges()){
+  const u=nodesByName.get(edge.a),v=nodesByName.get(edge.b);
+  if(!u||!v)throw Error('Ragdoll bone endpoint missing: '+edge.a+' / '+edge.b);
   const length=u.p.distanceTo(v.p);
   if(length<.04)continue;
-  const mesh=new THREE.Mesh(FALL_BONE_GEOMETRY,
-   a.startsWith('hip')||a.startsWith('knee')||a.startsWith('ankle')?wood:blue);
-  mesh.castShadow=true;FALL.group.add(mesh);
-  FALL.links.push({a:u,b:v,length,mesh});
+  let mesh=null;
+  if(edge.visible){
+   const material=player.userData.materials[edge.kind];
+   mesh=new THREE.Mesh(FALL_BONE_GEOMETRY,material);
+   mesh.castShadow=true;FALL.group.add(mesh);
+  }
+  FALL.links.push({a:u,b:v,length,mesh,visible:edge.visible,radius:edge.radius||.055});
  }
  // Prevent elbows/knees from collapsing into impossibly acute angles.
  for(let i=0;i<2;i++){
@@ -499,7 +530,7 @@ function beginFall(reason='Lost balance'){
  runButton.disabled=true;interactButton.disabled=true;
  // A downward start helps the hips and knees buckle; no upward launch.
  for(const n of FALL.nodes){
-  n.prev.y+=['pelvis','spine','neck','head'].includes(n.id)?.020:.008;
+  n.prev.y+=['pelvis','lowerSpine','chest','neck','head'].includes(n.id)?.020:.008;
  }
  LOCOMOTION.vx=0;LOCOMOTION.vz=0;
  document.getElementById('message').textContent=reason+' — press Stand Up when ready.';
@@ -565,8 +596,9 @@ function physicsFallStep(dt){
    n.contacts.clear();n.onFloor=false;
    const velocity=n.p.clone().sub(n.prev).multiplyScalar(.976);
    const upperForce=n.id==='head'?19:n.id==='neck'?16:
-    n.id.startsWith('shoulder')?13:n.id==='spine'?11:
-    n.id==='pelvis'?3.5:n.id.startsWith('knee')?2.5:0;
+    n.id.startsWith('shoulder')?13:n.id==='chest'?12:
+    n.id==='lowerSpine'?9:n.id==='pelvis'?3.5:
+    n.id.startsWith('knee')?2.5:0;
    velocity.x+=FALL.direction.x*upperForce*tipDrive*dt*dt;
    velocity.z+=FALL.direction.z*upperForce*tipDrive*dt*dt;
    if(n.id==='pelvis'||n.id.startsWith('knee')){
@@ -593,7 +625,7 @@ function physicsFallStep(dt){
     }
    }
    for(const n of FALL.nodes)projectFallNode(n);
-   for(const link of FALL.links)projectFallBone(link);
+   for(const link of FALL.links)if(link.visible)projectFallBone(link);
   }
   for(const n of FALL.nodes){
    projectFallNode(n);
@@ -623,11 +655,12 @@ function renderFallenBody(){
  const temp=new THREE.Vector3();
  for(const n of FALL.nodes)n.mesh.position.copy(n.p);
  for(const link of FALL.links){
+  if(!link.mesh)continue; // Hidden physics braces must never render.
   const direction=temp.subVectors(link.b.p,link.a.p);
   const length=direction.length();
   link.mesh.position.copy(link.a.p).addScaledVector(direction,.5);
   link.mesh.quaternion.setFromUnitVectors(FALL_Y_AXIS,direction.normalize());
-  link.mesh.scale.set(.060,length,.060);
+  link.mesh.scale.set(link.radius,length,link.radius);
  }
  const pelvis=FALL.nodes.find(n=>n.id==='pelvis');
  if(pelvis){
