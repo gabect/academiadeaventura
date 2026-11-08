@@ -586,7 +586,7 @@ const LADDER_LOCAL=new THREE.Vector3();
 function ladderRootAt(progress,out){
  const height=(LADDER.deckY-LADDER.bottomY)*progress;
  return out.set(LADDER.x,height,Math.max(
-  ladderZAtHeight(LADDER.bottomY+height+.62)+.27,
+  ladderZAtHeight(LADDER.bottomY+height+.62)+.39,
   WALL_TRAINING.maxZ+.455));
 }
 function ladderEntry(){
