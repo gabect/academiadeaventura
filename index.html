@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Adventure Academy — Prototype</title><style>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Adventure Academy — Playground de pruebas</title><style>
 html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
@@ -33,18 +33,18 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.29.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.29.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.30.0 · Playground de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Playground · v0.30.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.29.0';let pendingBuild=null;
+const BUILD='0.30.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
-const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',35,85);
 const camera=new THREE.PerspectiveCamera(34,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 // Link's Awakening-style top-down diorama camera: NORTH remains at screen top.
 // The view is a steep, slightly tilted aerial shot, NOT a diagonal 45° isometric.
@@ -141,7 +141,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
  });
 }
 setCameraZoom(1);
-scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-18;sun.shadow.camera.right=18;sun.shadow.camera.top=18;sun.shadow.camera.bottom=-18;scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-22;sun.shadow.camera.right=22;sun.shadow.camera.top=22;sun.shadow.camera.bottom=-22;scene.add(sun);
 const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
 const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${n}`;if(!cylCache.has(k))cylCache.set(k,new THREE.CylinderGeometry(rt,rb,h,n));const o=new THREE.Mesh(cylCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
@@ -152,25 +152,107 @@ const TERRAIN={floorTop:-.05,soleClearance:.11};
 const WALKABLE_ELEVATIONS=[];
 // Water bodies share one reusable depth sampler; world-space Y is the
 // water surface, while a smooth excavated bed controls walking vs swimming.
+// Lake and outgoing river are one connected water system on a sculpted floor.
+// The original shallow puddle stays available for basic wading tests.
 const WATER_BODIES=[
  {id:'puddle',kind:'puddle',x:-7.25,z:4.60,rx:1.35,rz:.85,maxDepth:.28},
- {id:'pond',kind:'lake',x:7.85,z:4.85,rx:2.15,rz:1.72,maxDepth:2.15}
+ {id:'lake-main',kind:'lake',x:10.0,z:8.10,rx:4.40,rz:4.35,maxDepth:2.80}
+];
+// River runs out of the southwest side of the lake and winds across the
+// larger playground. Shallow fords alternate with sections deep enough to swim.
+const RIVER_NODES=[
+ {x:8.20,z:9.50,width:1.65,depth:2.40,flow:.48},
+ {x:6.30,z:10.40,width:1.50,depth:2.25,flow:1.00},
+ {x:4.25,z:11.80,width:1.43,depth:2.40,flow:1.55},
+ {x:1.75,z:13.00,width:1.55,depth:.68,flow:.78},
+ {x:-.55,z:13.90,width:1.35,depth:2.15,flow:1.35},
+ {x:-3.20,z:14.50,width:1.28,depth:2.55,flow:1.75},
+ {x:-6.50,z:15.00,width:1.38,depth:.85,flow:1.15},
+ {x:-10.80,z:14.90,width:1.45,depth:2.20,flow:1.45}
 ];
 const WATER_SURFACE_Y=TERRAIN.floorTop+.018;
+const WATER_RENDER_BOUNDS={minX:-13.0,maxX:15.5,minZ:2.25,maxZ:16.75};
+const RIVER_DISTANCES=[0];
+for(let i=0;i<RIVER_NODES.length-1;i++){
+ const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+ RIVER_DISTANCES.push(RIVER_DISTANCES[i]+Math.hypot(b.x-a.x,b.z-a.z));
+}
+const RIVER_LENGTH=RIVER_DISTANCES[RIVER_DISTANCES.length-1];
+function smoothWater(t){
+ const u=THREE.MathUtils.clamp(t,0,1);
+ return u*u*(3-2*u);
+}
 function waterDepthAt(body,x,z){
  const r=Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
- if(r>=1)return 0;
- // Smooth shoreline: no invisible drop or sharp collider at the water edge.
- const t=1-r;
- return body.maxDepth*t*t*(3-2*t);
+ return body.maxDepth*smoothWater(1-r);
+}
+function riverSample(x,z){
+ let closest=null;
+ for(let i=0;i<RIVER_NODES.length-1;i++){
+  const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+  const dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
+  const t=THREE.MathUtils.clamp(
+   ((x-a.x)*dx+(z-a.z)*dz)/len2,0,1);
+  const cx=a.x+t*dx,cz=a.z+t*dz;
+  const distance=Math.hypot(x-cx,z-cz);
+  const width=THREE.MathUtils.lerp(a.width,b.width,t);
+  const signed=1-distance/width;
+  if(!closest||distance/width<closest.relativeDistance){
+   const length=Math.sqrt(len2);
+   closest={
+    coverage:signed,relativeDistance:distance/width,
+    depth:THREE.MathUtils.lerp(a.depth,b.depth,t)*smoothWater(signed),
+    flow:THREE.MathUtils.lerp(a.flow,b.flow,t),
+    dirX:dx/length,dirZ:dz/length,width
+   };
+  }
+ }
+ return closest;
+}
+function waterCoverageAt(x,z){
+ let signed=-Infinity;
+ for(const body of WATER_BODIES){
+  signed=Math.max(signed,1-Math.hypot((x-body.x)/body.rx,
+   (z-body.z)/body.rz));
+ }
+ return Math.max(signed,riverSample(x,z).coverage);
 }
 function waterAt(x,z){
+ let selected=null,depth=0;
  for(const body of WATER_BODIES){
-  const depth=waterDepthAt(body,x,z);
-  if(depth>.00001)return {body,depth,floorY:TERRAIN.floorTop-depth,
-   surfaceY:WATER_SURFACE_Y};
+  const d=waterDepthAt(body,x,z);
+  if(d>depth){depth=d;selected=body;}
  }
- return null;
+ const river=riverSample(x,z);
+ if(river.depth>depth){
+  depth=river.depth;
+  selected={id:'river-main',kind:'river'};
+ }
+ if(depth<=.00001)return null;
+ return {body:selected,depth,floorY:TERRAIN.floorTop-depth,
+  surfaceY:WATER_SURFACE_Y};
+}
+// A force field rather than a painted directional texture; current
+// continues even if the player releases the joystick.
+function waterCurrentAt(x,z){
+ const water=waterAt(x,z);
+ if(!water)return {x:0,z:0,strength:0};
+ const river=riverSample(x,z);
+ const influence=smoothWater(river.coverage/.55);
+ const strength=river.flow*influence;
+ return {x:river.dirX*strength,z:river.dirZ*strength,strength};
+}
+function riverPointAtDistance(distance){
+ const along=((distance%RIVER_LENGTH)+RIVER_LENGTH)%RIVER_LENGTH;
+ let i=0;
+ while(i<RIVER_NODES.length-2&&along>RIVER_DISTANCES[i+1])i++;
+ const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+ const span=RIVER_DISTANCES[i+1]-RIVER_DISTANCES[i];
+ const t=span?(along-RIVER_DISTANCES[i])/span:0;
+ const dx=(b.x-a.x)/span,dz=(b.z-a.z)/span;
+ return {x:THREE.MathUtils.lerp(a.x,b.x,t),
+  z:THREE.MathUtils.lerp(a.z,b.z,t),dirX:dx,dirZ:dz,
+  width:THREE.MathUtils.lerp(a.width,b.width,t)};
 }
 const STEP_HEIGHT=.30,MAX_STEP_UP=.34,MAX_STEP_DOWN=.34;
 const BALCONY={
@@ -202,68 +284,82 @@ function addRailCollider(minX,maxX,minZ,maxZ){
  BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
 }
 const FLOOR_DECAL_OFFSET=.002;
-// Excise the pond and puddle footprints from the otherwise flat terrain.
- // This is an actual depressed basin, not blue paint over a solid grass floor.
-const terrainShape=new THREE.Shape();
-terrainShape.moveTo(-18,-18);terrainShape.lineTo(18,-18);
-terrainShape.lineTo(18,18);terrainShape.lineTo(-18,18);
-terrainShape.closePath();
-for(const water of WATER_BODIES){
- const opening=new THREE.Path();
- opening.absellipse(water.x,-water.z,water.rx,water.rz,
-  0,Math.PI*2,true,0);
- terrainShape.holes.push(opening);
+// Double the WALKABLE playground area while retaining the old castle and
+// staircase. Terrain is a single continuous heightfield, so the joined river
+// and lake cannot leave overlapping-hole seams or invisible solid grass.
+const TERRAIN_HALF_SIZE=21;
+const terrainResolution=126;
+const terrainGeometry=new THREE.PlaneGeometry(
+ TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
+ terrainResolution,terrainResolution);
+const groundPositions=terrainGeometry.attributes.position;
+const groundColors=[];
+const dryGrass=new THREE.Color('#80aa71');
+const wetBed=new THREE.Color('#60796c');
+const terrainShade=new THREE.Color();
+for(let i=0;i<groundPositions.count;i++){
+ const x=groundPositions.getX(i),z=-groundPositions.getY(i);
+ const water=waterAt(x,z),depth=water?water.depth:0;
+ groundPositions.setZ(i,-depth);
+ terrainShade.copy(dryGrass).lerp(wetBed,
+  THREE.MathUtils.clamp(depth/1.8,0,1));
+ groundColors.push(terrainShade.r,terrainShade.g,terrainShade.b);
 }
-const groundMesh=new THREE.Mesh(new THREE.ShapeGeometry(terrainShape,64),grass);
+terrainGeometry.setAttribute('color',
+ new THREE.Float32BufferAttribute(groundColors,3));
+terrainGeometry.computeVertexNormals();
+const terrainMaterial=new THREE.MeshStandardMaterial({
+ vertexColors:true,roughness:.95,side:THREE.DoubleSide});
+const groundMesh=new THREE.Mesh(terrainGeometry,terrainMaterial);
 groundMesh.rotation.x=-Math.PI/2;
 groundMesh.position.y=TERRAIN.floorTop;
 groundMesh.receiveShadow=true;scene.add(groundMesh);
-// Procedural elliptical water surfaces and excavated bottoms share the same
-// depth function as locomotion. This scales to future ponds and lake areas.
+// One watertight water surface over the union of puddle, lake and winding
+// river. Clip small mesh triangles to the analytical shoreline contour.
 const WATER_VISUALS=[];
-const lakeBedMat=new THREE.MeshStandardMaterial({
- color:'#617d68',roughness:1,side:THREE.DoubleSide
-});
 const waterMat=new THREE.MeshStandardMaterial({
  color:'#3d9db4',roughness:.26,metalness:.02,
  transparent:true,opacity:.71,depthWrite:false,side:THREE.DoubleSide
 });
-const shoreMat=new THREE.MeshBasicMaterial({
- color:'#a8d6b8',transparent:true,opacity:.52,depthWrite:false
-});
-for(const body of WATER_BODIES){
- const ringCount=18,segments=64,vertices=[],indices=[];
- for(let j=0;j<=ringCount;j++){
-  const radius=j/ringCount;
-  for(let k=0;k<=segments;k++){
-   const angle=k/segments*Math.PI*2;
-   const x=body.x+Math.cos(angle)*body.rx*radius;
-   const z=body.z+Math.sin(angle)*body.rz*radius;
-   vertices.push(x,TERRAIN.floorTop-waterDepthAt(body,x,z)-.008,z);
+const waterTriangles=[];
+function addWaterTriangle(a,b,c){
+ let poly=[a,b,c];
+ const output=[];
+ for(let i=0;i<poly.length;i++){
+  const p=poly[i],q=poly[(i+1)%poly.length];
+  if(p.coverage>=0)output.push(p);
+  if((p.coverage>0)!==(q.coverage>0)){
+   const t=p.coverage/(p.coverage-q.coverage);
+   output.push({x:THREE.MathUtils.lerp(p.x,q.x,t),
+    z:THREE.MathUtils.lerp(p.z,q.z,t),coverage:0});
   }
  }
- for(let j=0;j<ringCount;j++)for(let k=0;k<segments;k++){
-  const a=j*(segments+1)+k,b=a+segments+1;
-  indices.push(a,b,a+1,b,b+1,a+1);
+ for(let i=1;i<output.length-1;i++){
+  for(const v of [output[0],output[i],output[i+1]])
+   waterTriangles.push(v.x,WATER_SURFACE_Y,v.z);
  }
- const floorGeometry=new THREE.BufferGeometry();
- floorGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
- floorGeometry.setIndex(indices);floorGeometry.computeVertexNormals();
- const bed=new THREE.Mesh(floorGeometry,lakeBedMat);
- bed.receiveShadow=true;scene.add(bed);
- const surfaceShape=new THREE.Shape();
- surfaceShape.absellipse(0,0,body.rx,body.rz,0,Math.PI*2,false,0);
- const waterPlane=new THREE.Mesh(new THREE.ShapeGeometry(surfaceShape,64),
-  waterMat.clone());
- waterPlane.rotation.x=-Math.PI/2;
- waterPlane.position.set(body.x,WATER_SURFACE_Y,body.z);
- waterPlane.renderOrder=2;scene.add(waterPlane);
- const rim=new THREE.Mesh(new THREE.RingGeometry(.985,1.01,64),shoreMat);
- rim.rotation.x=-Math.PI/2;rim.scale.set(body.rx,body.rz,1);
- rim.position.set(body.x,WATER_SURFACE_Y+.003,body.z);
- rim.renderOrder=3;scene.add(rim);
- WATER_VISUALS.push({body,waterPlane});
 }
+const waterStep=.24;
+const waterBounds=WATER_RENDER_BOUNDS;
+const xCount=Math.ceil((waterBounds.maxX-waterBounds.minX)/waterStep);
+const zCount=Math.ceil((waterBounds.maxZ-waterBounds.minZ)/waterStep);
+function waterVertex(x,z){
+ return {x,z,coverage:waterCoverageAt(x,z)};
+}
+for(let ix=0;ix<xCount;ix++)for(let iz=0;iz<zCount;iz++){
+ const x=waterBounds.minX+ix*waterStep;
+ const z=waterBounds.minZ+iz*waterStep;
+ const a=waterVertex(x,z),b=waterVertex(x+waterStep,z);
+ const c=waterVertex(x+waterStep,z+waterStep),d=waterVertex(x,z+waterStep);
+ addWaterTriangle(a,b,c);addWaterTriangle(a,c,d);
+}
+const waterGeometry=new THREE.BufferGeometry();
+waterGeometry.setAttribute('position',
+ new THREE.Float32BufferAttribute(waterTriangles,3));
+waterGeometry.computeVertexNormals();
+const waterSurface=new THREE.Mesh(waterGeometry,waterMat);
+waterSurface.renderOrder=2;scene.add(waterSurface);
+WATER_VISUALS.push({body:WATER_BODIES[1],waterPlane:waterSurface});
 const swimRipple=new THREE.Mesh(new THREE.RingGeometry(.23,.29,32),
  new THREE.MeshBasicMaterial({
   color:'#c8f0e9',transparent:true,opacity:.55,depthWrite:false,
@@ -271,6 +367,20 @@ const swimRipple=new THREE.Mesh(new THREE.RingGeometry(.23,.29,32),
  }));
 swimRipple.rotation.x=-Math.PI/2;
 swimRipple.visible=false;swimRipple.renderOrder=4;scene.add(swimRipple);
+// Moving light foam marks the downstream direction of the river.
+const streamFoam=[];
+const foamMat=new THREE.MeshBasicMaterial({
+ color:'#d3f4ed',transparent:true,opacity:.38,depthWrite:false,
+ side:THREE.DoubleSide
+});
+for(let i=0;i<22;i++){
+ const mark=new THREE.Mesh(new THREE.RingGeometry(.085,.12,18),
+  foamMat.clone());
+ mark.rotation.x=-Math.PI/2;
+ mark.renderOrder=4;scene.add(mark);
+ streamFoam.push(mark);
+}
+let streamTime=0;
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
 pavement.rotation.x=-Math.PI/2;
 pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
@@ -421,10 +531,28 @@ function buildWallMountedLadder(){
  for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;y+=LADDER.rungSpacing)
   rod(group,[left,y,z],[right,y,z],.044,rungMat);
 }
-for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
-for(let z=-10;z<=10;z+=2.1){box(2,2,1.5,wall,-13,1,z);box(2,2,1.5,wall,13,1,z)}for(let x=-11;x<=11;x+=2.1){box(1.5,2,2,wall,x,1,-13);box(1.5,2,2,wall,x,1,13)}
+// Enlarged outer perimeter: the central training wall, deck, castle and
+// staircase remain where they were. Only the outer arena is expanded.
+const OUTER_WALL=18;
+for(const x of [-OUTER_WALL,OUTER_WALL])
+ for(const z of [-OUTER_WALL,OUTER_WALL]){
+  cylinder(1.65,1.8,6,wall,x,3,z);
+  cylinder(2.2,0,2.5,roof,x,7.2,z);
+  for(let k=0;k<4;k++){
+   const a=k*Math.PI/2;
+   box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1);
+  }
+ }
+for(let z=-15.9;z<=15.9;z+=2.1){
+ box(2,2,1.5,wall,-OUTER_WALL,1,z);
+ box(2,2,1.5,wall,OUTER_WALL,1,z);
+}
+for(let x=-15.9;x<=15.9;x+=2.1){
+ box(1.5,2,2,wall,x,1,-OUTER_WALL);
+ box(1.5,2,2,wall,x,1,OUTER_WALL);
+}
 function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864');cylinder(0,1.65,3,leaves,x,3.3,z,scene,7);cylinder(0,1.2,2.2,leaves,x,4.6,z,scene,7)}
-[[-9,-8],[9,-8],[-9,8],[9,8]].forEach(p=>tree(...p));
+[[-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15]].forEach(p=>tree(...p));
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
@@ -1395,6 +1523,20 @@ function updateWaterVisual(dt){
  for(const water of WATER_VISUALS)
   water.waterPlane.material.opacity=.69+
    .035*Math.sin(wet.cycle+water.body.x*.3);
+ streamTime+=dt;
+ for(let i=0;i<streamFoam.length;i++){
+  const mark=streamFoam[i];
+  const distance=streamTime*(1.0+(i%3)*.24)+
+   RIVER_LENGTH*i/streamFoam.length;
+  const sample=riverPointAtDistance(distance);
+  const drift=Math.sin(i*5.23)*sample.width*.45;
+  mark.position.set(sample.x-sample.dirZ*drift,
+   WATER_SURFACE_Y+.026,sample.z+sample.dirX*drift);
+  const active=waterAt(mark.position.x,mark.position.z)!==null;
+  mark.visible=active;
+  mark.material.opacity=.25+.14*Math.sin(streamTime*2+i);
+ }
+
 }
 // Push-off drives acceleration during foot contact; momentum continues during
 // sprint flight, as it should in real physics. Contact and collisions govern
@@ -1445,9 +1587,13 @@ function stepLocomotion(dt,right,forward,runEnabled){
   gait.vx*=airDrag;gait.vz*=airDrag;
  }
  const startX=player.position.x,startZ=player.position.z;
- const expectedTravel=Math.hypot(gait.vx,gait.vz)*dt;
+ const current=waterCurrentAt(startX,startZ);
+ const currentFactor=WATER_STATE.mode==='swim'?1:
+  WATER_STATE.mode==='wade'?.33:0;
+ const flowX=current.x*currentFactor,flowZ=current.z*currentFactor;
+ const expectedTravel=Math.hypot(gait.vx+flowX,gait.vz+flowZ)*dt;
  const impactSpeed=Math.hypot(gait.vx,gait.vz);
- moveWithCollisions(gait.vx*dt,gait.vz*dt);
+ moveWithCollisions((gait.vx+flowX)*dt,(gait.vz+flowZ)*dt);
  updateWaterState();
  const xDelta=player.position.x-startX,zDelta=player.position.z-startZ;
  // A hard sprint impact triggers a protective stumble, never a fall.
@@ -1456,7 +1602,9 @@ function stepLocomotion(dt,right,forward,runEnabled){
   beginBalanceRecovery('Watch the obstacle',Math.max(.44,impactSpeed/8));return;
  }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
- gait.vx=xDelta/dt;gait.vz=zDelta/dt;
+ // Retain self-propulsion separately from river drift so letting go
+ // of the joystick doesn't cancel the downstream current.
+ gait.vx=xDelta/dt-flowX;gait.vz=zDelta/dt-flowZ;
  gait.runBlend=THREE.MathUtils.damp(gait.runBlend,
   runEnabled&&!crouched&&!crawling&&WATER_STATE.mode!=='swim'?1:0,8,dt);
  const actualTravel=Math.hypot(xDelta,zDelta);
@@ -1524,9 +1672,9 @@ const obstacles=[
   ...[[-9,-8],[9,-8],[-9,8],[9,8]].map(([x,z])=>({x,z,r:.48})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.32})),
   {x:guardian.position.x,z:guardian.position.z,r:.76},
-  ...[-12,12].flatMap(x=>[-12,12].map(z=>({x,z,r:1.82})))
+  ...[-OUTER_WALL,OUTER_WALL].flatMap(x=>[-OUTER_WALL,OUTER_WALL].map(z=>({x,z,r:1.82})))
 ];
-const BOUND=11.55; // Inner face of the surrounding courtyard walls.
+const BOUND=11.55*Math.SQRT2; // Exactly twice the former playable AREA.
 const BODY_CLEARANCE={
  stand:{radius:.40,height:2.13,points:[0]},
  crouch:{radius:.38,height:1.72,points:[0]},
@@ -1738,7 +1886,7 @@ function fallObstacleList(){
   ...[[-9,-8],[9,-8],[-9,8],[9,8]].map(([x,z])=>({x,z,r:.34,height:2.6})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.16,height:3})),
   {x:guardian.position.x,z:guardian.position.z,r:.65,height:2.7},
-  ...[-12,12].flatMap(x=>[-12,12].map(z=>({x,z,r:1.82,height:8})))
+  ...[-OUTER_WALL,OUTER_WALL].flatMap(x=>[-OUTER_WALL,OUTER_WALL].map(z=>({x,z,r:1.82,height:8})))
  ];
 }
 const FALL_COLLIDERS=fallObstacleList();
