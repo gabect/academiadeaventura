@@ -1217,6 +1217,61 @@ for(let segment=0;segment<LAJA_ROUTE.length-1;segment++){
 }
 // Short approach trail from the lowland camp toward the lake stairs.
 groundRibbon([[0,7],[4,15],[5,22],[8,22]],1.45,trailMat);
+// A SECOND deliberate ascent: 35° natural graded track through the east
+// notch. Outside the marked passes, the cliff remains nearly vertical.
+const EASTERN_MOUNTAIN_TRAIL=[
+ [12.6,-11.6],[12.6,-16.5],[12.6,-22],[12.6,-28.5],
+ [12.6,-32],[10,-38]
+];
+groundRibbon(EASTERN_MOUNTAIN_TRAIL,2.35,trailMat);
+// WESTERN SUMMIT: a clearly marked 45° uphill traverse from the green
+// valley floor up to a second, higher green terrace at elevation 18.
+const SUMMIT_ASCENT_TRAIL=[
+ [-27,-46],[-35,-44],[-39,-43],[-41,-43],
+ [-44,-43],[-47,-43],[-50,-43],[-55,-43]
+];
+groundRibbon(SUMMIT_ASCENT_TRAIL,2.30,trailMat);
+const summitTrailStone=mat('#b5ae9b');
+for(let x=-41;x>=-50;x-=.79){
+ const surface=naturalSurfaceY(x,-43);
+ for(const side of [-1,1]){
+  const z=-43+side*1.33;
+  const pebble=box(.25,.09,.43,summitTrailStone,
+   x,naturalSurfaceY(x,z)+.048,z);
+  pebble.rotation.y=x*.13;
+ }
+}
+// A few understated wooden signposts make every ascent entrance obvious.
+// They use real meshes so the same curved-world shader bends their boards
+// with the landscape, unlike screen-space floating labels.
+const trailBoard=mat('#79593c'),trailPostMat=mat('#6d5840');
+function placeMountainSign(label,x,z){
+ const ground=naturalSurfaceY(x,z);
+ box(.16,1.42,.15,trailPostMat,x,ground+.71,z);
+ box(2.96,.89,.11,trailBoard,x,ground+1.53,z);
+ const board=document.createElement('canvas');
+ board.width=512;board.height=150;
+ const ctx=board.getContext('2d');
+ if(!ctx)return;
+ ctx.clearRect(0,0,512,150);
+ ctx.fillStyle='#f9edce';ctx.textAlign='center';
+ ctx.textBaseline='middle';ctx.font='bold 49px sans-serif';
+ ctx.fillText(label,256,76,484);
+ const canvasTexture=new THREE.CanvasTexture(board);
+ canvasTexture.colorSpace=THREE.SRGBColorSpace;
+ const lettering=new THREE.Mesh(
+  new THREE.PlaneGeometry(2.85,.78),
+  new THREE.MeshBasicMaterial({
+   map:canvasTexture,transparent:true,side:THREE.DoubleSide,
+   depthWrite:false
+  }));
+ lettering.position.set(x,ground+1.53,z+.071);
+ lettering.renderOrder=3;scene.add(lettering);
+}
+placeMountainSign('VALLE 30°',-10.55,-13.15);
+placeMountainSign('VALLE 35°',17.25,-13.15);
+placeMountainSign('CUMBRE 45°',-39.4,-40.0);
+
 
 // The same coordinates drive vegetation and its collision proxies.
 const FIELD_TREE_POSITIONS=[
