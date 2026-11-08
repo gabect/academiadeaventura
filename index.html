@@ -353,7 +353,7 @@ function addRailCollider(minX,maxX,minZ,maxZ){
 // The old isolated test hills are preserved in the historical map.
 const FIELD_HILLS=[
  {id:'southwest-meadow',x:-48,z:35,radius:10,height:1.4},
- {id:'central-knoll',x:-17,z:31,radius:8,height:1.1},
+ {id:'central-knoll',x:-4,z:42,radius:8,height:1.1},
  {id:'low-woodland',x:-53,z:-3,radius:9,height:1.6},
  {id:'southern-bank',x:-13,z:46,radius:7,height:.9}
 ];
@@ -741,7 +741,7 @@ function buildWallMountedLadder(ladder=LADDER){
 const rampWoodMat=mat('#946e45'),rampStoneMat=mat('#adb3af');
 const rampTrim=mat('#cfbf9c');
 function buildRampSlice(ramp,start,end,startY,endY,material){
- const floor=TERRAIN.floorTop-.10;
+ const floor=(ramp.baseY??TERRAIN.floorTop)-.10;
  const sideX=-ramp.dz,sideZ=ramp.dx,half=ramp.width*.5;
  const point=(t,side,y)=>[
   ramp.x+ramp.dx*t+sideX*side*half,y,
