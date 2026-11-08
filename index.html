@@ -30,12 +30,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.18.2 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.18.2</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.19.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.19.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.18.2';let pendingBuild=null;
+const BUILD='0.19.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -102,9 +102,25 @@ function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${
 // Visual-only overlay surfaces use a tiny rendering offset to avoid z-fighting,
 // not a gameplay height or step. Future elevated props opt into ground sampling.
 const TERRAIN={floorTop:-.05,soleClearance:.11};
-// Reserved for future steps/platforms only. Decorative or solid objects are NOT
-// walkable unless registered here with walkable:true and a surface footprint.
+// Walkable surfaces are explicitly registered; decorative boxes are NOT ground.
 const WALKABLE_ELEVATIONS=[];
+const STEP_HEIGHT=.30,MAX_STEP_UP=.34,MAX_STEP_DOWN=.34;
+const BALCONY={
+ xMin:7.10,xMax:10.10,zMin:1.20,zMax:5.80,
+ stairsMinX:4.70,stairsMinZ:2.20,stairsMaxZ:4.80,
+ stepDepth:.60,steps:4
+};
+const BALCONY_RAIL_COLLIDERS=[];
+const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
+ BALCONY_EDGE=mat('#593a29'),STAIR_STONE=mat('#b7b4a5'),
+ STAIR_TRIM=mat('#d6d1bd');
+function addWalkable(name,minX,maxX,minZ,maxZ,topY,kind){
+ const surface={name,walkable:true,minX,maxX,minZ,maxZ,topY,kind};
+ WALKABLE_ELEVATIONS.push(surface);return surface;
+}
+function addRailCollider(minX,maxX,minZ,maxZ){
+ BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
+}
 const FLOOR_DECAL_OFFSET=.002;
 box(36,.5,36,grass,0,-.3,0); // top face = -.05
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
@@ -134,6 +150,73 @@ function groundTopAt(x,z){
  return top;
 }
 function ankleGroundY(x,z){return groundTopAt(x,z)+TERRAIN.soleClearance;}
+// A timber viewing balcony, reached from the courtyard by four stone risers.
+// Registered surface boundaries match the solid mesh TOPS exactly.
+function buildBalconyAndStoneSteps(){
+ const b=BALCONY,base=TERRAIN.floorTop,deckTop=base+b.steps*STEP_HEIGHT;
+ const deckCenterX=(b.xMin+b.xMax)*.5,deckCenterZ=(b.zMin+b.zMax)*.5;
+ const deckW=b.xMax-b.xMin,deckD=b.zMax-b.zMin;
+ box(deckW,.22,deckD,BALCONY_WOOD,deckCenterX,deckTop-.11,deckCenterZ);
+ // Timber support posts terminate exactly under the deck.
+ for(const px of [b.xMin+.20,b.xMax-.20])
+  for(const pz of [b.zMin+.20,b.zMax-.20])
+   box(.24,deckTop-base-.22,.24,BALCONY_EDGE,
+    px,base+(deckTop-base-.22)*.5,pz);
+ for(let x=b.xMin+.14;x<b.xMax-.08;x+=.40)
+  box(.34,.014,deckD-.22,BALCONY_PLANK,x,deckTop+.003,deckCenterZ);
+ box(deckW+.10,.12,.14,BALCONY_EDGE,deckCenterX,deckTop-.06,b.zMin);
+ box(deckW+.10,.12,.14,BALCONY_EDGE,deckCenterX,deckTop-.06,b.zMax);
+ addWalkable('wooden-balcony',b.xMin,b.xMax,b.zMin,b.zMax,deckTop,'balcony');
+ for(let i=0;i<b.steps;i++){
+  const x0=b.stairsMinX+i*b.stepDepth,x1=x0+b.stepDepth;
+  const height=(i+1)*STEP_HEIGHT,top=base+height;
+  const zCenter=(b.stairsMinZ+b.stairsMaxZ)*.5;
+  const zDepth=b.stairsMaxZ-b.stairsMinZ;
+  box(b.stepDepth,height,zDepth,STAIR_STONE,(x0+x1)*.5,
+   base+height*.5,zCenter);
+  box(b.stepDepth-.065,.012,zDepth-.11,STAIR_TRIM,(x0+x1)*.5,
+   top+.003,zCenter);
+  addWalkable('stone-step-'+(i+1),x0,x1,b.stairsMinZ,b.stairsMaxZ,
+   top,'stairs');
+ }
+ // Rails on the deck's back and sides. Leave the staircase opening unbarred.
+ const railTop=deckTop+.87;
+ function post(x,z){box(.14,.91,.14,BALCONY_EDGE,x,deckTop+.455,z);}
+ function railX(x0,x1,z){
+  box(x1-x0,.10,.095,BALCONY_EDGE,(x0+x1)*.5,railTop-.04,z);
+  box(x1-x0,.075,.075,BALCONY_WOOD,(x0+x1)*.5,deckTop+.43,z);
+  addRailCollider(x0,x1,z-.055,z+.055);
+ }
+ function railZ(x,z0,z1){
+  box(.095,.10,z1-z0,BALCONY_EDGE,x,railTop-.04,(z0+z1)*.5);
+  box(.075,.075,z1-z0,BALCONY_WOOD,x,deckTop+.43,(z0+z1)*.5);
+  addRailCollider(x-.055,x+.055,z0,z1);
+ }
+ for(const x of [b.xMin,b.xMax])for(const z of [b.zMin,b.zMax])post(x,z);
+ for(const z of [b.zMin,b.zMax])post(deckCenterX,z);
+ railX(b.xMin,b.xMax,b.zMin);railX(b.xMin,b.xMax,b.zMax);
+ railZ(b.xMax,b.zMin,b.zMax);
+ for(const [lo,hi] of [[b.zMin,b.stairsMinZ],
+                       [b.stairsMaxZ,b.zMax]]){
+  post(b.xMin,lo===b.zMin?hi:lo);
+  railZ(b.xMin,lo,hi);
+ }
+ // Angled handrails protect both flanks of the stone staircase.
+ for(const z of [b.stairsMinZ-.12,b.stairsMaxZ+.12]){
+  const start=b.stairsMinX-.08,end=b.xMin+.09;
+  for(let j=0;j<=4;j++){
+   const x=b.stairsMinX+j*b.stepDepth;
+   const top=base+Math.max(.35,j*STEP_HEIGHT+.38);
+   box(.13,top-base,.13,BALCONY_EDGE,x,(top+base)*.5,z);
+  }
+  const rise=1.18;
+  const handrail=box(.085,Math.hypot(end-start,rise),.085,
+   BALCONY_WOOD,(start+end)*.5,base+.40+rise*.5,z);
+  handrail.rotation.z=-Math.atan2(end-start,rise);
+  addRailCollider(start,end,z-.06,z+.06);
+ }
+}
+buildBalconyAndStoneSteps();
 for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
 for(let z=-10;z<=10;z+=2.1){box(2,2,1.5,wall,-13,1,z);box(2,2,1.5,wall,13,1,z)}for(let x=-11;x<=11;x+=2.1){box(1.5,2,2,wall,x,1,-13);box(1.5,2,2,wall,x,1,13)}
 function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864');cylinder(0,1.65,3,leaves,x,3.3,z,scene,7);cylinder(0,1.2,2.2,leaves,x,4.6,z,scene,7)}
