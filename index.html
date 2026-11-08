@@ -17,7 +17,7 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}
 #skillPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:8px;z-index:6;display:flex;gap:7px;align-items:center;flex-wrap:wrap;max-width:60%;color:#17323c;background:#ffffffe0;border:1px solid #ffffffad;border-radius:9px;padding:5px 8px;font:600 12px system-ui,sans-serif}
 #balanceUpgrade{border:1px solid #678080;border-radius:7px;background:#284c54;color:white;font:600 12px system-ui,sans-serif;padding:6px 8px;touch-action:manipulation}
-#balanceUpgrade:disabled{opacity:.5}
+#balanceUpgrade:disabled{opacity:.5}#waterStatus{background:#d3eff1;color:#225a68;border-radius:6px;padding:4px 6px;font-weight:700}
 @media(max-height:430px){#actionCluster{width:149px;height:113px;right:max(11px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}#interactButton{width:53px;height:53px}#runButton{width:65px;height:65px}#cancelButton{width:43px;height:43px;right:51px;bottom:69px}#actionCluster button{font-size:24px}#actionCluster button small{font-size:9px}}
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.28.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.28.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.29.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.29.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.28.0';let pendingBuild=null;
+const BUILD='0.29.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -150,6 +150,28 @@ function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${
 const TERRAIN={floorTop:-.05,soleClearance:.11};
 // Walkable surfaces are explicitly registered; decorative boxes are NOT ground.
 const WALKABLE_ELEVATIONS=[];
+// Water bodies share one reusable depth sampler; world-space Y is the
+// water surface, while a smooth excavated bed controls walking vs swimming.
+const WATER_BODIES=[
+ {id:'puddle',kind:'puddle',x:-7.25,z:4.60,rx:1.35,rz:.85,maxDepth:.28},
+ {id:'pond',kind:'lake',x:7.55,z:4.85,rx:2.20,rz:1.72,maxDepth:2.15}
+];
+const WATER_SURFACE_Y=TERRAIN.floorTop+.018;
+function waterDepthAt(body,x,z){
+ const r=Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
+ if(r>=1)return 0;
+ // Smooth shoreline: no invisible drop or sharp collider at the water edge.
+ const t=1-r;
+ return body.maxDepth*t*t*(3-2*t);
+}
+function waterAt(x,z){
+ for(const body of WATER_BODIES){
+  const depth=waterDepthAt(body,x,z);
+  if(depth>.00001)return {body,depth,floorY:TERRAIN.floorTop-depth,
+   surfaceY:WATER_SURFACE_Y};
+ }
+ return null;
+}
 const STEP_HEIGHT=.30,MAX_STEP_UP=.34,MAX_STEP_DOWN=.34;
 const BALCONY={
  xMin:7.10,xMax:10.10,zMin:-5.80,zMax:-1.20,
@@ -180,7 +202,75 @@ function addRailCollider(minX,maxX,minZ,maxZ){
  BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
 }
 const FLOOR_DECAL_OFFSET=.002;
-const groundMesh=box(36,.5,36,grass,0,-.3,0); // top face = -.05
+// Excise the pond and puddle footprints from the otherwise flat terrain.
+ // This is an actual depressed basin, not blue paint over a solid grass floor.
+const terrainShape=new THREE.Shape();
+terrainShape.moveTo(-18,-18);terrainShape.lineTo(18,-18);
+terrainShape.lineTo(18,18);terrainShape.lineTo(-18,18);
+terrainShape.closePath();
+for(const water of WATER_BODIES){
+ const opening=new THREE.Path();
+ opening.absellipse(water.x,-water.z,water.rx,water.rz,
+  0,Math.PI*2,true,0);
+ terrainShape.holes.push(opening);
+}
+const groundMesh=new THREE.Mesh(new THREE.ShapeGeometry(terrainShape,64),grass);
+groundMesh.rotation.x=-Math.PI/2;
+groundMesh.position.y=TERRAIN.floorTop;
+groundMesh.receiveShadow=true;scene.add(groundMesh);
+// Procedural elliptical water surfaces and excavated bottoms share the same
+// depth function as locomotion. This scales to future ponds and lake areas.
+const WATER_VISUALS=[];
+const lakeBedMat=new THREE.MeshStandardMaterial({
+ color:'#617d68',roughness:1,side:THREE.DoubleSide
+});
+const waterMat=new THREE.MeshStandardMaterial({
+ color:'#3d9db4',roughness:.26,metalness:.02,
+ transparent:true,opacity:.71,depthWrite:false,side:THREE.DoubleSide
+});
+const shoreMat=new THREE.MeshBasicMaterial({
+ color:'#a8d6b8',transparent:true,opacity:.52,depthWrite:false
+});
+for(const body of WATER_BODIES){
+ const ringCount=18,segments=64,vertices=[],indices=[];
+ for(let j=0;j<=ringCount;j++){
+  const radius=j/ringCount;
+  for(let k=0;k<=segments;k++){
+   const angle=k/segments*Math.PI*2;
+   const x=body.x+Math.cos(angle)*body.rx*radius;
+   const z=body.z+Math.sin(angle)*body.rz*radius;
+   vertices.push(x,TERRAIN.floorTop-waterDepthAt(body,x,z)-.008,z);
+  }
+ }
+ for(let j=0;j<ringCount;j++)for(let k=0;k<segments;k++){
+  const a=j*(segments+1)+k,b=a+segments+1;
+  indices.push(a,b,a+1,b,b+1,a+1);
+ }
+ const floorGeometry=new THREE.BufferGeometry();
+ floorGeometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ floorGeometry.setIndex(indices);floorGeometry.computeVertexNormals();
+ const bed=new THREE.Mesh(floorGeometry,lakeBedMat);
+ bed.receiveShadow=true;scene.add(bed);
+ const surfaceShape=new THREE.Shape();
+ surfaceShape.absellipse(0,0,body.rx,body.rz,0,Math.PI*2,false,0);
+ const waterPlane=new THREE.Mesh(new THREE.ShapeGeometry(surfaceShape,64),
+  waterMat.clone());
+ waterPlane.rotation.x=-Math.PI/2;
+ waterPlane.position.set(body.x,WATER_SURFACE_Y,body.z);
+ waterPlane.renderOrder=2;scene.add(waterPlane);
+ const rim=new THREE.Mesh(new THREE.RingGeometry(.985,1.01,64),shoreMat);
+ rim.rotation.x=-Math.PI/2;rim.scale.set(body.rx,body.rz,1);
+ rim.position.set(body.x,WATER_SURFACE_Y+.003,body.z);
+ rim.renderOrder=3;scene.add(rim);
+ WATER_VISUALS.push({body,waterPlane});
+}
+const swimRipple=new THREE.Mesh(new THREE.RingGeometry(.23,.29,32),
+ new THREE.MeshBasicMaterial({
+  color:'#c8f0e9',transparent:true,opacity:.55,depthWrite:false,
+  side:THREE.DoubleSide
+ }));
+swimRipple.rotation.x=-Math.PI/2;
+swimRipple.visible=false;swimRipple.renderOrder=4;scene.add(swimRipple);
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
 pavement.rotation.x=-Math.PI/2;
 pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
@@ -197,7 +287,8 @@ for(let i=-5;i<=5;i++)for(let j=-7;j<=7;j++)if((i+j)%7===0){
 // Non-walkable decorative/interactive solids still use their own collision
 // footprints and never become steps just because a visible mesh is tall.
 function groundTopAt(x,z){
- let top=TERRAIN.floorTop;
+ const water=waterAt(x,z);
+ let top=water?water.floorY:TERRAIN.floorTop;
  for(const surface of WALKABLE_ELEVATIONS){
   if(!surface.walkable)continue;
   if(x>=surface.minX&&x<=surface.maxX&&
@@ -563,7 +654,40 @@ const LOCOMOTION={
 // Shared protective reflexes for all avatars. XP can improve motor control.
 const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
 const JUMP={active:false,height:0,velocity:0};
+// Hip is the physical rule: below hip = wade; above hip = swim.
+const WATER_STATE={mode:'dry',depth:0,blend:0,cycle:0,water:null};
+const HIP_WATER_DEPTH=LEG.hipY;
+const waterStatus=document.getElementById('waterStatus');
 let crouched=false,crawling=false;
+function updateWaterState(){
+ const water=waterAt(player.position.x,player.position.z);
+ WATER_STATE.water=water;
+ WATER_STATE.depth=water?water.depth:0;
+ const prior=WATER_STATE.mode;
+ // Small hysteresis prevents mode flicker when resting on the swim boundary.
+ const threshold=HIP_WATER_DEPTH+(prior==='swim'?-.035:.025);
+ WATER_STATE.mode=!water||water.depth<.035?'dry':
+  water.depth>threshold?'swim':'wade';
+ if(WATER_STATE.mode==='swim'&&prior!=='swim'){
+  crouched=false;crawling=false;CRAWL.active=false;
+  JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+  LOCOMOTION.kneelMode=null;LOCOMOTION.strainSeconds=0;
+ }
+ if(WATER_STATE.mode!==prior){
+  waterStatus.hidden=WATER_STATE.mode==='dry';
+  waterStatus.textContent=WATER_STATE.mode==='swim'?'Swimming':'Wading';
+  updateButtonHints();
+  if(WATER_STATE.mode==='swim')
+   document.getElementById('message').textContent=
+    'Deep water: swim with the joystick / WASD. Hold B to swim faster.';
+  else if(WATER_STATE.mode==='wade')
+   document.getElementById('message').textContent=
+    'Shallow water: walk carefully while the water stays below your hips.';
+  else if(prior==='swim'||prior==='wade')
+   document.getElementById('message').textContent='Back on dry land.';
+ }
+ return WATER_STATE.mode;
+}
 const LADDER_STATE={
  active:false,mode:'none',progress:0,direction:0,time:0,cycle:0,from:new THREE.Vector3(),
  target:new THREE.Vector3(),handHeights:[null,null],footHeights:[null,null],
@@ -837,6 +961,7 @@ const CRAWL={
 };
 function toggleCrawl(){
  if(LADDER_STATE.active){cancelLadder();return;}
+ if(WATER_STATE.mode==='swim')return;
  if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
  if(!canChangePosture(crawling?'crouch':'crawl'))return;
  crawling=!crawling;
@@ -850,7 +975,7 @@ function toggleCrawl(){
   'Back to tactical crouch.';
 }
 function startJump(){
- if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched||crawling||LADDER_STATE.active)return;
+ if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched||crawling||LADDER_STATE.active||WATER_STATE.mode==='swim')return;
  JUMP.active=true;JUMP.height=0;JUMP.velocity=3.1;
 }
 function stepJump(dt){
@@ -1218,12 +1343,60 @@ function poseCrawlCharacter(character,travel,dt,moving){
    rig.arms[i].wrist.rotation.x,-.18,weight);
  }
 }
+// While swimming the player is buoyed up near the waterline, with alternating
+// arm strokes and leg kicks. No grounded foot IK runs in this state.
+function poseSwimmingCharacter(dt,travel){
+ const wet=WATER_STATE,water=wet.water,rig=player.userData.rig;
+ if(!water)return;
+ const speed=Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz);
+ const moving=speed>.04&&travel>.00001;
+ wet.cycle+=dt*(moving?2.1+speed*.48:.30);
+ wet.blend=THREE.MathUtils.damp(wet.blend,1,7,dt);
+ LOCOMOTION.terrainLift=water.floorY-TERRAIN.floorTop;
+ const floating=water.surfaceY-1.20+Math.sin(wet.cycle*2)*.026;
+ player.position.y=THREE.MathUtils.lerp(LOCOMOTION.terrainLift,
+  floating,wet.blend);
+ setIdlePose(player);
+ const sway=Math.sin(wet.cycle*2)*.05;
+ rig.torso.rotation.x=.72*wet.blend;
+ rig.torso.rotation.z=sway*wet.blend;
+ rig.head.rotation.x=-.39*wet.blend;
+ for(let i=0;i<2;i++){
+  const phase=wet.cycle*Math.PI*2+i*Math.PI;
+  const wave=Math.sin(phase);
+  const arm=rig.arms[i],leg=rig.legs[i];
+  arm.shoulder.rotation.x=(-1.10+wave*(moving?.57:.10))*wet.blend;
+  arm.shoulder.rotation.z=(i===0?-.18:.18)*wet.blend;
+  arm.elbow.rotation.x=(-.42-Math.max(0,wave)*.46)*wet.blend;
+  leg.hip.rotation.x=(.40+Math.sin(phase+Math.PI)*.34*
+   (moving?1:.22))*wet.blend;
+  leg.knee.rotation.x=(.36+Math.max(0,-wave)*.29)*wet.blend;
+  leg.ankle.rotation.x=-leg.hip.rotation.x*.45;
+ }
+ LOCOMOTION.strain=0;LOCOMOTION.strainSeconds=0;
+}
+function updateWaterVisual(dt){
+ const wet=WATER_STATE;
+ swimRipple.visible=wet.mode!=='dry'&&wet.water!==null;
+ if(swimRipple.visible){
+  swimRipple.position.set(player.position.x,WATER_SURFACE_Y+.025,
+   player.position.z);
+  const radius=(.75+.12*Math.sin(wet.cycle*2))*
+   (wet.mode==='swim'?1.5:1);
+  swimRipple.scale.set(radius,1,radius);
+  swimRipple.material.opacity=wet.mode==='swim'?.58:.32;
+ }
+ for(const water of WATER_VISUALS)
+  water.waterPlane.material.opacity=.69+
+   .035*Math.sin(wet.cycle+water.body.x*.3);
+}
 // Push-off drives acceleration during foot contact; momentum continues during
 // sprint flight, as it should in real physics. Contact and collisions govern
 // which movement the rig may actually perform.
 function stepLocomotion(dt,right,forward,runEnabled){
  const gait=LOCOMOTION;
  gait.cooldown=Math.max(0,gait.cooldown-dt);
+ updateWaterState();
  const len=Math.hypot(right,forward);
  let dx=0,dz=0;
  if(len>.03){
@@ -1243,8 +1416,16 @@ function stepLocomotion(dt,right,forward,runEnabled){
   // Begin midway through the first grounded step, not at full rearward reach.
   gait.cycle=gait.walkStance*.5;
  }
- const grounded=!JUMP.active&&(gait.feet.some(f=>f.contact)||wasStopped);
- const target=len>.03?(crawling?gait.walkSpeed*CRAWL.speed:crouched?gait.walkSpeed*CROUCH.speed:runEnabled?gait.runSpeed:gait.walkSpeed):0;
+ const grounded=WATER_STATE.mode==='swim'||(!JUMP.active&&
+  (gait.feet.some(f=>f.contact)||wasStopped));
+ const waterDepth=WATER_STATE.depth;
+ const wadeFactor=1-.37*Math.min(1,waterDepth/HIP_WATER_DEPTH);
+ const walkingSpeed=crawling?gait.walkSpeed*CRAWL.speed:
+  crouched?gait.walkSpeed*CROUCH.speed:
+  runEnabled?gait.runSpeed:gait.walkSpeed;
+ const swimSpeed=runEnabled?2.65:1.85;
+ const target=len>.03?(WATER_STATE.mode==='swim'?
+  swimSpeed:walkingSpeed*wadeFactor):0;
  const tx=dx*target,tz=dz*target;
  const dvx=tx-gait.vx,dvz=tz-gait.vz;
  const change=Math.hypot(dvx,dvz);
@@ -1261,16 +1442,27 @@ function stepLocomotion(dt,right,forward,runEnabled){
  const expectedTravel=Math.hypot(gait.vx,gait.vz)*dt;
  const impactSpeed=Math.hypot(gait.vx,gait.vz);
  moveWithCollisions(gait.vx*dt,gait.vz*dt);
+ updateWaterState();
  const xDelta=player.position.x-startX,zDelta=player.position.z-startZ;
  // A hard sprint impact triggers a protective stumble, never a fall.
- if(runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
+ if(WATER_STATE.mode!=='swim'&&runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
   Math.hypot(xDelta,zDelta)<expectedTravel*.32){
   beginBalanceRecovery('Watch the obstacle',Math.max(.44,impactSpeed/8));return;
  }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
- gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled&&!crouched&&!crawling?1:0,8,dt);
- poseGroundedCharacter(player,Math.hypot(xDelta,zDelta),dt);
+ gait.runBlend=THREE.MathUtils.damp(gait.runBlend,
+  runEnabled&&!crouched&&!crawling&&WATER_STATE.mode!=='swim'?1:0,8,dt);
+ const actualTravel=Math.hypot(xDelta,zDelta);
+ if(WATER_STATE.mode==='swim')poseSwimmingCharacter(dt,actualTravel);
+ else {
+  WATER_STATE.blend=THREE.MathUtils.damp(WATER_STATE.blend,0,10,dt);
+  poseGroundedCharacter(player,actualTravel,dt);
+  // Ease the last fraction of buoyancy out on a sloping bank.
+  if(WATER_STATE.blend>.003&&WATER_STATE.water)
+   player.position.y=THREE.MathUtils.lerp(player.position.y,
+    WATER_STATE.water.surfaceY-1.20,WATER_STATE.blend);
+ }
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -1295,7 +1487,8 @@ function followPlayerCamera(dt){
  const leadZ=LADDER_STATE.active?0:
   THREE.MathUtils.clamp(LOCOMOTION.vz*.17,-.60,.60);
  cameraTarget.set(player.position.x+leadX,
-  LADDER_STATE.active?player.position.y+height:ground+height,
+  LADDER_STATE.active?player.position.y+height:
+   WATER_STATE.mode==='swim'?WATER_SURFACE_Y+.55:ground+height,
   player.position.z+leadZ);
  // More distant camera and narrower FOV achieve the miniature diorama view.
  // No abrupt zoom when climbing: keep the same base distance in all states.
@@ -1880,11 +2073,12 @@ const C_HOLD_MS=520;
 let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
 let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
 function updateButtonHints(){
- B_HINT.textContent=LADDER_STATE.active?'Rest':bHeld?'Running':crawling?'Rest':'Run / Jump';
- C_HINT.textContent=LADDER_STATE.active?'Exit':challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
+ B_HINT.textContent=LADDER_STATE.active?'Rest':WATER_STATE.mode==='swim'?'Swim Fast':bHeld?'Running':crawling?'Rest':'Run / Jump';
+ C_HINT.textContent=LADDER_STATE.active?'Exit':WATER_STATE.mode==='swim'?'—':challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
  document.body.classList.toggle('dialog-open',challengeOpen);
  runButton.disabled=crawling||LADDER_STATE.active;
  cancelButton.setAttribute('aria-pressed',String(crouched||crawling));
+ cancelButton.disabled=WATER_STATE.mode==='swim'&&!challengeOpen;
  runButton.setAttribute('aria-pressed',String(bHeld));
  cancelButton.setAttribute('aria-label',LADDER_STATE.active?
   'C: exit safely from the ladder':challengeOpen?'C: cancel dialog':
@@ -1902,6 +2096,7 @@ function stopBPointer(){
 }
 function cancelAction(){
  if(LADDER_STATE.active){cancelLadder();return;}
+ if(WATER_STATE.mode==='swim')return;
  if(challengeOpen){closeChallenge();updateButtonHints();return;}
  if(crawling){
   if(!canChangePosture('crouch'))return;
@@ -2114,6 +2309,7 @@ function animate(){
  }
  updateLadderPrompt();
  followPlayerCamera(dt);
+ updateWaterVisual(dt);
  marker.rotation.y+=dt;renderer.render(scene,camera);
 }
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
