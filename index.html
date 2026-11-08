@@ -1671,6 +1671,21 @@ const runButton=document.getElementById('runButton');
 const interactButton=document.getElementById('interactButton');
 const cancelButton=document.getElementById('cancelButton');
 let bHeld=false,bPointer=null,bDownAt=0;
+let ladderPromptVisible=false;
+function updateLadderPrompt(){
+ const nearby=!challengeOpen&&!LADDER_STATE.active&&ladderEntry()!==null;
+ if(nearby===ladderPromptVisible)return;
+ ladderPromptVisible=nearby;
+ interactButton.querySelector('small').textContent=nearby?'Climb':'Action';
+ interactButton.setAttribute('aria-label',nearby?
+  'A: Climb the leaning wooden ladder':'A: Interact and talk');
+ if(nearby)document.getElementById('message').textContent=
+  'Press A / Action to climb the leaning ladder.';
+ else if(document.getElementById('message').textContent.startsWith(
+  'Press A / Action to climb the leaning ladder'))
+  document.getElementById('message').textContent=
+   'Explore the stone steps and wooden balcony.';
+}
 const C_HOLD_MS=520;
 let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
 let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
@@ -1907,6 +1922,7 @@ function animate(){
   stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched&&!crawling);
   stepJump(dt);
  }
+ updateLadderPrompt();
  followPlayerCamera(dt);
  marker.rotation.y+=dt;renderer.render(scene,camera);
 }
