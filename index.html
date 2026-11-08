@@ -780,7 +780,12 @@ function startJump(){
 function stepJump(dt){
  if(!JUMP.active)return;
  JUMP.velocity-=13*dt;
- JUMP.height+=JUMP.velocity*dt;
+ const next=Math.max(0,JUMP.height+JUMP.velocity*dt);
+ const floor=groundTopAt(player.position.x,player.position.z);
+ if(next>JUMP.height&&!bodyVolumeFits(
+   player.position.x,player.position.z,'stand',floor+next)){
+  JUMP.velocity=0;
+ }else JUMP.height=next;
  if(JUMP.height<=0){JUMP.height=0;JUMP.velocity=0;JUMP.active=false;}
  player.position.y+=JUMP.height;
 }
@@ -1255,8 +1260,8 @@ const obstacles=[
 const BOUND=11.55; // Inner face of the surrounding courtyard walls.
 const BODY_CLEARANCE={
  stand:{radius:.40,height:2.13,points:[0]},
- crouch:{radius:.38,height:1.54,points:[0]},
- crawl:{radius:.30,height:.48,points:[-.51,0,.51]}
+ crouch:{radius:.38,height:1.72,points:[0]},
+ crawl:{radius:.30,height:.62,points:[-.51,0,.51]}
 };
 function currentPosture(){return crawling?'crawl':crouched?'crouch':'stand';}
 function circleTouchesBox(x,z,r,minX,maxX,minZ,maxZ){
@@ -1264,9 +1269,8 @@ function circleTouchesBox(x,z,r,minX,maxX,minZ,maxZ){
  const dz=z-THREE.MathUtils.clamp(z,minZ,maxZ);
  return dx*dx+dz*dz<(r+.015)*(r+.015);
 }
-function bodyVolumeFits(x,z,posture=currentPosture()){
+function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z)){
  const body=BODY_CLEARANCE[posture];
- const floor=groundTopAt(x,z);
  const bottom=floor+.025,top=floor+body.height;
  const yaw=player.rotation.y,fx=Math.sin(yaw),fz=Math.cos(yaw);
  for(const forward of body.points){
