@@ -930,9 +930,7 @@ addEventListener('keydown',e=>{
  if(e.repeat)return;
  if(e.code==='KeyE')interact(); // A is already WASD strafe-left.
  if(e.code==='KeyC'||e.code==='Escape')cancelAction();
- if(e.code==='KeyR'||e.code==='KeyB'){
-  startJump();
- }
+ if(e.code==='KeyB')startJump();
  if(e.code==='Space')startJump();
 });
 addEventListener('keyup',e=>keys.delete(e.code));
