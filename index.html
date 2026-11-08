@@ -52,8 +52,8 @@ const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraHeading=Math.PI,cameraPitch=.35,cameraReady=false;
 const CAMERA_DEADZONE=40*Math.PI/180;
-const CAMERA_RATE=1.65,CAMERA_MANUAL_HOLD_MS=2500;
-let cameraAutoTurn=false,cameraManualUntil=0;
+const CAMERA_RATE=1.25,CAMERA_MANUAL_HOLD_MS=2500;
+let cameraAutoTurn=false,cameraManualUntil=0,cameraTurnVelocity=0;
 const cameraHistory=[];
 const cameraUndoButton=document.getElementById('cameraUndo');
 function cameraSnapshot(){
@@ -73,11 +73,13 @@ function undoCameraChange(){
  if(!previous)return;
  cameraHeading=previous.heading;cameraPitch=previous.pitch;
  setCameraZoom(previous.zoom);
- cameraAutoTurn=false;cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
+ cameraAutoTurn=false;cameraTurnVelocity=0;
+ cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
  cameraUndoButton.disabled=cameraHistory.length===0;
 }
 cameraUndoButton.addEventListener('click',undoCameraChange);
 const cameraTarget=new THREE.Vector3();
+const cameraLookAt=new THREE.Vector3();
 const cameraDesired=new THREE.Vector3();
 const cameraDelta=new THREE.Vector3();
 const cameraRay=new THREE.Raycaster();
@@ -106,7 +108,8 @@ let pinchDistance=0,pinchActive=false;
 function setManualCameraTurn(deltaX,deltaY){
  cameraHeading-=deltaX*.005;
  cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*.003,.12,.78);
- cameraAutoTurn=false;cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
+ cameraAutoTurn=false;cameraTurnVelocity=0;
+ cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
 }
 renderer.domElement.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -961,11 +964,12 @@ function followPlayerCamera(dt){
  // while moving. Manual orbit holds the camera independently for 2.5 seconds.
  if(!manual&&Math.abs(difference)>CAMERA_DEADZONE)cameraAutoTurn=true;
  if(manual)cameraAutoTurn=false;
- if(cameraAutoTurn){
-  const turn=THREE.MathUtils.clamp(difference,-CAMERA_RATE*dt,CAMERA_RATE*dt);
-  cameraHeading+=turn;
-  if(Math.abs(difference)<.045)cameraAutoTurn=false;
- }
+ const desiredRate=cameraAutoTurn?
+  THREE.MathUtils.clamp(difference*1.35,-CAMERA_RATE,CAMERA_RATE):0;
+ cameraTurnVelocity=THREE.MathUtils.damp(cameraTurnVelocity,desiredRate,5,dt);
+ cameraHeading+=cameraTurnVelocity*dt;
+ if(cameraAutoTurn&&Math.abs(difference)<.035&&Math.abs(cameraTurnVelocity)<.06)
+  cameraAutoTurn=false;
  const ground=groundTopAt(player.position.x,player.position.z);
  const height=crawling?.40:crouched?.83:1.05;
  cameraTarget.set(player.position.x,ground+height,player.position.z);
@@ -984,9 +988,13 @@ function followPlayerCamera(dt){
  if(hit)cameraDesired.copy(cameraTarget).addScaledVector(
   cameraDelta,Math.max(.6,hit.distance-.20));
  if(!cameraReady){
-  camera.position.copy(cameraDesired);cameraReady=true;
- }else camera.position.lerp(cameraDesired,1-Math.exp(-4.0*dt));
- camera.lookAt(cameraTarget);
+  camera.position.copy(cameraDesired);
+  cameraLookAt.copy(cameraTarget);cameraReady=true;
+ }else{
+  camera.position.lerp(cameraDesired,1-Math.exp(-4.0*dt));
+  cameraLookAt.lerp(cameraTarget,1-Math.exp(-6*dt));
+ }
+ camera.lookAt(cameraLookAt);
 }
 // Lightweight collision footprints, independent of meshes and shadows.
 const PLAYER_RADIUS=.43;
