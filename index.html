@@ -765,7 +765,7 @@ function buildRampSlice(ramp,start,end,startY,endY,material){
 function buildFieldRamps(){
  for(const ramp of FIELD_RAMPS){
   const material=ramp.kind==='wood'?rampWoodMat:rampStoneMat;
-  const base=TERRAIN.floorTop,top=base+ramp.rise;
+  const base=ramp.baseY??TERRAIN.floorTop,top=base+ramp.rise;
   buildRampSlice(ramp,0,ramp.length,base+.007,top+.007,material);
   buildRampSlice(ramp,ramp.length,ramp.length+ramp.landing,
    top+.007,top+.007,material);
@@ -781,45 +781,56 @@ function buildFieldRamps(){
 }
 buildFieldRamps();
 // A usable lookout tower with TEN actual stone risers and an open deck.
+// The stone WATCHTOWER belongs in the low southwestern field.
+// A dedicated ladder shares the original full-body climbing mechanism.
 const FIELD_TOWER={
- minX:20.9,maxX:25.3,minZ:-2.2,maxZ:2.2,
- topY:TERRAIN.floorTop+10*STEP_HEIGHT,
- stepStartX:14.9,stepWidth:.60,stairMinZ:-1.25,stairMaxZ:1.25
+ minX:-58,maxX:-48,minZ:14,maxZ:24,
+ topY:9.15
 };
+const TOWER_LADDER={
+ id:'watchtower',x:-53,wallZ:FIELD_TOWER.maxZ,standoff:.16,
+ bottomY:TERRAIN.floorTop,deckY:FIELD_TOWER.topY,
+ railTopY:FIELD_TOWER.topY+.18,
+ rungTopY:FIELD_TOWER.topY-.10,
+ width:.70,rungSpacing:.27,climbSpeed:1.15,
+ topRootProgress:1-.40/(FIELD_TOWER.topY-TERRAIN.floorTop),
+ bottomExitZ:FIELD_TOWER.maxZ+1.42,
+ topExitZ:FIELD_TOWER.maxZ-.19
+};
+LADDER_SPOTS.push(TOWER_LADDER);
 function buildFieldTower(){
- const t=FIELD_TOWER,base=TERRAIN.floorTop;
- const width=t.maxX-t.minX,depth=t.maxZ-t.minZ,height=t.topY-base;
- box(width,height,depth,wall,(t.minX+t.maxX)*.5,base+height*.5,0);
- box(width+.09,.13,depth+.09,STAIR_TRIM,(t.minX+t.maxX)*.5,
-  t.topY-.045,0);
- addWalkable('field-tower-deck',t.minX,t.maxX,t.minZ,t.maxZ,
+ const t=FIELD_TOWER,base=TERRAIN.floorTop,
+  cx=(t.minX+t.maxX)*.5,cz=(t.minZ+t.maxZ)*.5,
+  w=t.maxX-t.minX,d=t.maxZ-t.minZ,h=t.topY-base;
+ const stoneBlock=mat('#b4afa5'),band=mat('#898a86'),
+  lightTrim=mat('#cfc7b8'),window=mat('#5a6262');
+ box(w,h,d,stoneBlock,cx,base+h*.5,cz);
+ box(w+.14,.19,d+.14,lightTrim,cx,t.topY-.065,cz);
+ addWalkable('lookout-deck',t.minX,t.maxX,t.minZ,t.maxZ,
   t.topY,'tower');
- for(let i=0;i<10;i++){
-  const x0=t.stepStartX+i*t.stepWidth,x1=x0+t.stepWidth;
-  const rise=(i+1)*STEP_HEIGHT,top=base+rise;
-  box(t.stepWidth,rise,t.stairMaxZ-t.stairMinZ,STAIR_STONE,
-   (x0+x1)*.5,base+rise*.5,0);
-  box(t.stepWidth-.04,.015,t.stairMaxZ-t.stairMinZ-.09,STAIR_TRIM,
-   (x0+x1)*.5,top+.005,0);
-  addWalkable('field-tower-stair-'+(i+1),x0,x1,
-   t.stairMinZ,t.stairMaxZ,top,'stairs');
+ for(const y of [2.0,4.4,6.8]){
+  box(w+.15,.13,d+.15,band,cx,y,cz);
  }
- const railTop=t.topY+.78;
- for(const z of [t.minZ,t.maxZ]){
-  for(const x of [t.minX+.08,t.maxX-.08])
-   box(.14,.84,.14,wood,x,t.topY+.42,z);
-  box(width,.12,.12,wood,(t.minX+t.maxX)*.5,railTop,z);
-  addRailCollider(t.minX,t.maxX,z-.06,z+.06);
+ const parapet=t.topY+.55;
+ // A single 1.4-unit gap at the SOUTH edge allows foot-first exit.
+ for(const [x0,x1] of [[t.minX,cx-.70],[cx+.70,t.maxX]]){
+  box(x1-x0,.59,.20,stoneBlock,(x0+x1)*.5,parapet-.295,
+   t.maxZ-.10);
+  addRailCollider(x0,x1,t.maxZ-.20,t.maxZ+.01);
  }
- box(.12,.12,depth,wood,t.maxX,railTop,0);
- addRailCollider(t.maxX-.06,t.maxX+.06,t.minZ,t.maxZ);
- for(const [z0,z1] of [[t.minZ,t.stairMinZ-.08],
-                       [t.stairMaxZ+.08,t.maxZ]]){
-  box(.12,.12,z1-z0,wood,t.minX,railTop,(z0+z1)*.5);
-  addRailCollider(t.minX-.06,t.minX+.06,z0,z1);
+ box(w,.59,.20,stoneBlock,cx,parapet-.295,t.minZ+.10);
+ addRailCollider(t.minX,t.maxX,t.minZ-.01,t.minZ+.20);
+ for(const x of [t.minX,t.maxX]){
+  box(.20,.59,d,stoneBlock,x,parapet-.295,cz);
+  addRailCollider(x-.10,x+.10,t.minZ,t.maxZ);
  }
- for(const z of [t.stairMinZ-.13,t.stairMaxZ+.13])
-  addRailCollider(t.stepStartX,t.minX,z-.05,z+.05);
+ for(const x of [t.minX+.65,t.maxX-.65])
+  for(const z of [t.minZ+.65,t.maxZ-.65])
+   box(.76,.30,.76,band,x,parapet+.15,z);
+ for(const y of [3.4,6.3]){
+  box(.75,1.08,.032,window,cx,y,t.maxZ+.027);
+  box(.032,1.08,.75,window,t.minX-.027,y,cz);
+ }
 }
 buildFieldTower();
 // The same coordinates drive vegetation and its collision proxies.
@@ -857,6 +868,7 @@ function rod(parent,start,end,radius,material){
  return mesh;
 }
 buildWallMountedLadder();
+buildWallMountedLadder(TOWER_LADDER);
 // Neutral 12–13-year-old reference rig, adjustable for a future 10–15-year-old
 // avatar creator. Sex does not change the joint topology or movement physics.
 const YOUTH_REFERENCE={ageBand:'10-15',referenceAge:13,headRadius:.19,
