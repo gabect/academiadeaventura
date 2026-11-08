@@ -6,6 +6,9 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #interactButton{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:15px;font-weight:700;touch-action:none;-webkit-touch-callout:none;user-select:none}
 #runButton{position:fixed;right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:14px;font-weight:700;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#runButton[aria-pressed="true"]{background:#497e9e;border-color:#efc56a}#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}#standButton{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:140px;z-index:7;border:2px solid #fff9;border-radius:14px;background:#284c54;color:white;font:700 15px system-ui,sans-serif;padding:13px 17px;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
 #standButton[hidden]{display:none!important}
+#skillPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:8px;z-index:6;display:flex;gap:7px;align-items:center;flex-wrap:wrap;max-width:60%;color:#17323c;background:#ffffffe0;border:1px solid #ffffffad;border-radius:9px;padding:5px 8px;font:600 12px system-ui,sans-serif}
+#balanceUpgrade{border:1px solid #678080;border-radius:7px;background:#284c54;color:white;font:600 12px system-ui,sans-serif;padding:6px 8px;touch-action:manipulation}
+#balanceUpgrade:disabled{opacity:.5}
 @media(max-height:430px){#standButton{bottom:99px;right:20px;padding:9px 12px}}
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
@@ -20,12 +23,12 @@ html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:1
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.11.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><span id="buildLabel">v0.11.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.12.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><div id="skillPanel"><span id="skillStatus">XP 0 · Balance Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Balance</button></div><span id="buildLabel">v0.12.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.11.0';let pendingBuild=null;
+const BUILD='0.12.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -213,8 +216,8 @@ function person(color,accent){
 // Straight standing pose. Walking/running parameters must never deform idle.
 function setIdlePose(character){
  const rig=character.userData.rig;if(!rig)return;
- for(const leg of rig.legs){leg.hip.rotation.x=0;leg.knee.rotation.x=0;leg.ankle.rotation.x=0;}
- for(const arm of rig.arms){arm.shoulder.rotation.x=.06;arm.elbow.rotation.x=-.09;arm.wrist.rotation.x=0;}
+ for(const leg of rig.legs){leg.hip.rotation.set(0,0,0);leg.knee.rotation.set(0,0,0);leg.ankle.rotation.set(0,0,0);}
+ for(const arm of rig.arms){arm.shoulder.rotation.set(.06,0,0);arm.elbow.rotation.set(-.09,0,0);arm.wrist.rotation.set(0,0,0);}
  rig.torso.rotation.x=0;rig.torso.rotation.z=0;rig.head.rotation.x=0;
 }
 // Two-bone 3D target IK. A planted ankle is tracked in world space, while
@@ -250,6 +253,8 @@ const LOCOMOTION={
  walkStance:.63,runStance:.42,walkLift:.12,runLift:.29,
  vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,feet:[],strain:0,strainSeconds:0,cooldown:0
 };
+// Shared protective reflexes for all avatars. XP can improve motor control.
+const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
 function footPosition(root,index,forward=0,height=FOOT_Y){
  const lateral=index===0?-.24:.24,yaw=root.rotation.y;
  return new THREE.Vector3(root.position.x+Math.cos(yaw)*lateral+Math.sin(yaw)*forward,
@@ -351,7 +356,7 @@ function poseGroundedCharacter(character,travel,dt){
  // Sustained overextension triggers a fall, not one-frame animation noise.
  if(gait.cooldown<=0&&blend>.55){
   gait.strainSeconds=gait.strain>.065?gait.strainSeconds+dt:Math.max(0,gait.strainSeconds-dt*2);
-  if(gait.strainSeconds>.19)beginFall('Lost balance');
+  if(gait.strainSeconds>.19)beginBalanceRecovery('Lost balance',gait.strain);
  }else gait.strainSeconds=0;
 }
 // Push-off drives acceleration during foot contact; momentum continues during
@@ -396,7 +401,7 @@ function stepLocomotion(dt,right,forward,runEnabled){
  // A head-on sprint into a solid trunk or wall can also topple the runner.
  if(runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
   Math.hypot(xDelta,zDelta)<expectedTravel*.32){
-  beginFall('Hit an obstacle');return;
+  beginBalanceRecovery('Hit an obstacle',Math.max(.44,impactSpeed/8));return;
  }
  // Obstacle response cancels blocked velocity (sideways sliding remains).
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
@@ -431,6 +436,46 @@ function moveWithCollisions(dx,dz){
   if(clearPosition(player.position.x,player.position.z+sz))player.position.z+=sz;
  }
  return Math.hypot(player.position.x-initialX,player.position.z-initialZ);
+}
+// Counterbalance and a catch-step attempt use the same visible humanoid rig.
+function beginBalanceRecovery(reason,severity){
+ if(BALANCE.active||FALL.active||challengeOpen||LOCOMOTION.cooldown>0)return;
+ BALANCE.active=true;BALANCE.age=0;BALANCE.reason=reason;
+ BALANCE.severity=Math.max(0,severity);
+ BALANCE.duration=.36+.08*Math.min(balanceLevel,4);
+ BALANCE.success=severity<=(.24+(balanceLevel-1)*.12);
+ BALANCE.side=Math.sin(player.rotation.y)>=0?1:-1;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;LOCOMOTION.strainSeconds=0;
+ document.getElementById('message').textContent='Recovering balance...';
+}
+function updateBalanceRecovery(dt){
+ if(!BALANCE.active)return;
+ BALANCE.age+=dt;
+ const p=Math.min(1,BALANCE.age/BALANCE.duration);
+ const effort=Math.sin(Math.PI*p),rig=player.userData.rig;
+ setIdlePose(player);player.position.y=-.065*effort;
+ // Reflex: lean back, flex knees and spread arms, lifting the catch foot.
+ rig.torso.rotation.x=-.19*effort;
+ rig.torso.rotation.z=BALANCE.side*.14*effort;
+ rig.head.rotation.x=.10*effort;
+ rig.arms.forEach((arm,i)=>{
+  arm.shoulder.rotation.z=(i===0?-1:1)*(.85*effort);
+  arm.shoulder.rotation.x=-.28*effort;arm.elbow.rotation.x=-.35*effort;
+ });
+ rig.legs.forEach((leg,i)=>{
+  const catchStep=i===(BALANCE.side>0?1:0)?1:0;
+  leg.hip.rotation.x=-.18*effort;
+  leg.hip.rotation.z=(i===0?-1:1)*(.22*catchStep*effort);
+  leg.knee.rotation.x=.38*effort;
+  leg.ankle.rotation.x=-.20*effort;
+ });
+ if(p<1)return;
+ BALANCE.active=false;
+ if(!BALANCE.success){beginFall(BALANCE.reason);return;}
+ player.position.y=0;setIdlePose(player);
+ Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:1.5});
+ prepareFeet(player);
+ document.getElementById('message').textContent='Balance recovered!';
 }
 // Lightweight Verlet/PBD ragdoll: real gravity, fixed-length limbs, friction,
 // obstacle contacts and repeated constraint projection. No external physics engine.
@@ -518,6 +563,7 @@ function chooseFallDirection(){
 }
 function beginFall(reason='Lost balance'){
  if(FALL.active||challengeOpen)return;
+ BALANCE.active=false;
  FALL.active=true;FALL.reason=reason;
  FALL.age=0;FALL.quiet=0;FALL.accumulator=0;
  FALL.direction.copy(chooseFallDirection());
@@ -562,8 +608,8 @@ function beginFall(reason='Lost balance'){
  FALL.group.add(player.userData.rig.ribcage);
  // Prevent elbows/knees from collapsing into impossibly acute angles.
  for(let i=0;i<2;i++){
-  FALL.limits.push({a:nodesByName.get('hip'+i),b:nodesByName.get('ankle'+i),min:.39});
-  FALL.limits.push({a:nodesByName.get('shoulder'+i),b:nodesByName.get('wrist'+i),min:.31});
+  FALL.limits.push({a:nodesByName.get('hip'+i),b:nodesByName.get('ankle'+i),min:.24});
+  FALL.limits.push({a:nodesByName.get('shoulder'+i),b:nodesByName.get('wrist'+i),min:.18});
  }
  player.visible=false;
  FALL.group.visible=true;
@@ -648,6 +694,9 @@ function physicsFallStep(dt){
    n.intent=velocity;
    n.p.add(velocity);
    n.p.y-=12.0*dt*dt;
+   // Distal limbs should keep dropping while the torso settles.
+   if(FALL.age>.3&&/^(elbow|wrist|hand|knee|ankle|toe)/.test(n.id))
+    n.p.y-=2.4*dt*dt;
    n.predicted=n.p.clone();
   }
   for(let iteration=0;iteration<7;iteration++){
@@ -689,7 +738,13 @@ function physicsFallStep(dt){
   // Do not freeze the simulation in the notorious half-squat pose.
   // Only sleep after the pelvis AND head have reached a low resting pose.
   const resting=pelvis&&head&&pelvis.p.y<.58&&head.p.y<.82;
-  FALL.quiet=resting&&energy/FALL.nodes.length<.00008?FALL.quiet+dt:0;
+  // Prevent sleeping with an arm or leg still unnaturally suspended.
+  const limbsSettled=FALL.nodes.every(n=>{
+   if(!/^(elbow|wrist|hand|knee|ankle|toe)/.test(n.id))return true;
+   const maxHeight=/^(elbow|knee)/.test(n.id)?.73:.45;
+   return n.p.y<maxHeight||n.contacts.size>0;
+  });
+  FALL.quiet=FALL.age>2&&resting&&limbsSettled&&energy/FALL.nodes.length<.00007?FALL.quiet+dt:0;
 }
 const RIB_WORLD_X=new THREE.Vector3(),RIB_WORLD_Y=new THREE.Vector3(),
  RIB_WORLD_Z=new THREE.Vector3(),RIB_MATRIX=new THREE.Matrix4();
@@ -787,7 +842,34 @@ if(new URLSearchParams(location.search).get('debug')==='1'){
 for(const eventName of ['contextmenu','selectstart','dragstart'])
  STAND_BUTTON.addEventListener(eventName,e=>e.preventDefault());
 
-const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;let xp=0,stage=0,challengeOpen=false,questionIndex=0,picked=[];
+const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;
+const SAVE_KEY='adventure-academy-progression-v1';
+let xp=0,stage=0,balanceLevel=1,challengeOpen=false,questionIndex=0,picked=[];
+try{
+ const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+ xp=Math.max(0,Math.floor(Number(saved.xp)||0));
+ stage=saved.stage===1?1:0;
+ balanceLevel=THREE.MathUtils.clamp(Math.floor(Number(saved.balanceLevel)||1),1,4);
+}catch(_){}
+if(stage===1)marker.visible=false;
+const skillStatus=document.getElementById('skillStatus'),balanceUpgrade=document.getElementById('balanceUpgrade');
+function upgradeCost(){return balanceLevel>=4?0:10+balanceLevel*10;}
+function saveProgress(){
+ try{localStorage.setItem(SAVE_KEY,JSON.stringify({xp,stage,balanceLevel}));}catch(_){}
+}
+function renderProgress(){
+ skillStatus.textContent='XP '+xp+' · Balance Lv '+balanceLevel;
+ balanceUpgrade.textContent=balanceLevel>=4?'Max Balance':'+ Balance ('+upgradeCost()+' XP)';
+ balanceUpgrade.disabled=balanceLevel>=4||xp<upgradeCost();
+ document.getElementById('xp').textContent='XP: '+xp+(stage?' · Apprentice Trial completed':' · Quest: Talk to the guardian');
+}
+balanceUpgrade.addEventListener('click',()=>{
+ const cost=upgradeCost();
+ if(balanceLevel>=4||xp<cost||FALL.active||BALANCE.active)return;
+ xp-=cost;balanceLevel++;saveProgress();renderProgress();
+ document.getElementById('message').textContent='Motor control improved — Balance Lv '+balanceLevel+'!';
+});
+renderProgress();
 const keys=new Set();addEventListener('keydown',e=>{if(challengeOpen){if(e.code==='Escape')closeChallenge();return}keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyE'&&!e.repeat)interact();if(e.code==='KeyR'&&!e.repeat)standUp()});addEventListener('keyup',e=>keys.delete(e.code));
 document.addEventListener('contextmenu',e=>{if(e.target.closest('#touch,#interactButton,#runButton'))e.preventDefault()});
 const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
@@ -836,7 +918,7 @@ function showQuestion(){
  questionIndex++;
  if(questionIndex<3){showQuestion();return}
  progress.textContent='Trial completed';question.textContent='You completed all three challenges!';answers.replaceChildren();
- if(stage===0){stage=1;xp+=25;marker.visible=false;status.textContent='XP: '+xp+' · Apprentice Trial completed';feedback.textContent='You earned 25 XP!';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
+ if(stage===0){stage=1;xp+=25;marker.visible=false;saveProgress();renderProgress();feedback.textContent='You earned 25 XP! Upgrade Balance in the corner.';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
  else feedback.textContent='Great job! You can practice again, but no additional XP will be awarded.';
  });answers.append(b)});
 }
@@ -847,7 +929,7 @@ function interact(){
 }
 let lastReloadAttempt=0;
 function applyUpdateIfSafe(){
- if(!pendingBuild||challengeOpen||FALL.active||Math.hypot(stickX,stickY)>.1||keys.size)return;
+ if(!pendingBuild||challengeOpen||FALL.active||BALANCE.active||Math.hypot(stickX,stickY)>.1||keys.size)return;
  if(Date.now()-lastReloadAttempt<10000)return;
  lastReloadAttempt=Date.now();
  const url=new URL(location.href);url.searchParams.set('v',pendingBuild);
@@ -862,7 +944,9 @@ function animate(){
  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
  if(keys.has('KeyA')||keys.has('ArrowLeft'))right-=1;
  if(keys.has('KeyD')||keys.has('ArrowRight'))right+=1;
- if(FALL.active){updateFall(dt);}else{
+ if(FALL.active){updateFall(dt);}
+ else if(BALANCE.active){updateBalanceRecovery(dt);}
+ else{
   if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
   stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,running&&!challengeOpen);
  }
