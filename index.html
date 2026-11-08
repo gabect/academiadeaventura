@@ -30,12 +30,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.15.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.15.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.16.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.16.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.15.1';let pendingBuild=null;
+const BUILD='0.16.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -292,13 +292,20 @@ function solveLegTarget(leg,localX,localY,localZ,pitch=0,yawOffset=0){
   Math.max(0,Math.abs(leg.hip.rotation.z)-.61));
 }
 const FOOT_Y=TERRAIN.floorTop+TERRAIN.soleClearance;
-// Short strides and a controlled forward lean are the tactical crouch.
-// IK solves the knees from planted ankles; no fake vertical foot translation.
-const CROUCH={drop:.34,walkStep:.46,stance:.72,lift:.065,speed:.47};
+// Asymmetric tactical crouch, as in a lowered kneeling patrol stance:
+// RIGHT foot leads, LEFT foot stays back; at rest the rear knee grazes the
+// ground while the front knee supports the weight. During motion, the player
+// shuffles forward low with short, grounded steps (no weapon or props).
+const CROUCH={
+ drop:.34,idleExtra:.105,frontFoot:.40,rearFoot:-.50,
+ strideBias:.13,settleSeconds:.62,
+ walkStep:.42,stance:.74,lift:.085,speed:.42
+};
 const LOCOMOTION={
  walkSpeed:3.2,runSpeed:6.0,walkStep:.72,runStep:1.16,
  walkStance:.63,runStance:.42,walkLift:.12,runLift:.29,
  vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,crouchBlend:0,terrainLift:0,
+ kneelMode:null,kneelTime:0,kneelFrom:[],
  feet:[],strain:0,strainSeconds:0,cooldown:0
 };
 // Shared protective reflexes for all avatars. XP can improve motor control.
@@ -336,8 +343,24 @@ function poseGroundedCharacter(character,travel,dt){
  const speed=Math.hypot(gait.vx,gait.vz);
  const moving=speed>.035&&travel>.00001;
  gait.moveBlend=THREE.MathUtils.damp(gait.moveBlend,moving?1:0,11,dt);
- gait.crouchBlend=THREE.MathUtils.damp(gait.crouchBlend,crouched?1:0,12,dt);
+ gait.crouchBlend=THREE.MathUtils.damp(gait.crouchBlend,crouched?1:0,10,dt);
  const blend=gait.moveBlend,mix=gait.runBlend,crouch=gait.crouchBlend;
+ // When stopping in crouch, reposition the feet in two deliberate, lifted
+ // half-steps rather than instantly sliding to a wide split stance.
+ // Standing back up likewise brings both feet to neutral before idle resets.
+ if(!moving){
+  const wanted=crouched?'kneel':'stand';
+  if(gait.kneelMode!==wanted){
+   gait.kneelMode=wanted;gait.kneelTime=0;
+   gait.kneelFrom=gait.feet.map(foot=>foot.position.clone());
+  }
+  gait.kneelTime=Math.min(CROUCH.settleSeconds,gait.kneelTime+dt);
+ }else{
+  gait.kneelMode=null;gait.kneelTime=0;
+ }
+ const settleT=THREE.MathUtils.clamp(gait.kneelTime/CROUCH.settleSeconds,0,1);
+ const settleEase=settleT*settleT*(3-2*settleT);
+ const kneelRest=!moving&&crouched?settleEase:0;
  const normalStep=THREE.MathUtils.lerp(gait.walkStep,gait.runStep,mix);
  const step=THREE.MathUtils.lerp(normalStep,CROUCH.walkStep,crouch);
  if(moving)gait.cycle+=travel/(2*step);
@@ -349,7 +372,7 @@ function poseGroundedCharacter(character,travel,dt){
  }
  gait.terrainLift=THREE.MathUtils.damp(
   gait.terrainLift,supportTop-TERRAIN.floorTop,15,dt);
- if(blend<.008&&crouch<.008){
+ if(blend<.008&&crouch<.008&&gait.kneelTime>=CROUCH.settleSeconds){
   setIdlePose(character);
   character.position.y=gait.terrainLift;
   gait.cycle=0;
@@ -365,8 +388,9 @@ function poseGroundedCharacter(character,travel,dt){
  const phase=gait.cycle*Math.PI*2;
  const movingDrop=THREE.MathUtils.lerp(
   THREE.MathUtils.lerp(.15,.18,mix),.04,crouch);
- character.position.y=gait.terrainLift-movingDrop*blend-CROUCH.drop*crouch+
-  Math.sin(phase*2)*.010*blend*(1-crouch);
+ character.position.y=gait.terrainLift-movingDrop*blend-
+  (CROUCH.drop+CROUCH.idleExtra*kneelRest)*crouch+
+  Math.sin(phase*2)*.006*blend*(1-crouch);
  const stance=THREE.MathUtils.lerp(
   THREE.MathUtils.lerp(gait.walkStance,gait.runStance,mix),CROUCH.stance,crouch);
  const lift=THREE.MathUtils.lerp(
@@ -386,15 +410,32 @@ function poseGroundedCharacter(character,travel,dt){
    foot.from.copy(foot.position);
   }
   foot.contact=inContact;
-  if(inContact){
-   // No horizontal foot sliding in support; preserve x/z and re-sample y.
+  if(!moving&&gait.kneelTime<CROUCH.settleSeconds){
+   // Resting stance: right foot advances, left knee drops behind.
+   // Stagger the adjustment: front foot first, rear foot second.
+   const start=i===1?0:.5;
+   const u=THREE.MathUtils.clamp((settleT-start)*2,0,1);
+   const eased=u*u*(3-2*u);
+   const offset=crouched?(i===1?CROUCH.frontFoot:CROUCH.rearFoot):0;
+   const restTarget=footPosition(character,i,offset);
+   const startFoot=gait.kneelFrom[i];
+   foot.position.lerpVectors(startFoot,restTarget,eased);
+   // The shoe rises on its deliberate shuffle step, never sinks.
+   foot.position.y=ankleGroundY(foot.position.x,foot.position.z)+
+    Math.sin(Math.PI*u)*.09;
+   foot.anchor.copy(foot.position);
+   foot.heading=yaw;
+  }else if(inContact){
+   // The ankle stays fixed in world x/z during load-bearing stance.
    foot.anchor.y=ankleGroundY(foot.anchor.x,foot.anchor.z);
    foot.position.copy(foot.anchor);
   }else{
    const s=(t-stance)/(1-stance);
    const ease=s*s*(3-2*s);
    const remainingTravel=(1-t)*step*2;
-   const landing=footPosition(character,i,remainingTravel+stance*step);
+   // A shorter step retains a slight right-front/left-rear split in motion.
+   const stagger=(i===1?1:-1)*CROUCH.strideBias*crouch;
+   const landing=footPosition(character,i,remainingTravel+stance*step+stagger);
    foot.position.lerpVectors(foot.from,landing,ease);
    foot.position.y=THREE.MathUtils.lerp(foot.from.y,landing.y,ease)+
     Math.sin(Math.PI*s)*lift;
@@ -426,17 +467,19 @@ function poseGroundedCharacter(character,travel,dt){
   // Arms forward and bent for balance, not a two-handed weapon hold.
   const guardSwing=Math.cos(phase+i*Math.PI)*.10*blend;
   arm.shoulder.rotation.x=THREE.MathUtils.lerp(
-   regularSwing,-.60+guardSwing,crouch);
-  arm.shoulder.rotation.z=(i===0?-.17:.17)*crouch;
+   regularSwing,-.72+guardSwing,crouch);
+  arm.shoulder.rotation.z=(i===0?-.14:.14)*crouch;
   arm.elbow.rotation.x=THREE.MathUtils.lerp(
-   -THREE.MathUtils.lerp(.20,1.03,mix)*blend,-.74,crouch);
-  arm.wrist.rotation.x=.12*crouch;
+   -THREE.MathUtils.lerp(.20,1.03,mix)*blend,-.90,crouch);
+  arm.wrist.rotation.x=.10*crouch;
  });
  rig.torso.rotation.x=THREE.MathUtils.lerp(.03,.18,mix)*blend*(1-crouch)+
-  .18*crouch;
+  (.32+.05*kneelRest)*crouch;
  rig.torso.rotation.z=Math.sin(phase)*THREE.MathUtils.lerp(.018,.045,mix)*blend*(1-crouch);
  rig.head.rotation.x=-rig.torso.rotation.x*.50;
- // Tactical crouch has contact-preserving knee flexion, so it isn't strain.
+ // A rear knee has a physical ground contact at full crouched rest, with
+ // the shin folded backward. Keep the torso and knee distinct and grounded.
+ // Tactical crouch is a voluntary pose, not overextension or a fall.
  if(!crouched&&!JUMP.active&&gait.cooldown<=0&&blend>.55){
   gait.strainSeconds=gait.strain>.065?gait.strainSeconds+dt:Math.max(0,gait.strainSeconds-dt*2);
   if(gait.strainSeconds>.19+.065*(balanceLevel-1))beginBalanceRecovery('Steady yourself',gait.strain);
