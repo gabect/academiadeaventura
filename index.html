@@ -180,7 +180,7 @@ const WALL_TRAINING={
 const LADDER={
  x:-3.50,bottomZ:-9.20,topZ:-10.43,
  bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
- railTopY:WALL_TRAINING.topY+.80,
+ railTopY:WALL_TRAINING.topY+1.20,
  width:.70,rungSpacing:.27,climbSpeed:.79,
  bottomExitZ:-8.93,topExitZ:-11.14
 };
@@ -578,18 +578,18 @@ const LADDER_STATE={
 const LADDER_TMP=new THREE.Vector3();
 const LADDER_LOCAL=new THREE.Vector3();
 function ladderRootAt(progress,out){
- return out.set(
-  THREE.MathUtils.lerp(LADDER.bottomX,LADDER.topX,progress)-.14,
-  (LADDER.deckY-LADDER.bottomY)*progress,LADDER.z);
+ const height=(LADDER.deckY-LADDER.bottomY)*progress;
+ return out.set(LADDER.x,height,
+  ladderZAtHeight(LADDER.bottomY+height+.62)+.27);
 }
 function ladderEntry(){
  if(LADDER_STATE.active)return null;
  const x=player.position.x,z=player.position.z;
  const level=groundTopAt(x,z);
  if(level<TERRAIN.floorTop+.12&&
-    Math.hypot(x-LADDER.bottomX,z-LADDER.z)<.97)return 'bottom';
+    Math.hypot(x-LADDER.x,z-LADDER.bottomExitZ)<1.15)return 'bottom';
  if(level>LADDER.deckY-.12&&
-    Math.hypot(x-LADDER.topExitX,z-LADDER.z)<1.05)return 'top';
+    Math.hypot(x-LADDER.x,z-LADDER.topExitZ)<1.10)return 'top';
  return null;
 }
 function startLadder(){
@@ -597,7 +597,9 @@ function startLadder(){
  if(!entry||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
  const climb=LADDER_STATE;
  climb.active=true;climb.mode='enter';climb.time=0;
- climb.progress=entry==='top'?1:0;climb.cycle=0;
+ climb.progress=entry==='top'?1:0;
+ climb.direction=entry==='top'?-1:1;
+ climb.cycle=0;
  climb.handHeights=[null,null];climb.footHeights=[null,null];
  climb.from.copy(player.position);climb.fromYaw=player.rotation.y;
  crouched=false;crawling=false;CRAWL.active=false;
@@ -606,9 +608,9 @@ function startLadder(){
  LOCOMOTION.runBlend=0;
  if(bHeld)stopBPointer();
  updateButtonHints();
- document.getElementById('message').textContent=entry==='bottom'?
-  'Ladder: W / joystick up to climb, S / down to descend. C: return safely.':
-  'Ladder: S / joystick down to descend. W: step onto balcony.';
+ document.getElementById('message').textContent=
+  entry==='top'?'Descending the wall ladder automatically. C: safe exit.':
+  'Climbing the wall ladder automatically. W/S or joystick changes direction.';
  return true;
 }
 function startLadderExit(top){
@@ -616,15 +618,16 @@ function startLadderExit(top){
  if(!climb.active||climb.mode==='exit')return;
  climb.mode='exit';climb.toTop=top;climb.time=0;
  climb.from.copy(player.position);
- climb.target.set(top?LADDER.topExitX:LADDER.bottomExitX,
-  top?LADDER.deckY-TERRAIN.floorTop:0,LADDER.z);
+ climb.target.set(LADDER.x,
+  top?LADDER.deckY-TERRAIN.floorTop:0,
+  top?LADDER.topExitZ:LADDER.bottomExitZ);
 }
 function cancelLadder(){
  const climb=LADDER_STATE;
- if(!climb.active||climb.mode==='exit'||climb.mode==='descend')return;
- if(climb.progress>=.96){startLadderExit(true);return;}
- climb.mode='descend';
- document.getElementById('message').textContent='Returning safely to the foot of the ladder...';
+ if(!climb.active||climb.mode==='exit')return;
+ if(climb.progress>.76){startLadderExit(true);return;}
+ climb.mode='climb';climb.direction=-1;
+ document.getElementById('message').textContent='Descending safely to the courtyard...';
 }
 function finishLadder(){
  const climb=LADDER_STATE,top=climb.toTop;
@@ -636,11 +639,11 @@ function finishLadder(){
  setIdlePose(player);prepareFeet(player);
  updateButtonHints();
  document.getElementById('message').textContent=top?
-  'On the balcony. Press A near the ladder to descend.':
-  'Back on the ground.';
+  'On top of the stone wall. Press A near the ladder to descend.':
+  'Back in the courtyard. Press A to climb again.';
 }
 function ladderRungAt(y){
- const first=LADDER.bottomY+.18;
+ const first=LADDER.bottomY+.22;
  const last=Math.floor((LADDER.railTopY-.11-first)/LADDER.rungSpacing);
  const index=THREE.MathUtils.clamp(
   Math.round((y-first)/LADDER.rungSpacing),0,last);
@@ -649,33 +652,34 @@ function ladderRungAt(y){
 function poseLadder(dt,weight,moving){
  const rig=player.userData.rig,climb=LADDER_STATE;
  setIdlePose(player);
- rig.torso.rotation.x=.26*weight;
- rig.head.rotation.x=-.18*weight;
- const yaw=player.rotation.y,c=Math.cos(yaw),sin=Math.sin(yaw);
+ rig.torso.rotation.x=.22*weight;
+ rig.head.rotation.x=-.15*weight;
+ const yaw=player.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
  for(let i=0;i<2;i++){
   const phase=Math.sin(climb.cycle+(1-i)*Math.PI);
-  const requested=player.position.y+.24+(moving?Math.max(0,phase)*.18:0);
-  const desired=ladderRungAt(requested+TERRAIN.floorTop);
+  const requested=player.position.y+.30+(moving?Math.max(0,phase)*.20:0);
+  const desired=ladderRungAt(requested);
   const previous=climb.footHeights[i];
   const y=climb.footHeights[i]=previous===null?desired:
    THREE.MathUtils.damp(previous,desired,12,dt);
-  const x=ladderXAtHeight(y),z=LADDER.z+(i===0?-.21:.21);
+  const x=LADDER.x+(i===0?-.20:.20),z=ladderZAtHeight(y);
   const dx=x-player.position.x,dz=z-player.position.z;
-  const localX=c*dx-sin*dz,localZ=sin*dx+c*dz;
+  const localX=c*dx-si*dz,localZ=si*dx+c*dz;
   const leg=rig.legs[i];
-  solveLegTarget(leg,localX,y-player.position.y,localZ,.10);
+  solveLegTarget(leg,localX,y-player.position.y,localZ,.12);
   leg.hip.rotation.x*=weight;leg.hip.rotation.z*=weight;
   leg.knee.rotation.x*=weight;leg.ankle.rotation.x*=weight;
  }
  player.updateMatrixWorld(true);
  for(let i=0;i<2;i++){
   const phase=Math.sin(climb.cycle+i*Math.PI);
-  const requested=player.position.y+1.05+(moving?Math.max(0,phase)*.19:0);
-  const desired=ladderRungAt(requested+TERRAIN.floorTop);
+  const requested=player.position.y+1.26+
+   (moving?Math.max(0,phase)*.15:0);
+  const desired=ladderRungAt(requested);
   const previous=climb.handHeights[i];
   const y=climb.handHeights[i]=previous===null?desired:
    THREE.MathUtils.damp(previous,desired,11,dt);
-  LADDER_TMP.set(ladderXAtHeight(y),y,LADDER.z+(i===0?-.22:.22));
+  LADDER_TMP.set(LADDER.x+(i===0?-.22:.22),y,ladderZAtHeight(y));
   LADDER_LOCAL.copy(LADDER_TMP);
   rig.torso.worldToLocal(LADDER_LOCAL);
   aimArmAt(rig.arms[i],LADDER_LOCAL,i===0?-1:1,weight);
@@ -692,8 +696,8 @@ function stepLadder(dt,verticalInput){
   const ease=t*t*(3-2*t);
   ladderRootAt(climb.progress,LADDER_TMP);
   player.position.lerpVectors(climb.from,LADDER_TMP,ease);
-  const angle=Math.atan2(Math.sin(-Math.PI/2-climb.fromYaw),
-   Math.cos(-Math.PI/2-climb.fromYaw));
+  const angle=Math.atan2(Math.sin(Math.PI-climb.fromYaw),
+   Math.cos(Math.PI-climb.fromYaw));
   player.rotation.y=climb.fromYaw+angle*ease;
   poseLadder(dt,ease,false);
   if(t>=1)climb.mode='climb';
@@ -701,25 +705,29 @@ function stepLadder(dt,verticalInput){
  }
  if(climb.mode==='exit'){
   climb.time+=dt;
-  const t=THREE.MathUtils.clamp(climb.time/.40,0,1),ease=t*t*(3-2*t);
+  const t=THREE.MathUtils.clamp(climb.time/.58,0,1);
+  const ease=t*t*(3-2*t);
   player.position.lerpVectors(climb.from,climb.target,ease);
-  if(!climb.toTop)player.rotation.y=-Math.PI/2+Math.PI*ease;
+  if(!climb.toTop)player.rotation.y=Math.PI;
   poseLadder(dt,1-ease,false);
   if(t>=1)finishLadder();
   return;
  }
- const command=climb.mode==='descend'?-1:input;
+ // A / Action starts an automatic journey. Strong W/S or joystick input
+ // can reverse it; release continues toward the selected landing.
+ if(input>.24)climb.direction=1;
+ else if(input<-.24)climb.direction=-1;
  const before=climb.progress;
  climb.progress=THREE.MathUtils.clamp(before+
-  command*LADDER.climbSpeed*dt/(LADDER.deckY-LADDER.bottomY),0,1);
+  climb.direction*LADDER.climbSpeed*dt/(LADDER.deckY-LADDER.bottomY),0,1);
  const delta=climb.progress-before;
  climb.cycle+=Math.abs(delta)*(LADDER.deckY-LADDER.bottomY)*
   Math.PI/LADDER.rungSpacing;
  ladderRootAt(climb.progress,player.position);
- player.rotation.y=-Math.PI/2;
+ player.rotation.y=Math.PI;
  poseLadder(dt,1,Math.abs(delta)>.00001);
- if(climb.progress>=1&&command>.05)startLadderExit(true);
- if(climb.progress<=0&&command<-.05)startLadderExit(false);
+ if(climb.direction>0&&climb.progress>=.995)startLadderExit(true);
+ if(climb.direction<0&&climb.progress<=.005)startLadderExit(false);
 }
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
 // support and swing phases. Hands and ankles have ground-anchored contacts.
