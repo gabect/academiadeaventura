@@ -539,7 +539,14 @@ const waterfallMat=new THREE.MeshStandardMaterial({
  color:'#c4eef0',side:THREE.DoubleSide,transparent:true,
  opacity:.81,depthWrite:false,roughness:.22,metalness:.02
 });
-const FALL_CREST={x:34,z:-17.1,width:6.5,top:WORLD.plateauHeight};
+const FALL_CREST={x:34,z:-15.72,width:6.5,top:WORLD.plateauHeight};
+// A 2.65-unit river spillway bridges the source channel to the cliff
+// edge, so the waterfall appears in FRONT of the rock, not buried in it.
+const spillway=new THREE.Mesh(
+ new THREE.PlaneGeometry(FALL_CREST.width,2.65),waterMat.clone());
+spillway.rotation.x=-Math.PI/2;
+spillway.position.set(FALL_CREST.x,FALL_CREST.top+.065,-16.91);
+spillway.renderOrder=3;scene.add(spillway);
 const waterfallPlane=new THREE.Mesh(
  new THREE.PlaneGeometry(FALL_CREST.width,FALL_CREST.top+.7,14,28),
  waterfallMat);
