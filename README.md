@@ -5,15 +5,24 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; C to crouch/cancel; R to stand after falling.
-- **Touchscreen:** left analog joystick for movement, and three compact contextual buttons at bottom right: **A** = interact / talk; **B** = press and hold to run, tap to jump, or press after a fall to stand up; **C** = cancel an active conversation or toggle crouch when no dialog is open. Hold C is not required. B's quick-tap jump and press-and-hold run are mutually exclusive.
+- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; C to crouch/cancel. **R no longer serves a stand-up action**.
+- **Touchscreen:** left analog joystick for movement, and compact lower-right A/B/C controls: **A** = interact/talk; **B** = hold to run or tap to jump; **C** = close a dialog, otherwise toggle crouch. No fall/stand-up mode. B's tap and hold controls are mutually exclusive.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
-- **Falling:** the player first tries to regain balance when physically overextended or struck; press **B** (or keyboard R) after a fall to stand. The dedicated Stand Up button was removed. Use `?debug=1` to expose the QA-only **Fall** button.
-- **Motor Control:** spend XP with **+ Balance** at the top left. The guardian's three-question trial grants 25 XP once and 10 XP for each completed practice round afterward.
+- **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
+- **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.13.0 — November 8, 2026
+## Current version: 0.14.0 — November 8, 2026
+- **Falls disabled throughout the playable RPG:** the legacy ragdoll solver is retained as dormant source for possible future use, but has a hard `ENABLE_RAGDOLL=false` guard, no fall-triggering recovery branch and no active physics update.
+- **Removed the QA Fall button** even when loading `?debug=1`; the main game and debugging URL behave consistently.
+- **Automatic protective recovery for everyone:** a catch-step, arm counterbalance and knee flexion resolve back to a standing/walking pose, without transitioning to a falling state.
+- **Agility XP progression:** replaces Balance labels, preserving existing purchased skill levels and XP in browser local storage. Higher levels reduce overreach wobble frequency, recovery animation duration and amplitude, and post-recovery cooldown. The upgrade prices (20, 30, 40 XP) and repeatable guardian challenges are unchanged.
+- **Input compatibility:** A still interacts, B still holds to run / taps to jump, C cancels / crouches, Shift runs and Space jumps; stand-up controls are removed.
+- **Kept grounded foot placement, leap/gravity, object and courtyard collisions, teen skeleton and ribcage, joystick, zoom, education and XP.**
+- **Requires device QA:** exercise straight running, stopping against trees/walls, hopping, couching, dialog A/C, and repeatable Agility upgrades on Android/Chromebook. No full real-time browser QA is asserted by source-code checks.
+
+## Previous version: 0.13.0 — November 8, 2026
 - **Real A/B/C control implementation** in the main GitHub Pages project; no image-only UI mockup. The lower-right cluster has smaller touch buttons (roughly 43–72px, even more compact in landscape).
 - **A: interact** with NPCs and initiate educational dialogs; future contextual item grabbing remains unimplemented until pick-up objects exist.
 - **B: context-sensitive movement.** Hold it to sprint, release to stop sprinting; quick tap on B triggers a simple gravity-based hop. When the avatar is fallen, press B to stand after the normal 1.35-second fall delay. Shift on keyboard also runs; Space/B jumps.
@@ -66,6 +75,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.14.0 (2026-11-08):** fall feature disabled; permanent reflex recovery; Agility XP progression preserving legacy Balance levels; removed debug Fall and stand-up actions.
 - **0.13.0 (2026-11-08):** compact working contextual A/B/C touch controls, B sprint hold and tap jump/fall recovery, C cancel/crouch, Shift sprint and Space jump.
 - **0.12.0 (2026-11-08):** automatic protective balance/catch-step animation; upgradeable motor skill (Balance levels 1–4) using XP; repeatable quiz XP; softer ragdoll limb settling and safer sleep gating.
 - **0.11.0 (2026-11-07):** lightweight anatomical rib cage + sternum reused across standing and fallen characters; neutral 12–13-year-old proportions, additional torso clearance.
@@ -86,7 +96,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.13.1, feature 0.14.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.14.1, feature 0.15.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
