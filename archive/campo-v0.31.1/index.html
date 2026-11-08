@@ -1,0 +1,2728 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Academia Aventura — Campo de pruebas</title><style>
+html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
+#stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
+#stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
+/* Compact three-button touchscreen cluster, 42px+ touch targets. */
+#actionCluster{position:fixed;right:max(13px,env(safe-area-inset-right));bottom:max(17px,env(safe-area-inset-bottom));width:167px;height:137px;z-index:10;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:contain}
+#actionCluster button{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;border-radius:50%;background:#203f49e8;border:2px solid #ffffffb9;color:#fff;font:700 27px/1 system-ui,sans-serif;box-shadow:0 3px 11px #172c3745;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer;padding:3px}
+#actionCluster button small{font:600 10px/1.15 system-ui,sans-serif;white-space:nowrap;margin-top:3px}
+#interactButton{width:58px;height:58px;left:0;bottom:0}
+#runButton{width:72px;height:72px;right:0;bottom:0;font-size:31px!important}
+#cancelButton{width:46px;height:46px;right:57px;bottom:84px;font-size:22px!important}
+#cancelButton small{font-size:8px!important;margin-top:1px!important}
+#actionCluster button[aria-pressed="true"],#actionCluster button.is-active{background:#497e9e;border-color:#efc56a}
+#actionCluster button:disabled{opacity:.45;cursor:default}
+body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer-events:none}
+#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}
+#skillPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:8px;z-index:6;display:flex;gap:7px;align-items:center;flex-wrap:wrap;max-width:60%;color:#17323c;background:#ffffffe0;border:1px solid #ffffffad;border-radius:9px;padding:5px 8px;font:600 12px system-ui,sans-serif}
+#balanceUpgrade{border:1px solid #678080;border-radius:7px;background:#284c54;color:white;font:600 12px system-ui,sans-serif;padding:6px 8px;touch-action:manipulation}
+#balanceUpgrade:disabled{opacity:.5}#waterStatus{background:#d3eff1;color:#225a68;border-radius:6px;padding:4px 6px;font-weight:700}#slopeStatus{background:#e9edd6;color:#4b6038;border-radius:6px;padding:4px 6px;font-weight:700}
+@media(max-height:430px){#actionCluster{width:149px;height:113px;right:max(11px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}#interactButton{width:53px;height:53px}#runButton{width:65px;height:65px}#cancelButton{width:43px;height:43px;right:51px;bottom:69px}#actionCluster button{font-size:24px}#actionCluster button small{font-size:9px}}
+#zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+#zoomControls button:disabled{opacity:.45;cursor:default}
+#cameraUndo{font-size:23px!important}
+#cameraHint{position:fixed;right:max(11px,env(safe-area-inset-right));top:193px;z-index:4;color:#203f49;background:#ffffffae;border-radius:5px;padding:3px 5px;font:600 10px/1.2 system-ui,sans-serif;pointer-events:none}
+@media(max-height:430px){#cameraHint{top:189px;font-size:9px}}
+#landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
+#landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
+@media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
+@media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#message{bottom:12px;font-size:12px;max-width:45%}}
+#challenge{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:#102533bb;padding:15px}
+#challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
+#challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
+@media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.1 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Space: A · F: B · Caps Lock: C · fixed camera</p></div><div id="message">Campo de pruebas: explora lomas, rampas, torre, lago y río.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+// El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
+const BUILD='0.31.1';let pendingBuild=null;
+// Ragdoll code is retained for possible future gameplay, but inactive.
+// No player input, collision or recovery path can transition to a fall.
+const ENABLE_RAGDOLL=false;
+async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
+setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',55,125);
+const camera=new THREE.PerspectiveCamera(34,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+// Link's Awakening-style top-down diorama camera: NORTH remains at screen top.
+// The view is a steep, slightly tilted aerial shot, NOT a diagonal 45° isometric.
+// Camera does not orbit; only distance zoom and tracked position can change.
+const ZOOM_MIN=.70,ZOOM_MAX=2.6;
+const zoomInButton=document.getElementById('zoomIn');
+const zoomOutButton=document.getElementById('zoomOut');
+let cameraZoom=1,cameraReady=false;
+// Fixed north-up heading, elevated ~66.5 degrees above the ground.
+// Nintendo has not published exact camera parameters: these are visual matches.
+const cameraHeading=Math.PI,cameraPitch=1.16;
+const cameraHistory=[];
+const cameraUndoButton=document.getElementById('cameraUndo');
+function recordCameraChange(){
+ // Camera undo now records zoom only; no camera-angle history exists.
+ const previous=cameraHistory[cameraHistory.length-1];
+ if(previous!==undefined&&Math.abs(previous-cameraZoom)<.003)return;
+ cameraHistory.push(cameraZoom);
+ if(cameraHistory.length>12)cameraHistory.shift();
+ cameraUndoButton.disabled=false;
+}
+function undoCameraChange(){
+ const previousZoom=cameraHistory.pop();
+ if(previousZoom===undefined)return;
+ setCameraZoom(previousZoom);
+ cameraUndoButton.disabled=cameraHistory.length===0;
+}
+cameraUndoButton.addEventListener('click',undoCameraChange);
+const cameraTarget=new THREE.Vector3();
+const cameraLookAt=new THREE.Vector3();
+const cameraDesired=new THREE.Vector3();
+const cameraDelta=new THREE.Vector3();
+const cameraRay=new THREE.Raycaster();
+const cameraOccluders=[];
+function setCameraZoom(next){
+ cameraZoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
+ zoomInButton.disabled=cameraZoom>=ZOOM_MAX-.001;
+ zoomOutButton.disabled=cameraZoom<=ZOOM_MIN+.001;
+}
+zoomInButton.addEventListener('click',()=>{
+ recordCameraChange();setCameraZoom(cameraZoom*1.25);
+});
+zoomOutButton.addEventListener('click',()=>{
+ recordCameraChange();setCameraZoom(cameraZoom/1.25);
+});
+for(const button of [zoomInButton,zoomOutButton]){
+ for(const eventName of ['contextmenu','selectstart','dragstart']){
+  button.addEventListener(eventName,e=>e.preventDefault());
+ }
+}
+renderer.domElement.style.touchAction='none';
+let lastZoomWheelAt=-1000;
+renderer.domElement.addEventListener('wheel',e=>{
+ e.preventDefault();
+ if(e.deltaY===0)return;
+ const now=performance.now();
+ if(now-lastZoomWheelAt>350)recordCameraChange();
+ lastZoomWheelAt=now;
+ setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
+},{passive:false});
+// A single finger/mouse drag cannot rotate the camera.
+// Two fingers can still pinch zoom without affecting its fixed orientation.
+const cameraPointers=new Map();
+let pinchDistance=0,pinchRecorded=false;
+renderer.domElement.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+ if(cameraPointers.size===2){
+  const [a,b]=[...cameraPointers.values()];
+  pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);
+  pinchRecorded=false;
+ }
+},{passive:false});
+renderer.domElement.addEventListener('pointermove',e=>{
+ const p=cameraPointers.get(e.pointerId);if(!p)return;
+ e.preventDefault();
+ p.x=e.clientX;p.y=e.clientY;
+ if(cameraPointers.size===2){
+  const [a,b]=[...cameraPointers.values()];
+  const dist=Math.hypot(a.x-b.x,a.y-b.y);
+  if(!pinchRecorded&&Math.abs(dist-pinchDistance)>3){
+   recordCameraChange();pinchRecorded=true;
+  }
+  if(pinchDistance>0&&dist>0)setCameraZoom(cameraZoom*dist/pinchDistance);
+  pinchDistance=dist;
+ }
+},{passive:false});
+for(const type of ['pointerup','pointercancel','lostpointercapture']){
+ renderer.domElement.addEventListener(type,e=>{
+  cameraPointers.delete(e.pointerId);
+  if(cameraPointers.size<2){pinchDistance=0;pinchRecorded=false;}
+ });
+}
+setCameraZoom(1);
+scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);
+const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
+const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${n}`;if(!cylCache.has(k))cylCache.set(k,new THREE.CylinderGeometry(rt,rb,h,n));const o=new THREE.Mesh(cylCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+// Grass and paving share the same level; only registered steps/decks rise.
+// Decorative overlays do not contribute to collision or ground height.
+const TERRAIN={floorTop:-.05,soleClearance:.11};
+// Walkable surfaces are explicitly registered; decorative boxes are NOT ground.
+const WALKABLE_ELEVATIONS=[];
+// Water bodies share one reusable depth sampler; world-space Y is the
+// water surface, while a smooth excavated bed controls walking vs swimming.
+// Lake and outgoing river are one connected water system on a sculpted floor.
+// The original shallow puddle stays available for basic wading tests.
+const WATER_BODIES=[
+ {id:'puddle',kind:'puddle',x:-7.25,z:4.60,rx:1.35,rz:.85,maxDepth:.28},
+ {id:'lake-main',kind:'lake',x:10.0,z:8.10,rx:4.40,rz:4.35,maxDepth:2.80}
+];
+// River runs out of the southwest side of the lake and winds across the
+// larger playground. Shallow fords alternate with sections deep enough to swim.
+const RIVER_NODES=[
+ {x:8.20,z:9.50,width:1.65,depth:2.40,flow:.48},
+ {x:6.30,z:10.40,width:1.50,depth:2.25,flow:1.00},
+ {x:4.25,z:11.80,width:1.43,depth:2.40,flow:1.55},
+ {x:1.75,z:13.00,width:1.55,depth:.68,flow:.78},
+ {x:-.55,z:13.90,width:1.35,depth:2.15,flow:1.35},
+ {x:-3.20,z:14.50,width:1.28,depth:2.55,flow:1.75},
+ {x:-6.50,z:15.00,width:1.38,depth:.85,flow:1.15},
+ {x:-10.80,z:14.90,width:1.45,depth:2.20,flow:1.45}
+];
+const WATER_SURFACE_Y=TERRAIN.floorTop+.018;
+const WATER_RENDER_BOUNDS={minX:-13.0,maxX:15.5,minZ:2.25,maxZ:16.75};
+const RIVER_DISTANCES=[0];
+for(let i=0;i<RIVER_NODES.length-1;i++){
+ const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+ RIVER_DISTANCES.push(RIVER_DISTANCES[i]+Math.hypot(b.x-a.x,b.z-a.z));
+}
+const RIVER_LENGTH=RIVER_DISTANCES[RIVER_DISTANCES.length-1];
+function smoothWater(t){
+ const u=THREE.MathUtils.clamp(t,0,1);
+ return u*u*(3-2*u);
+}
+function waterDepthAt(body,x,z){
+ const r=Math.hypot((x-body.x)/body.rx,(z-body.z)/body.rz);
+ return body.maxDepth*smoothWater(1-r);
+}
+function riverSample(x,z){
+ let closest=null;
+ for(let i=0;i<RIVER_NODES.length-1;i++){
+  const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+  const dx=b.x-a.x,dz=b.z-a.z,len2=dx*dx+dz*dz;
+  const t=THREE.MathUtils.clamp(
+   ((x-a.x)*dx+(z-a.z)*dz)/len2,0,1);
+  const cx=a.x+t*dx,cz=a.z+t*dz;
+  const distance=Math.hypot(x-cx,z-cz);
+  const width=THREE.MathUtils.lerp(a.width,b.width,t);
+  const signed=1-distance/width;
+  if(!closest||distance/width<closest.relativeDistance){
+   const length=Math.sqrt(len2);
+   closest={
+    coverage:signed,relativeDistance:distance/width,
+    depth:THREE.MathUtils.lerp(a.depth,b.depth,t)*smoothWater(signed),
+    flow:THREE.MathUtils.lerp(a.flow,b.flow,t),
+    dirX:dx/length,dirZ:dz/length,width
+   };
+  }
+ }
+ return closest;
+}
+function waterCoverageAt(x,z){
+ let signed=-Infinity;
+ for(const body of WATER_BODIES){
+  signed=Math.max(signed,1-Math.hypot((x-body.x)/body.rx,
+   (z-body.z)/body.rz));
+ }
+ return Math.max(signed,riverSample(x,z).coverage);
+}
+function waterAt(x,z){
+ let selected=null,depth=0;
+ for(const body of WATER_BODIES){
+  const d=waterDepthAt(body,x,z);
+  if(d>depth){depth=d;selected=body;}
+ }
+ const river=riverSample(x,z);
+ if(river.depth>depth){
+  depth=river.depth;
+  selected={id:'river-main',kind:'river'};
+ }
+ if(depth<=.00001)return null;
+ return {body:selected,depth,floorY:TERRAIN.floorTop-depth,
+  surfaceY:WATER_SURFACE_Y};
+}
+// A force field rather than a painted directional texture; current
+// continues even if the player releases the joystick.
+function waterCurrentAt(x,z){
+ const water=waterAt(x,z);
+ if(!water)return {x:0,z:0,strength:0};
+ const river=riverSample(x,z);
+ const influence=smoothWater(river.coverage/.55);
+ const strength=river.flow*influence;
+ return {x:river.dirX*strength,z:river.dirZ*strength,strength};
+}
+function riverPointAtDistance(distance){
+ const along=((distance%RIVER_LENGTH)+RIVER_LENGTH)%RIVER_LENGTH;
+ let i=0;
+ while(i<RIVER_NODES.length-2&&along>RIVER_DISTANCES[i+1])i++;
+ const a=RIVER_NODES[i],b=RIVER_NODES[i+1];
+ const span=RIVER_DISTANCES[i+1]-RIVER_DISTANCES[i];
+ const t=span?(along-RIVER_DISTANCES[i])/span:0;
+ const dx=(b.x-a.x)/span,dz=(b.z-a.z)/span;
+ return {x:THREE.MathUtils.lerp(a.x,b.x,t),
+  z:THREE.MathUtils.lerp(a.z,b.z,t),dirX:dx,dirZ:dz,
+  width:THREE.MathUtils.lerp(a.width,b.width,t)};
+}
+const STEP_HEIGHT=.30,MAX_STEP_UP=.34,MAX_STEP_DOWN=.34;
+const BALCONY={
+ xMin:7.10,xMax:10.10,zMin:-5.80,zMax:-1.20,
+ stairsMinX:4.70,stairsMinZ:-4.80,stairsMaxZ:-2.20,
+ stepDepth:.60,steps:4
+};
+const WALL_TRAINING={
+ minX:-4.75,maxX:-2.25,minZ:-12.35,maxZ:-10.50,topY:2.0
+};
+const LADDER={
+ // Vertical, bracket-mounted ladder. The open top rung area lets the
+ // climber transfer at the wall lip instead of walking through crossbars.
+ x:-3.50,wallZ:WALL_TRAINING.maxZ,standoff:.16,
+ bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
+ railTopY:WALL_TRAINING.topY+.18,rungTopY:WALL_TRAINING.topY-.10,
+ width:.70,rungSpacing:.27,climbSpeed:.79,topRootProgress:.80,
+ bottomExitZ:-9.08,topExitZ:WALL_TRAINING.maxZ-.19
+};
+const BALCONY_RAIL_COLLIDERS=[];
+const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
+ BALCONY_EDGE=mat('#593a29'),STAIR_STONE=mat('#b7b4a5'),
+ STAIR_TRIM=mat('#d6d1bd');
+function addWalkable(name,minX,maxX,minZ,maxZ,topY,kind){
+ const surface={name,walkable:true,minX,maxX,minZ,maxZ,topY,kind};
+ WALKABLE_ELEVATIONS.push(surface);return surface;
+}
+function addRailCollider(minX,maxX,minZ,maxZ){
+ BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
+}
+// All natural hills use the same smooth analytical height model as terrain
+// rendering, collision, avatar body lift, and grounded IK. Vary footprint,
+// rise and grade without creating separate hand-tuned movement mechanics.
+const FIELD_HILLS=[
+ {id:'gentle-west',x:-17,z:-3,radius:6.0,height:1.35},
+ {id:'broad-west',x:-21,z:-19,radius:7.1,height:3.05},
+ {id:'south-swell',x:0,z:21,radius:6.0,height:1.85},
+ {id:'eastern-hill',x:17,z:-21,radius:6.0,height:3.65},
+ {id:'rocky-steep',x:23,z:-12,radius:4.7,height:4.10},
+ {id:'little-rise',x:-2,z:-23,radius:4.0,height:.75},
+ {id:'northwest-meadow',x:-22,z:19,radius:5.3,height:1.32},
+ {id:'far-east-hummock',x:23,z:21,radius:4.5,height:1.15}
+];
+const MAX_WALKABLE_GRADE=1; // tan(45°): anything steeper is impassable.
+const MAX_WALKABLE_ANGLE=Math.PI/4;
+function naturalHillHeightAt(x,z){
+ let elevation=0;
+ for(const hill of FIELD_HILLS){
+  const r=Math.hypot(x-hill.x,z-hill.z)/hill.radius;
+  if(r>=1)continue;
+  const t=1-r;
+  const value=hill.height*t*t*(3-2*t);
+  elevation=Math.max(elevation,value);
+ }
+ return elevation;
+}
+function naturalSurfaceY(x,z){
+ const water=waterAt(x,z);
+ return TERRAIN.floorTop+naturalHillHeightAt(x,z)-(water?water.depth:0);
+}
+function naturalGradeAt(x,z){
+ const epsilon=.07;
+ const slopeX=(naturalSurfaceY(x+epsilon,z)-
+  naturalSurfaceY(x-epsilon,z))/(2*epsilon);
+ const slopeZ=(naturalSurfaceY(x,z+epsilon)-
+  naturalSurfaceY(x,z-epsilon))/(2*epsilon);
+ return Math.hypot(slopeX,slopeZ);
+}
+// Ramp geometry, normal, clearance and foot placement will all use these
+// shared definitions; the original stairs keep their discrete 0.30 risers.
+const FIELD_RAMPS=[
+ {id:'wood-16',kind:'wood',x:-6,z:-17,dx:0,dz:-1,
+  length:5.0,width:2.7,rise:1.45,landing:1.2},
+ {id:'stone-33',kind:'stone',x:0,z:-16,dx:0,dz:-1,
+  length:4.7,width:2.7,rise:3.05,landing:1.3},
+ {id:'wood-45',kind:'wood',x:7,z:-15,dx:0,dz:-1,
+  length:3.2,width:2.7,rise:3.2,landing:1.3},
+ {id:'stone-53',kind:'stone',x:-11,z:-18,dx:0,dz:-1,
+  length:3.25,width:2.7,rise:4.25,landing:1.3}
+];
+function rampSampleAt(ramp,x,z){
+ const offsetX=x-ramp.x,offsetZ=z-ramp.z;
+ const along=offsetX*ramp.dx+offsetZ*ramp.dz;
+ const lateral=offsetX*(-ramp.dz)+offsetZ*ramp.dx;
+ if(Math.abs(lateral)>ramp.width*.5||
+    along<0||along>ramp.length+ramp.landing)return null;
+ return {ramp,along,lateral,
+  topY:TERRAIN.floorTop+
+   ramp.rise*Math.min(along/ramp.length,1),
+  grade:along<ramp.length?ramp.rise/ramp.length:0};
+}
+function rampAt(x,z){
+ for(const ramp of FIELD_RAMPS){
+  const hit=rampSampleAt(ramp,x,z);
+  if(hit)return hit;
+ }
+ return null;
+}
+const FLOOR_DECAL_OFFSET=.002;
+// Three times the usable area of v0.30.0, with open grassy field and
+// continuous hill and underwater elevations. No arena perimeter walls.
+const TERRAIN_HALF_SIZE=35;
+const terrainResolution=224;
+const terrainGeometry=new THREE.PlaneGeometry(
+ TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
+ terrainResolution,terrainResolution);
+const groundPositions=terrainGeometry.attributes.position;
+const groundColors=[];
+const dryGrass=new THREE.Color('#80aa71');
+const wetBed=new THREE.Color('#60796c');
+const terrainShade=new THREE.Color();
+for(let i=0;i<groundPositions.count;i++){
+ const x=groundPositions.getX(i),z=-groundPositions.getY(i);
+ const water=waterAt(x,z),depth=water?water.depth:0;
+ const hill=naturalHillHeightAt(x,z);
+ groundPositions.setZ(i,hill-depth);
+ terrainShade.copy(dryGrass).lerp(wetBed,
+  THREE.MathUtils.clamp(depth/1.8,0,1));
+ if(hill>0){
+  const hillColor=new THREE.Color('#8aa579');
+  terrainShade.lerp(hillColor,THREE.MathUtils.clamp(hill/4,0,.7));
+ }
+ groundColors.push(terrainShade.r,terrainShade.g,terrainShade.b);
+}
+terrainGeometry.setAttribute('color',
+ new THREE.Float32BufferAttribute(groundColors,3));
+terrainGeometry.computeVertexNormals();
+const terrainMaterial=new THREE.MeshStandardMaterial({
+ vertexColors:true,roughness:.95,side:THREE.DoubleSide});
+const groundMesh=new THREE.Mesh(terrainGeometry,terrainMaterial);
+groundMesh.rotation.x=-Math.PI/2;
+groundMesh.position.y=TERRAIN.floorTop;
+groundMesh.receiveShadow=true;scene.add(groundMesh);
+// One watertight water surface over the union of puddle, lake and winding
+// river. Clip small mesh triangles to the analytical shoreline contour.
+const WATER_VISUALS=[];
+const waterMat=new THREE.MeshStandardMaterial({
+ color:'#3d9db4',roughness:.26,metalness:.02,
+ transparent:true,opacity:.71,depthWrite:false,side:THREE.DoubleSide
+});
+const waterTriangles=[];
+function addWaterTriangle(a,b,c){
+ let poly=[a,b,c];
+ const output=[];
+ for(let i=0;i<poly.length;i++){
+  const p=poly[i],q=poly[(i+1)%poly.length];
+  if(p.coverage>=0)output.push(p);
+  if((p.coverage>0)!==(q.coverage>0)){
+   const t=p.coverage/(p.coverage-q.coverage);
+   output.push({x:THREE.MathUtils.lerp(p.x,q.x,t),
+    z:THREE.MathUtils.lerp(p.z,q.z,t),coverage:0});
+  }
+ }
+ for(let i=1;i<output.length-1;i++){
+  for(const v of [output[0],output[i],output[i+1]])
+   waterTriangles.push(v.x,WATER_SURFACE_Y,v.z);
+ }
+}
+const waterStep=.24;
+const waterBounds=WATER_RENDER_BOUNDS;
+const xCount=Math.ceil((waterBounds.maxX-waterBounds.minX)/waterStep);
+const zCount=Math.ceil((waterBounds.maxZ-waterBounds.minZ)/waterStep);
+function waterVertex(x,z){
+ return {x,z,coverage:waterCoverageAt(x,z)};
+}
+for(let ix=0;ix<xCount;ix++)for(let iz=0;iz<zCount;iz++){
+ const x=waterBounds.minX+ix*waterStep;
+ const z=waterBounds.minZ+iz*waterStep;
+ const a=waterVertex(x,z),b=waterVertex(x+waterStep,z);
+ const c=waterVertex(x+waterStep,z+waterStep),d=waterVertex(x,z+waterStep);
+ addWaterTriangle(a,b,c);addWaterTriangle(a,c,d);
+}
+const waterGeometry=new THREE.BufferGeometry();
+waterGeometry.setAttribute('position',
+ new THREE.Float32BufferAttribute(waterTriangles,3));
+waterGeometry.computeVertexNormals();
+const waterSurface=new THREE.Mesh(waterGeometry,waterMat);
+waterSurface.renderOrder=2;scene.add(waterSurface);
+WATER_VISUALS.push({body:WATER_BODIES[1],waterPlane:waterSurface});
+const swimRipple=new THREE.Mesh(new THREE.RingGeometry(.23,.29,32),
+ new THREE.MeshBasicMaterial({
+  color:'#c8f0e9',transparent:true,opacity:.55,depthWrite:false,
+  side:THREE.DoubleSide
+ }));
+swimRipple.rotation.x=-Math.PI/2;
+swimRipple.visible=false;swimRipple.renderOrder=4;scene.add(swimRipple);
+// Moving light foam marks the downstream direction of the river.
+const streamFoam=[];
+const foamMat=new THREE.MeshBasicMaterial({
+ color:'#d3f4ed',transparent:true,opacity:.38,depthWrite:false,
+ side:THREE.DoubleSide
+});
+for(let i=0;i<22;i++){
+ const mark=new THREE.Mesh(new THREE.RingGeometry(.085,.12,18),
+  foamMat.clone());
+ mark.rotation.x=-Math.PI/2;
+ mark.renderOrder=4;scene.add(mark);
+ streamFoam.push(mark);
+}
+let streamTime=0;
+const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
+pavement.rotation.x=-Math.PI/2;
+pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
+pavement.receiveShadow=true;scene.add(pavement);
+const pavingDetail=mat('#aeb6ac');
+const tileGeometry=new THREE.PlaneGeometry(.7,.45);
+for(let i=-5;i<=5;i++)for(let j=-7;j<=7;j++)if((i+j)%7===0){
+ const tile=new THREE.Mesh(tileGeometry,pavingDetail);
+ tile.rotation.x=-Math.PI/2;
+ tile.position.set(i,TERRAIN.floorTop+2*FLOOR_DECAL_OFFSET,j);
+ tile.receiveShadow=true;scene.add(tile);
+}
+// Collision/IK ground height comes from traversable top surfaces ONLY.
+// Non-walkable decorative/interactive solids still use their own collision
+// footprints and never become steps just because a visible mesh is tall.
+function groundTopAt(x,z){
+ let top=naturalSurfaceY(x,z);
+ const ramp=rampAt(x,z);
+ if(ramp)top=Math.max(top,ramp.topY);
+ for(const surface of WALKABLE_ELEVATIONS){
+  if(!surface.walkable)continue;
+  if(x>=surface.minX&&x<=surface.maxX&&
+     z>=surface.minZ&&z<=surface.maxZ){
+   top=Math.max(top,surface.topY);
+  }
+ }
+ return top;
+}
+function ankleGroundY(x,z,centerX=x,centerZ=z){
+ const centerTop=groundTopAt(centerX,centerZ);
+ const footTop=groundTopAt(x,z);
+ const reachable=footTop>centerTop+MAX_STEP_UP+.001?centerTop:footTop;
+ return reachable+TERRAIN.soleClearance;
+}
+// A timber viewing balcony, reached from the courtyard by four stone risers.
+// Registered surface boundaries match the solid mesh TOPS exactly.
+function buildBalconyAndStoneSteps(){
+ const b=BALCONY,base=TERRAIN.floorTop,deckTop=base+b.steps*STEP_HEIGHT;
+ const deckCenterX=(b.xMin+b.xMax)*.5,deckCenterZ=(b.zMin+b.zMax)*.5;
+ const deckW=b.xMax-b.xMin,deckD=b.zMax-b.zMin;
+ box(deckW,.22,deckD,BALCONY_WOOD,deckCenterX,deckTop-.11,deckCenterZ);
+ // Timber support posts terminate exactly under the deck.
+ for(const px of [b.xMin+.20,b.xMax-.20])
+  for(const pz of [b.zMin+.20,b.zMax-.20])
+   box(.24,deckTop-base-.22,.24,BALCONY_EDGE,
+    px,base+(deckTop-base-.22)*.5,pz);
+ for(let x=b.xMin+.14;x<b.xMax-.08;x+=.40)
+  box(.34,.014,deckD-.22,BALCONY_PLANK,x,deckTop+.003,deckCenterZ);
+ box(deckW+.10,.12,.14,BALCONY_EDGE,deckCenterX,deckTop-.06,b.zMin);
+ box(deckW+.10,.12,.14,BALCONY_EDGE,deckCenterX,deckTop-.06,b.zMax);
+ addWalkable('wooden-balcony',b.xMin,b.xMax,b.zMin,b.zMax,deckTop,'balcony');
+ for(let i=0;i<b.steps;i++){
+  const x0=b.stairsMinX+i*b.stepDepth,x1=x0+b.stepDepth;
+  const height=(i+1)*STEP_HEIGHT,top=base+height;
+  const zCenter=(b.stairsMinZ+b.stairsMaxZ)*.5;
+  const zDepth=b.stairsMaxZ-b.stairsMinZ;
+  box(b.stepDepth,height,zDepth,STAIR_STONE,(x0+x1)*.5,
+   base+height*.5,zCenter);
+  box(b.stepDepth-.065,.012,zDepth-.11,STAIR_TRIM,(x0+x1)*.5,
+   top+.003,zCenter);
+  addWalkable('stone-step-'+(i+1),x0,x1,b.stairsMinZ,b.stairsMaxZ,
+   top,'stairs');
+ }
+ // Rails on the deck's back and sides. Leave the staircase opening unbarred.
+ const railTop=deckTop+.87;
+ function post(x,z){box(.14,.91,.14,BALCONY_EDGE,x,deckTop+.455,z);}
+ function railX(x0,x1,z){
+  box(x1-x0,.10,.095,BALCONY_EDGE,(x0+x1)*.5,railTop-.04,z);
+  box(x1-x0,.075,.075,BALCONY_WOOD,(x0+x1)*.5,deckTop+.43,z);
+  addRailCollider(x0,x1,z-.055,z+.055);
+ }
+ function railZ(x,z0,z1){
+  box(.095,.10,z1-z0,BALCONY_EDGE,x,railTop-.04,(z0+z1)*.5);
+  box(.075,.075,z1-z0,BALCONY_WOOD,x,deckTop+.43,(z0+z1)*.5);
+  addRailCollider(x-.055,x+.055,z0,z1);
+ }
+ for(const x of [b.xMin,b.xMax])for(const z of [b.zMin,b.zMax])post(x,z);
+ for(const z of [b.zMin,b.zMax])post(deckCenterX,z);
+ railX(b.xMin,b.xMax,b.zMin);railX(b.xMin,b.xMax,b.zMax);
+ railZ(b.xMax,b.zMin,b.zMax);
+ for(const [lo,hi] of [[b.zMin,b.stairsMinZ],
+                       [b.stairsMaxZ,b.zMax]]){
+  post(b.xMin,lo===b.zMin?hi:lo);
+  railZ(b.xMin,lo,hi);
+ }
+ // Angled handrails protect both flanks of the stone staircase.
+ for(const z of [b.stairsMinZ-.12,b.stairsMaxZ+.12]){
+  const start=b.stairsMinX-.08,end=b.xMin+.09;
+  // The slope finishes at exactly the balcony rail height.
+  const railStart=base+.65,railFinish=deckTop+.83;
+  const rise=railFinish-railStart;
+  for(let j=0;j<=4;j++){
+   const x=b.stairsMinX+j*b.stepDepth;
+   const top=railStart+(x-start)/(end-start)*rise;
+   box(.13,top-base,.13,BALCONY_EDGE,x,(top+base)*.5,z);
+  }
+  const handrail=box(.085,Math.hypot(end-start,rise),.085,
+   BALCONY_WOOD,(start+end)*.5,railStart+rise*.5,z);
+  handrail.rotation.z=-Math.atan2(end-start,rise);
+  addRailCollider(start,end,z-.06,z+.06);
+ }
+}
+buildBalconyAndStoneSteps();
+function buildTrainingWall(){
+ const w=WALL_TRAINING,centerX=(w.minX+w.maxX)/2;
+ const centerZ=(w.minZ+w.maxZ)/2;
+ const width=w.maxX-w.minX,depth=w.maxZ-w.minZ;
+ const wallHeight=w.topY-TERRAIN.floorTop;
+ box(width,wallHeight,depth,wall,centerX,
+  TERRAIN.floorTop+wallHeight/2,centerZ);
+ addWalkable('north-training-wall',w.minX,w.maxX,w.minZ,w.maxZ,
+  w.topY,'wall');
+ // Masonry battlements extend the original north wall into a short rampart.
+ const parapetY=w.topY+.38;
+ box(width,.72,.19,wall,centerX,parapetY,w.minZ+.09);
+ for(const x of [w.minX+.08,w.maxX-.08]){
+  box(.19,.72,depth,wall,x,parapetY,centerZ);
+  addRailCollider(x-.095,x+.095,w.minZ,w.maxZ);
+ }
+ // Leave a 1.30-wide gap at the front for the ladder dismount.
+ const gap=.65;
+ for(const [x0,x1] of [[w.minX,centerX-gap],[centerX+gap,w.maxX]]){
+  box(x1-x0,.48,.17,wall,(x0+x1)/2,w.topY+.24,w.maxZ-.08);
+  addRailCollider(x0,x1,w.maxZ-.17,w.maxZ);
+ }
+ addRailCollider(w.minX,w.maxX,w.minZ,w.minZ+.16);
+}
+buildTrainingWall();
+function ladderZAtHeight(y){
+ // Shared constant wall offset for render geometry, IK and collisions.
+ return LADDER.wallZ+LADDER.standoff;
+}
+function buildWallMountedLadder(){
+ const group=new THREE.Group();
+ group.userData.ignoreCameraRay=true;
+ scene.add(group);
+ const left=LADDER.x-LADDER.width*.5,right=LADDER.x+LADDER.width*.5;
+ const baseY=LADDER.bottomY+.06,topY=LADDER.railTopY;
+ const z=ladderZAtHeight(baseY);
+ const side=mat('#825735'),rungMat=mat('#b88a4d');
+ const mountMat=mat('#4a5554');
+ for(const x of [left,right]){
+  // Back-mounted metal anchors meet the actual masonry plane.
+  for(const y of [LADDER.bottomY+.40,LADDER.bottomY+1.12,
+                  LADDER.bottomY+1.84])
+   rod(group,[x,y,LADDER.wallZ+.008],[x,y,z],.034,mountMat);
+  rod(group,[x,baseY,z],[x,topY,z],.052,side);
+ }
+ for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;y+=LADDER.rungSpacing)
+  rod(group,[left,y,z],[right,y,z],.044,rungMat);
+}
+// Open field: NO perimeter walls, fortifications, or corner towers.
+// Artificial ramps use the same analytical planes for physics and visuals.
+const rampWoodMat=mat('#946e45'),rampStoneMat=mat('#adb3af');
+const rampTrim=mat('#cfbf9c');
+function buildRampSlice(ramp,start,end,startY,endY,material){
+ const floor=TERRAIN.floorTop-.10;
+ const sideX=-ramp.dz,sideZ=ramp.dx,half=ramp.width*.5;
+ const point=(t,side,y)=>[
+  ramp.x+ramp.dx*t+sideX*side*half,y,
+  ramp.z+ramp.dz*t+sideZ*side*half
+ ];
+ const positions=[
+  ...point(start,-1,startY),...point(start,1,startY),
+  ...point(end,-1,endY),...point(end,1,endY),
+  ...point(start,-1,floor),...point(start,1,floor),
+  ...point(end,-1,floor),...point(end,1,floor)
+ ];
+ const triangles=[0,1,2,1,3,2,4,6,5,5,6,7,
+  0,2,4,2,6,4,1,5,3,3,5,7,
+  0,4,1,1,4,5,2,3,6,3,7,6];
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ geometry.setIndex(triangles);geometry.computeVertexNormals();
+ const mesh=new THREE.Mesh(geometry,material);
+ mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);
+}
+function buildFieldRamps(){
+ for(const ramp of FIELD_RAMPS){
+  const material=ramp.kind==='wood'?rampWoodMat:rampStoneMat;
+  const base=TERRAIN.floorTop,top=base+ramp.rise;
+  buildRampSlice(ramp,0,ramp.length,base+.007,top+.007,material);
+  buildRampSlice(ramp,ramp.length,ramp.length+ramp.landing,
+   top+.007,top+.007,material);
+  // Small lines across the surface distinguish boards from a staircase.
+  for(let along=.35;along<ramp.length;along+=.49){
+   const strip=box(ramp.width-.12,.014,.045,rampTrim,
+    ramp.x+ramp.dx*along,
+    base+ramp.rise*along/ramp.length+.023,
+    ramp.z+ramp.dz*along);
+   strip.rotation.y=Math.atan2(ramp.dx,-ramp.dz);
+  }
+ }
+}
+buildFieldRamps();
+// A usable lookout tower with TEN actual stone risers and an open deck.
+const FIELD_TOWER={
+ minX:20.9,maxX:25.3,minZ:-2.2,maxZ:2.2,
+ topY:TERRAIN.floorTop+10*STEP_HEIGHT,
+ stepStartX:14.9,stepWidth:.60,stairMinZ:-1.25,stairMaxZ:1.25
+};
+function buildFieldTower(){
+ const t=FIELD_TOWER,base=TERRAIN.floorTop;
+ const width=t.maxX-t.minX,depth=t.maxZ-t.minZ,height=t.topY-base;
+ box(width,height,depth,wall,(t.minX+t.maxX)*.5,base+height*.5,0);
+ box(width+.09,.13,depth+.09,STAIR_TRIM,(t.minX+t.maxX)*.5,
+  t.topY-.045,0);
+ addWalkable('field-tower-deck',t.minX,t.maxX,t.minZ,t.maxZ,
+  t.topY,'tower');
+ for(let i=0;i<10;i++){
+  const x0=t.stepStartX+i*t.stepWidth,x1=x0+t.stepWidth;
+  const rise=(i+1)*STEP_HEIGHT,top=base+rise;
+  box(t.stepWidth,rise,t.stairMaxZ-t.stairMinZ,STAIR_STONE,
+   (x0+x1)*.5,base+rise*.5,0);
+  box(t.stepWidth-.04,.015,t.stairMaxZ-t.stairMinZ-.09,STAIR_TRIM,
+   (x0+x1)*.5,top+.005,0);
+  addWalkable('field-tower-stair-'+(i+1),x0,x1,
+   t.stairMinZ,t.stairMaxZ,top,'stairs');
+ }
+ const railTop=t.topY+.78;
+ for(const z of [t.minZ,t.maxZ]){
+  for(const x of [t.minX+.08,t.maxX-.08])
+   box(.14,.84,.14,wood,x,t.topY+.42,z);
+  box(width,.12,.12,wood,(t.minX+t.maxX)*.5,railTop,z);
+  addRailCollider(t.minX,t.maxX,z-.06,z+.06);
+ }
+ box(.12,.12,depth,wood,t.maxX,railTop,0);
+ addRailCollider(t.maxX-.06,t.maxX+.06,t.minZ,t.maxZ);
+ for(const [z0,z1] of [[t.minZ,t.stairMinZ-.08],
+                       [t.stairMaxZ+.08,t.maxZ]]){
+  box(.12,.12,z1-z0,wood,t.minX,railTop,(z0+z1)*.5);
+  addRailCollider(t.minX-.06,t.minX+.06,z0,z1);
+ }
+ for(const z of [t.stairMinZ-.13,t.stairMaxZ+.13])
+  addRailCollider(t.stepStartX,t.minX,z-.05,z+.05);
+}
+buildFieldTower();
+// The same coordinates drive vegetation and its collision proxies.
+const FIELD_TREE_POSITIONS=[
+ [-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15],
+ [-24,-4],[-25,5],[-16,23],[9,24],[-8,24],[26,5],[20,15]
+];
+function tree(x,z){
+ const lift=naturalSurfaceY(x,z)-TERRAIN.floorTop;
+ cylinder(.22,.32,2.5,wood,x,lift+1.25,z);
+ const leaves=mat('#4b8864');
+ cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
+ cylinder(0,1.2,2.2,leaves,x,lift+4.6,z,scene,7);
+}
+FIELD_TREE_POSITIONS.forEach(p=>tree(...p));
+// Banderas de la academia creadas únicamente con geometría 3D.
+for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
+for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
+// Skeleton Mode v0.6.0: thin reusable bones and visible joints; no clothing meshes.
+// Both characters share the same anatomical rig, movement and collision footprints.
+const LEG={upper:.43,lower:.42,hipY:.90,ankleY:.11};
+const ARM={upper:.41,lower:.40};
+const jointGeometry=new THREE.SphereGeometry(1,10,7);
+const Y_AXIS=new THREE.Vector3(0,1,0);
+function joint(parent,radius,material,x=0,y=0,z=0){
+ const mesh=new THREE.Mesh(jointGeometry,material);
+ mesh.position.set(x,y,z);mesh.scale.setScalar(radius);
+ mesh.castShadow=true;parent.add(mesh);return mesh;
+}
+function rod(parent,start,end,radius,material){
+ const direction=new THREE.Vector3(end[0]-start[0],end[1]-start[1],end[2]-start[2]);
+ const middle=[(start[0]+end[0])/2,(start[1]+end[1])/2,(start[2]+end[2])/2];
+ const mesh=cylinder(radius,radius,direction.length(),material,...middle,parent,8);
+ mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
+ return mesh;
+}
+buildWallMountedLadder();
+// Neutral 12–13-year-old reference rig, adjustable for a future 10–15-year-old
+// avatar creator. Sex does not change the joint topology or movement physics.
+const YOUTH_REFERENCE={ageBand:'10-15',referenceAge:13,headRadius:.19,
+ headCenter:.20,shoulderHalfWidth:.44};
+// One anatomical torso topology shared by idle/walk/run and the ragdoll.
+const TORSO_POINTS={
+ pelvis:[0,0,0],lowerSpine:[0,.31,0],chest:[0,.66,0],
+ neck:[0,.83,0],shoulder0:[-.44,.66,0],
+ shoulder1:[.44,.66,0],hip0:[-.24,0,0],hip1:[.24,0,0]
+};
+const TORSO_BONES=[
+ ['pelvis','lowerSpine',.07,'body'],
+ ['lowerSpine','chest',.07,'body'],
+ ['chest','neck',.055,'skin'],
+ ['chest','shoulder0',.055,'body'],
+ ['chest','shoulder1',.055,'body'],
+ ['pelvis','hip0',.055,'body'],
+ ['pelvis','hip1',.055,'body']
+];
+// Lightweight, recognisable 3D ribs made of six curved rods and a sternum.
+// Only the visual chest carries these meshes: the ragdoll keeps its physics
+// braces invisible. The SAME Three.Group transfers between states.
+const RIB_GEOMETRIES=[0,1,2].flatMap(i=>{
+ const halfWidth=[.255,.285,.245][i],depth=[.155,.178,.163][i];
+ const y=-.10-.092*i;
+ return [-1,1].map(side=>{
+  const points=[
+   new THREE.Vector3(0,y,-.115),
+   new THREE.Vector3(side*.13,y+.015,-.105),
+   new THREE.Vector3(side*halfWidth,y+.01,-.040),
+   new THREE.Vector3(side*(halfWidth+.015),y,depth*.43),
+   new THREE.Vector3(side*halfWidth*.80,y-.02,depth),
+   new THREE.Vector3(side*.048,y-.013,depth+.027)
+  ];
+  return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),12,.022,5,false);
+ });
+});
+const STERNUM_GEOMETRY=new THREE.CylinderGeometry(.027,.027,.245,7);
+function createRibcage(bodyMaterial,sternumMaterial){
+ const chest=new THREE.Group();chest.name='shared-juvenile-ribcage';
+ for(const geom of RIB_GEOMETRIES){
+  const rib=new THREE.Mesh(geom,bodyMaterial);
+  rib.castShadow=true;chest.add(rib);
+ }
+ const sternum=new THREE.Mesh(STERNUM_GEOMETRY,sternumMaterial);
+ sternum.position.set(0,-.192,.198);sternum.castShadow=true;
+ chest.add(sternum);
+ return chest;
+}
+function person(color,accent){
+ const root=new THREE.Group();
+ const rig={arms:[],legs:[]};
+ // A split spine, anatomical shoulder connections and an articulated pelvis.
+ // Exactly these same visible bones are rebuilt on the ragdoll during a fall.
+ const torso=new THREE.Group();torso.position.y=LEG.hipY;root.add(torso);rig.torso=torso;
+ for(const [a,b,radius,kind] of TORSO_BONES){
+  rod(torso,TORSO_POINTS[a],TORSO_POINTS[b],radius,kind==='skin'?accent:color);
+ }
+ joint(torso,.10,accent,0,0,0);
+ joint(torso,.068,accent,...TORSO_POINTS.lowerSpine);
+ joint(torso,.09,accent,...TORSO_POINTS.chest);
+ joint(torso,.068,accent,...TORSO_POINTS.neck);
+ const ribcage=createRibcage(color,accent);
+ ribcage.position.set(...TORSO_POINTS.chest);
+ torso.add(ribcage);rig.ribcage=ribcage;
+ const head=new THREE.Group();head.position.y=TORSO_POINTS.neck[1];torso.add(head);rig.head=head;
+ joint(head,YOUTH_REFERENCE.headRadius,accent,0,YOUTH_REFERENCE.headCenter,0);
+ for(const side of [-1,1]){
+  // Shoulder -> upper arm -> elbow -> forearm -> wrist -> hand.
+  const shoulder=new THREE.Group();shoulder.position.set(side*YOUTH_REFERENCE.shoulderHalfWidth,TORSO_POINTS.chest[1],0);torso.add(shoulder);
+  joint(shoulder,.082,accent);
+  rod(shoulder,[0,0,0],[0,-ARM.upper,0],.055,color);
+  const elbow=new THREE.Group();elbow.position.y=-ARM.upper;shoulder.add(elbow);
+  joint(elbow,.075,accent);
+  rod(elbow,[0,0,0],[0,-ARM.lower,0],.05,color);
+  const wrist=new THREE.Group();wrist.position.y=-ARM.lower;elbow.add(wrist);
+  joint(wrist,.065,accent);
+  rod(wrist,[0,0,0],[0,-.11,0],.045,accent);
+  joint(wrist,.07,accent,0,-.11,0);
+  rig.arms.push({shoulder,elbow,wrist});
+  // Hip -> thigh -> knee -> shin -> ankle -> forward-pointing foot.
+  const hip=new THREE.Group();hip.position.set(side*.24,LEG.hipY,0);root.add(hip);
+  joint(hip,.09,accent);
+  rod(hip,[0,0,0],[0,-LEG.upper,0],.065,wood);
+  const knee=new THREE.Group();knee.position.y=-LEG.upper;hip.add(knee);
+  joint(knee,.082,accent);
+  rod(knee,[0,0,0],[0,-LEG.lower,0],.055,wood);
+  const ankle=new THREE.Group();ankle.position.y=-LEG.lower;knee.add(ankle);
+  joint(ankle,.067,accent);
+  rod(ankle,[0,-.03,0],[0,-.045,.23],.06,wood);
+  joint(ankle,.055,accent,0,-.045,.23);
+  rig.legs.push({hip,knee,ankle});
+ }
+ root.userData.rig=rig;
+ root.userData.materials={body:color,skin:accent,legs:wood};
+ setIdlePose(root);
+ return root;
+}
+// Straight standing pose. Walking/running parameters must never deform idle.
+function setIdlePose(character){
+ const rig=character.userData.rig;if(!rig)return;
+ for(const leg of rig.legs){leg.hip.rotation.set(0,0,0);leg.knee.rotation.set(0,0,0);leg.ankle.rotation.set(0,0,0);}
+ for(const arm of rig.arms){arm.shoulder.rotation.set(.06,0,0);arm.elbow.rotation.set(-.09,0,0);arm.wrist.rotation.set(0,0,0);}
+ rig.torso.rotation.x=0;rig.torso.rotation.z=0;rig.head.rotation.x=0;
+}
+// Two-bone 3D target IK. A planted ankle is tracked in world space, while
+// the knee bends forward and the foot is kept level on the ground.
+function solveLegTarget(leg,localX,localY,localZ,pitch=0,yawOffset=0,kneeRise=0){
+ const side=localX-leg.hip.position.x;
+ const down=LEG.hipY-localY;
+ const ahead=localZ;
+ const downPlane=Math.hypot(down,side);
+ const maxReach=LEG.upper+LEG.lower-.001;
+ const unboundedDistance=Math.hypot(downPlane,ahead);
+ const distance=Math.min(maxReach,unboundedDistance);
+ const cosine=THREE.MathUtils.clamp(
+  (distance*distance-LEG.upper*LEG.upper-LEG.lower*LEG.lower)/(2*LEG.upper*LEG.lower),-1,1);
+ // The ordinary leg bends its knee downward as in walking. A prone crawling
+ // leg can raise the knee away from the terrain using the mirrored IK branch.
+ // Continuous interpolation between branches keeps the motion smooth.
+ const kneeBase=Math.acos(cosine);
+ const bendPlane=Math.atan2(LEG.lower*Math.sin(kneeBase),
+  LEG.upper+LEG.lower*Math.cos(kneeBase));
+ const rise=THREE.MathUtils.clamp(kneeRise,0,1);
+ const hip=Math.atan2(-ahead,downPlane)-bendPlane+2*bendPlane*rise;
+ const knee=kneeBase*(1-2*rise);
+ leg.hip.rotation.set(hip,0,Math.atan2(side,Math.max(.12,down)));
+ leg.knee.rotation.x=knee;
+ leg.ankle.rotation.x=-hip-knee+pitch;
+ leg.ankle.rotation.y=yawOffset;
+ // Unreachable contact targets and unsafe joint angles indicate a lost balance.
+ LOCOMOTION.strain=Math.max(LOCOMOTION.strain,
+  Math.max(0,unboundedDistance-maxReach-.12)*2.8,
+  Math.max(0,Math.abs(hip)-1.38),
+  Math.max(0,knee-2.40),
+  Math.max(0,Math.abs(leg.ankle.rotation.x)-1.16),
+  Math.max(0,Math.abs(leg.hip.rotation.z)-.61));
+}
+// A two-segment arm reaches toward useful, unarmed tactical hand targets.
+// The right hand can rest just above the forward knee at the kneeling pause;
+// the left stays in a relaxed forward counterbalance/guard position.
+// Reuse scratch objects to avoid allocating vectors each animation frame.
+const ARM_IK={
+ down:new THREE.Vector3(0,-1,0),
+ to:new THREE.Vector3(),direction:new THREE.Vector3(),
+ pole:new THREE.Vector3(),upper:new THREE.Vector3(),forearm:new THREE.Vector3(),
+ localForearm:new THREE.Vector3(),shoulderQ:new THREE.Quaternion(),
+ elbowQ:new THREE.Quaternion(),inverseQ:new THREE.Quaternion(),
+ kneeWorld:new THREE.Vector3(),kneeLocal:new THREE.Vector3(),
+ handGoal:new THREE.Vector3()
+};
+function aimArmAt(arm,target,side,weight,crawlWeight=0){
+ const ik=ARM_IK,upperLength=ARM.upper,lowerLength=ARM.lower;
+ ik.to.set(
+  target.x-arm.shoulder.position.x,
+  target.y-arm.shoulder.position.y,
+  target.z-arm.shoulder.position.z
+ );
+ const measured=ik.to.length();
+ if(measured<.05)return;
+ const reach=THREE.MathUtils.clamp(
+  measured,Math.abs(upperLength-lowerLength)+.02,upperLength+lowerLength-.012
+ );
+ ik.direction.copy(ik.to).multiplyScalar(1/measured);
+ const cosine=THREE.MathUtils.clamp(
+  (upperLength*upperLength+reach*reach-lowerLength*lowerLength)/
+  (2*upperLength*reach),-1,1
+ );
+ const alpha=Math.acos(cosine);
+ // Keep both elbows toward the outside/back, never folded through the torso.
+ // In prone crawl, elbows bend toward the floor beside the ribcage.
+ // In tactical crouch retain the original outward/back elbow pole.
+ ik.pole.set(side*.72,-.10,THREE.MathUtils.lerp(-.30,.26,crawlWeight));
+ ik.pole.addScaledVector(ik.direction,-ik.pole.dot(ik.direction));
+ if(ik.pole.lengthSq()<1e-5)ik.pole.set(side,0,0);
+ ik.pole.normalize();
+ ik.upper.copy(ik.direction).multiplyScalar(Math.cos(alpha))
+  .addScaledVector(ik.pole,Math.sin(alpha)).normalize();
+ ik.forearm.copy(ik.direction).multiplyScalar(reach)
+  .addScaledVector(ik.upper,-upperLength).normalize();
+ ik.shoulderQ.setFromUnitVectors(ik.down,ik.upper);
+ ik.inverseQ.copy(ik.shoulderQ).invert();
+ ik.localForearm.copy(ik.forearm).applyQuaternion(ik.inverseQ);
+ ik.elbowQ.setFromUnitVectors(ik.down,ik.localForearm);
+ arm.shoulder.quaternion.slerp(ik.shoulderQ,weight);
+ arm.elbow.quaternion.slerp(ik.elbowQ,weight);
+}
+const FOOT_Y=TERRAIN.floorTop+TERRAIN.soleClearance;
+// Asymmetric tactical crouch, as in a lowered kneeling patrol stance:
+// RIGHT foot leads, LEFT foot stays back; at rest the rear knee grazes the
+// ground while the front knee supports the weight. During motion, the player
+// shuffles forward low with short, grounded steps (no weapon or props).
+const CROUCH={
+ drop:.34,idleExtra:.105,frontFoot:.40,rearFoot:-.50,
+ strideBias:.13,settleSeconds:.62,
+ walkStep:.42,stance:.74,lift:.085,speed:.42
+};
+const LOCOMOTION={
+ walkSpeed:3.2,runSpeed:6.0,walkStep:.72,runStep:1.16,
+ walkStance:.63,runStance:.42,walkLift:.12,runLift:.29,
+ vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,crouchBlend:0,crawlBlend:0,terrainLift:0,
+ kneelMode:null,kneelTime:0,kneelFrom:[],
+ feet:[],strain:0,strainSeconds:0,cooldown:0
+};
+// Shared protective reflexes for all avatars. XP can improve motor control.
+const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
+const JUMP={active:false,height:0,velocity:0};
+// Hip is the physical rule: below hip = wade; above hip = swim.
+const WATER_STATE={mode:'dry',depth:0,blend:0,cycle:0,water:null};
+const HIP_WATER_DEPTH=LEG.hipY;
+const waterStatus=document.getElementById('waterStatus');
+const slopeStatus=document.getElementById('slopeStatus');
+let lastSlopeNotice=-100000;
+let crouched=false,crawling=false;
+function updateSlopeStatus(){
+ const x=player.position.x,z=player.position.z;
+ if(LADDER_STATE.active||WATER_STATE.mode!=='dry'){
+  slopeStatus.hidden=true;return;
+ }
+ let ramp=rampAt(x,z);
+ if(!ramp){
+  // Identify the artificial grade before climbing onto its first plank.
+  for(const candidate of FIELD_RAMPS){
+   if(Math.hypot(x-candidate.x,z-candidate.z)<1.5){
+    ramp={ramp:candidate,grade:candidate.rise/candidate.length};break;
+   }
+  }
+ }
+ if(ramp){
+  // rampSampleAt and the nearby-base preview both contain {ramp,grade}.
+  const angle=Math.round(Math.atan(
+   ramp.ramp.rise/ramp.ramp.length)*180/Math.PI);
+  const blocked=angle>45;
+  slopeStatus.hidden=false;
+  slopeStatus.textContent=(ramp.ramp.kind==='wood'?'Wood ramp':'Stone ramp')+
+   ' · '+angle+'°'+(blocked?' · Too steep':'');
+ }else{
+  const grade=naturalGradeAt(x,z);
+  slopeStatus.hidden=grade<.075;
+  if(!slopeStatus.hidden)
+   slopeStatus.textContent='Hill · '+
+    Math.round(Math.atan(grade)*180/Math.PI)+'°';
+ }
+}
+function updateWaterState(){
+ const water=waterAt(player.position.x,player.position.z);
+ WATER_STATE.water=water;
+ WATER_STATE.depth=water?water.depth:0;
+ const prior=WATER_STATE.mode;
+ // Small hysteresis prevents mode flicker when resting on the swim boundary.
+ const threshold=HIP_WATER_DEPTH+(prior==='swim'?-.035:.025);
+ WATER_STATE.mode=!water||water.depth<.035?'dry':
+  water.depth>threshold?'swim':'wade';
+ if(WATER_STATE.mode==='swim'&&prior!=='swim'){
+  crouched=false;crawling=false;CRAWL.active=false;
+  JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+  LOCOMOTION.kneelMode=null;LOCOMOTION.strainSeconds=0;
+ }
+ if(prior==='swim'&&WATER_STATE.mode!=='swim'){
+  // Re-anchor feet on the underwater slope before walking again.
+  LOCOMOTION.kneelMode=null;
+  prepareFeet(player);
+ }
+ // Expose flow strength in the test playground without adding controls.
+ waterStatus.hidden=WATER_STATE.mode==='dry';
+ if(!waterStatus.hidden){
+  const flow=waterCurrentAt(player.position.x,player.position.z);
+  waterStatus.textContent=
+   (WATER_STATE.mode==='swim'?'Swimming':'Wading')+
+   (flow.strength>.18?' · Current '+flow.strength.toFixed(1):'');
+ }
+ if(WATER_STATE.mode!==prior){
+  updateButtonHints();
+  if(WATER_STATE.mode==='swim')
+   document.getElementById('message').textContent=
+    'Deep water: swim with the joystick / WASD. Hold B to swim faster.';
+  else if(WATER_STATE.mode==='wade')
+   document.getElementById('message').textContent=
+    'Shallow water: walk carefully while the water stays below your hips.';
+  else if(prior==='swim'||prior==='wade')
+   document.getElementById('message').textContent='Back on dry land.';
+ }
+ return WATER_STATE.mode;
+}
+const LADDER_STATE={
+ active:false,mode:'none',progress:0,direction:0,time:0,cycle:0,from:new THREE.Vector3(),
+ target:new THREE.Vector3(),handHeights:[null,null],footHeights:[null,null],
+ fromYaw:0,toTop:false
+};
+const LADDER_TMP=new THREE.Vector3();
+const LADDER_LOCAL=new THREE.Vector3();
+function ladderRootAt(progress,out){
+ const height=(LADDER.deckY-LADDER.bottomY)*progress;
+ // The player travels straight up, staying outside both rail and wall.
+ return out.set(LADDER.x,height,ladderZAtHeight(LADDER.bottomY)+.38);
+}
+function ladderEntry(){
+ if(LADDER_STATE.active)return null;
+ const x=player.position.x,z=player.position.z;
+ const level=groundTopAt(x,z);
+ if(level<TERRAIN.floorTop+.12&&
+    Math.abs(x-LADDER.x)<.68&&
+    z>ladderZAtHeight(LADDER.bottomY)+.42&&
+    z<LADDER.bottomExitZ+.25)return 'bottom';
+ // The descent starts only at the actual top lip, not a distant point
+ // from which the avatar would need to glide across the masonry.
+ if(level>LADDER.deckY-.12&&
+    Math.abs(x-LADDER.x)<.58&&
+    z>=LADDER.topExitZ-.48&&z<=LADDER.wallZ-.10)return 'top';
+ return null;
+}
+function startLadder(){
+ const entry=ladderEntry();
+ if(!entry||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
+ const climb=LADDER_STATE;
+ climb.active=true;climb.mode=entry==='top'?'mount':'enter';climb.time=0;
+ climb.progress=entry==='top'?LADDER.topRootProgress:0;
+ climb.direction=entry==='top'?-1:1;
+ climb.cycle=0;
+ climb.handHeights=[null,null];climb.footHeights=[null,null];
+ climb.from.copy(player.position);climb.fromYaw=player.rotation.y;
+ crouched=false;crawling=false;CRAWL.active=false;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;
+ LOCOMOTION.moveBlend=0;LOCOMOTION.crouchBlend=0;LOCOMOTION.crawlBlend=0;
+ LOCOMOTION.runBlend=0;
+ if(bHeld)stopBPointer();
+ updateButtonHints();
+ document.getElementById('message').textContent=
+  entry==='top'?'Descending the wall ladder automatically. C: safe exit.':
+  'Climbing the wall ladder automatically. W/S or joystick changes direction.';
+ return true;
+}
+function startLadderExit(top){
+ const climb=LADDER_STATE;
+ if(!climb.active||climb.mode==='exit')return;
+ climb.mode='exit';climb.toTop=top;climb.time=0;
+ climb.from.copy(player.position);
+ climb.target.set(LADDER.x,
+  top?LADDER.deckY-TERRAIN.floorTop:0,
+  top?LADDER.topExitZ:LADDER.bottomExitZ);
+}
+function cancelLadder(){
+ const climb=LADDER_STATE;
+ if(!climb.active||climb.mode==='exit')return;
+ // While stepping backward off the wall, C cancels safely onto the wall,
+ // not directly into the climbing track on the far side of the lip.
+ if(climb.mode==='mount'){startLadderExit(true);return;}
+ const toTop=climb.progress>.76;
+ climb.mode='climb';climb.direction=toTop?1:-1;
+ document.getElementById('message').textContent=toTop?
+  'Completing the climb to the wall safely...':
+  'Descending safely to the courtyard...';
+}
+function finishLadder(){
+ const climb=LADDER_STATE,top=climb.toTop;
+ player.position.copy(climb.target);
+ climb.active=false;climb.mode='none';
+ LOCOMOTION.terrainLift=top?LADDER.deckY-TERRAIN.floorTop:0;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;
+ LOCOMOTION.moveBlend=0;LOCOMOTION.kneelMode=null;
+ setIdlePose(player);prepareFeet(player);
+ updateButtonHints();
+ document.getElementById('message').textContent=top?
+  'On top of the stone wall. Press A near the ladder to descend.':
+  'Back in the courtyard. Press A to climb again.';
+}
+function ladderRungAt(y){
+ const first=LADDER.bottomY+.22;
+ const last=Math.floor((LADDER.rungTopY-first-.00001)/LADDER.rungSpacing);
+ const index=THREE.MathUtils.clamp(
+  Math.round((y-first)/LADDER.rungSpacing),0,last);
+ return first+index*LADDER.rungSpacing;
+}
+// Explicit ledge contacts for dismounting and reversing into the ladder.
+// The standing side is the stone wall (negative Z). The climber backs
+// outward (+Z), with one foot reaching a rung before lowering the hips.
+function ladderEase(a,b,t){
+ const v=THREE.MathUtils.clamp((t-a)/(b-a),0,1);
+ return v*v*(3-2*v);
+}
+function poseLadderTransfer(dt,t,descending){
+ const rig=player.userData.rig;
+ setIdlePose(player);
+ const bend=descending?
+  .46*Math.sin(Math.PI*t)+.22*ladderEase(.65,1,t):
+  .24*(1-ladderEase(.35,1,t))+.15*Math.sin(Math.PI*t);
+ rig.torso.rotation.x=bend;
+ rig.head.rotation.x=-.13*Math.sin(Math.PI*t);
+ const c=Math.cos(player.rotation.y),si=Math.sin(player.rotation.y);
+ const rungZ=ladderZAtHeight(LADDER.deckY);
+ const footOnWallY=LADDER.deckY+TERRAIN.soleClearance;
+ const upper=ladderRungAt(LADDER.deckY-.20);
+ const lower=ladderRungAt(LADDER.deckY-.48);
+ for(let i=0;i<2;i++){
+  // For ascent, the first foot steps over the lip, then the second.
+  // For descent, the first foot searches for a rung BEFORE the torso
+  // moves outward; the second follows as weight shifts to the ladder.
+  const wallFoot=descending?
+   1-ladderEase(i===0?.30:.53,i===0?.65:.94,t):
+   ladderEase(i===0?.23:.56,i===0?.62:.96,t);
+  const goalZ=THREE.MathUtils.lerp(rungZ,LADDER.topExitZ-.05,wallFoot);
+  const goalY=THREE.MathUtils.lerp(
+   i===0?upper:lower,footOnWallY,wallFoot);
+  const goalX=LADDER.x+(i===0?.20:-.20);
+  const dx=goalX-player.position.x,dz=goalZ-player.position.z;
+  const leg=rig.legs[i];
+  solveLegTarget(leg,c*dx-si*dz,goalY-player.position.y,
+   si*dx+c*dz,.09);
+  const weight=descending?ladderEase(.10,.44,t):
+   1-ladderEase(.76,1,t);
+  leg.hip.rotation.x*=weight;leg.hip.rotation.z*=weight;
+  leg.knee.rotation.x*=weight;leg.ankle.rotation.x*=weight;
+ }
+ player.updateMatrixWorld(true);
+ const handWeight=descending?ladderEase(.10,.40,t):
+  1-ladderEase(.50,.98,t);
+ for(let i=0;i<2;i++){
+  // Fixed grip on the two short handholds, never through a cross-rung.
+  LADDER_TMP.set(LADDER.x+(i===0?.34:-.34),
+   LADDER.deckY+.09,rungZ);
+  LADDER_LOCAL.copy(LADDER_TMP);
+  rig.torso.worldToLocal(LADDER_LOCAL);
+  aimArmAt(rig.arms[i],LADDER_LOCAL,i===0?-1:1,handWeight);
+ }
+}
+function poseLadder(dt,weight,moving){
+ const rig=player.userData.rig,climb=LADDER_STATE;
+ setIdlePose(player);
+ rig.torso.rotation.x=.22*weight;
+ rig.head.rotation.x=-.15*weight;
+ const yaw=player.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
+ for(let i=0;i<2;i++){
+  const phase=Math.sin(climb.cycle+(1-i)*Math.PI);
+  const requested=player.position.y+.30+(moving?Math.max(0,phase)*.20:0);
+  const desired=ladderRungAt(requested);
+  const previous=climb.footHeights[i];
+  const y=climb.footHeights[i]=previous===null?desired:
+   THREE.MathUtils.damp(previous,desired,12,dt);
+  const x=LADDER.x+(i===0?.20:-.20),z=ladderZAtHeight(y);
+  const dx=x-player.position.x,dz=z-player.position.z;
+  const localX=c*dx-si*dz,localZ=si*dx+c*dz;
+  const leg=rig.legs[i];
+  solveLegTarget(leg,localX,y-player.position.y,localZ,.12);
+  leg.hip.rotation.x*=weight;leg.hip.rotation.z*=weight;
+  leg.knee.rotation.x*=weight;leg.ankle.rotation.x*=weight;
+ }
+ player.updateMatrixWorld(true);
+ for(let i=0;i<2;i++){
+  const phase=Math.sin(climb.cycle+i*Math.PI);
+  const requested=player.position.y+1.26+
+   (moving?Math.max(0,phase)*.15:0);
+  const desired=ladderRungAt(requested);
+  const previous=climb.handHeights[i];
+  const y=climb.handHeights[i]=previous===null?desired:
+   THREE.MathUtils.damp(previous,desired,11,dt);
+  LADDER_TMP.set(LADDER.x+(i===0?.22:-.22),y,ladderZAtHeight(y));
+  LADDER_LOCAL.copy(LADDER_TMP);
+  rig.torso.worldToLocal(LADDER_LOCAL);
+  aimArmAt(rig.arms[i],LADDER_LOCAL,i===0?-1:1,weight);
+  rig.arms[i].wrist.rotation.x=-.10*weight;
+ }
+}
+function stepLadder(dt,verticalInput){
+ const climb=LADDER_STATE;
+ if(!climb.active)return;
+ const input=THREE.MathUtils.clamp(verticalInput,-1,1);
+ if(climb.mode==='enter'){
+  // Ground-level grab; no change to the normal automatic climb.
+  climb.time+=dt;
+  const t=THREE.MathUtils.clamp(climb.time/.38,0,1);
+  const ease=ladderEase(0,1,t);
+  ladderRootAt(climb.progress,LADDER_TMP);
+  player.position.lerpVectors(climb.from,LADDER_TMP,ease);
+  const angle=Math.atan2(Math.sin(Math.PI-climb.fromYaw),
+   Math.cos(Math.PI-climb.fromYaw));
+  player.rotation.y=climb.fromYaw+angle*ease;
+  poseLadder(dt,ease,false);
+  if(t>=1)climb.mode='climb';
+  return;
+ }
+ if(climb.mode==='mount'){
+  // To go DOWN: face inward, lower into a crouch, feel for the first
+  // rung with one foot, back over the rim, and finally lower the hips.
+  climb.time+=dt;
+  const t=THREE.MathUtils.clamp(climb.time/1.18,0,1);
+  const yawEase=ladderEase(0,.26,t);
+  const angle=Math.atan2(Math.sin(Math.PI-climb.fromYaw),
+   Math.cos(Math.PI-climb.fromYaw));
+  player.rotation.y=climb.fromYaw+angle*yawEase;
+  const stepBack=ladderEase(.34,.78,t);
+  const lower=ladderEase(.68,1,t);
+  ladderRootAt(LADDER.topRootProgress,LADDER_TMP);
+  player.position.set(
+   THREE.MathUtils.lerp(climb.from.x,LADDER.x,ladderEase(.10,.34,t)),
+   THREE.MathUtils.lerp(climb.from.y,LADDER_TMP.y,lower),
+   THREE.MathUtils.lerp(climb.from.z,LADDER_TMP.z,stepBack));
+  poseLadderTransfer(dt,t,true);
+  if(t>=1){
+   climb.mode='climb';climb.direction=-1;
+   climb.handHeights=[null,null];climb.footHeights=[null,null];
+  }
+  return;
+ }
+ if(climb.mode==='exit'){
+  climb.time+=dt;
+  if(climb.toTop){
+   // To go UP: the player braces on the lip, pushes vertically,
+   // then steps a SHORT distance onto the wall, above the last rung.
+   const t=THREE.MathUtils.clamp(climb.time/.92,0,1);
+   const push=ladderEase(0,.53,t);
+   const step=ladderEase(.53,1,t);
+   player.position.set(climb.from.x,
+    THREE.MathUtils.lerp(climb.from.y,climb.target.y,push),
+    THREE.MathUtils.lerp(climb.from.z,climb.target.z,step));
+   player.rotation.y=Math.PI;
+   poseLadderTransfer(dt,t,false);
+   if(t>=1)finishLadder();
+  }else{
+   // The lower release backs away from the wall, not through it.
+   const t=THREE.MathUtils.clamp(climb.time/.58,0,1);
+   const ease=ladderEase(0,1,t);
+   player.position.lerpVectors(climb.from,climb.target,ease);
+   player.rotation.y=Math.PI;
+   poseLadder(dt,1-ease,false);
+   if(t>=1)finishLadder();
+  }
+  return;
+ }
+ // One press A/E begins an automatic trip. Joystick/W/S may reverse.
+ if(input>.24)climb.direction=1;
+ else if(input<-.24)climb.direction=-1;
+ const before=climb.progress;
+ climb.progress=THREE.MathUtils.clamp(before+
+  climb.direction*LADDER.climbSpeed*dt/(LADDER.deckY-LADDER.bottomY),0,1);
+ const delta=climb.progress-before;
+ climb.cycle+=Math.abs(delta)*(LADDER.deckY-LADDER.bottomY)*
+  Math.PI/LADDER.rungSpacing;
+ ladderRootAt(climb.progress,player.position);
+ player.rotation.y=Math.PI;
+ poseLadder(dt,1,Math.abs(delta)>.00001);
+ if(climb.direction>0&&climb.progress>=LADDER.topRootProgress)
+  startLadderExit(true);
+ if(climb.direction<0&&climb.progress<=.005)startLadderExit(false);
+}
+// Low military crawl is deliberate: opposite arm/leg pairs alternate their
+// support and swing phases. Hands and ankles have ground-anchored contacts.
+// Chest-to-ground / prone military crawl. The low hip and almost-horizontal
+// spine are calibrated to the existing juvenile skeleton and shared ribcage.
+// Straight back legs drag their toes; planted hands alternately pull the body.
+const CRAWL={
+ speed:.20,step:.24,stance:.66,drop:.72,torsoPitch:1.56,
+ footBack:-.825,kneeTuck:.17,kneeOut:.13,handAhead:1.12,handSide:.32,
+ palmHeight:.12,handLift:.038,footLift:.008,
+ cycle:0,motionBlend:0,active:false,feet:[],hands:[]
+};
+function toggleCrawl(){
+ if(LADDER_STATE.active){cancelLadder();return;}
+ if(WATER_STATE.mode==='swim')return;
+ if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
+ if(!canChangePosture(crawling?'crouch':'crawl'))return;
+ crawling=!crawling;
+ crouched=true; // exiting crawl returns to tactical crouch, not standing.
+ // A simultaneous B press must not leave a sprint latched behind the crawl.
+ if(crawling&&bHeld)stopBPointer();
+ LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
+ updateButtonHints();
+ document.getElementById('message').textContent=crawling?
+  'Prone crawl — chest to ground. Move slowly; C to rise.':
+  'Back to tactical crouch.';
+}
+function startJump(){
+ if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched||crawling||LADDER_STATE.active||WATER_STATE.mode==='swim')return;
+ JUMP.active=true;JUMP.height=0;JUMP.velocity=3.1;
+}
+function stepJump(dt){
+ if(!JUMP.active)return;
+ JUMP.velocity-=13*dt;
+ const next=Math.max(0,JUMP.height+JUMP.velocity*dt);
+ const floor=groundTopAt(player.position.x,player.position.z);
+ if(next>JUMP.height&&!bodyVolumeFits(
+   player.position.x,player.position.z,'stand',floor+next)){
+  JUMP.velocity=0;
+ }else JUMP.height=next;
+ if(JUMP.height<=0){JUMP.height=0;JUMP.velocity=0;JUMP.active=false;}
+ player.position.y+=JUMP.height;
+}
+function footPosition(root,index,forward=0){
+ const lateral=index===0?-.24:.24,yaw=root.rotation.y;
+ const x=root.position.x+Math.cos(yaw)*lateral+Math.sin(yaw)*forward;
+ const z=root.position.z-Math.sin(yaw)*lateral+Math.cos(yaw)*forward;
+ return new THREE.Vector3(x,ankleGroundY(x,z,root.position.x,root.position.z),z);
+}
+function prepareFeet(root){
+ LOCOMOTION.feet=[0,1].map(i=>{
+  const position=footPosition(root,i);
+  return {position,anchor:position.clone(),from:position.clone(),
+   contact:true,heading:root.rotation.y};
+ });
+}
+// No artificial cycling in place: cadence is computed from actual world travel.
+function poseGroundedCharacter(character,travel,dt){
+ const gait=LOCOMOTION;
+ gait.strain=0;
+ const speed=Math.hypot(gait.vx,gait.vz);
+ const moving=speed>.035&&travel>.00001;
+ gait.moveBlend=THREE.MathUtils.damp(gait.moveBlend,moving?1:0,11,dt);
+ gait.crouchBlend=THREE.MathUtils.damp(gait.crouchBlend,crouched?1:0,10,dt);
+ gait.crawlBlend=THREE.MathUtils.damp(gait.crawlBlend,crawling?1:0,9,dt);
+ const blend=gait.moveBlend,mix=gait.runBlend,crouch=gait.crouchBlend;
+ // When stopping in crouch, reposition the feet in two deliberate, lifted
+ // half-steps rather than instantly sliding to a wide split stance.
+ // Standing back up likewise brings both feet to neutral before idle resets.
+ if(!moving){
+  const wanted=crawling?'crawl':crouched?'kneel':'stand';
+  if(gait.kneelMode!==wanted){
+   gait.kneelMode=wanted;gait.kneelTime=0;
+   gait.kneelFrom=gait.feet.map(foot=>foot.position.clone());
+  }
+  gait.kneelTime=Math.min(CROUCH.settleSeconds,gait.kneelTime+dt);
+ }else{
+  gait.kneelMode=null;gait.kneelTime=0;
+ }
+ const settleT=THREE.MathUtils.clamp(gait.kneelTime/CROUCH.settleSeconds,0,1);
+ const settleEase=settleT*settleT*(3-2*settleT);
+ const kneelRest=!moving&&crouched?settleEase:0;
+ const normalStep=THREE.MathUtils.lerp(gait.walkStep,gait.runStep,mix);
+ const step=THREE.MathUtils.lerp(normalStep,CROUCH.walkStep,crouch);
+ if(moving)gait.cycle+=travel/(2*step);
+ // Lift the whole rig to match the actual ground under the body/support feet.
+ // Contact ankles remain at their separate exact world-space surface heights.
+ const supportTop=groundTopAt(character.position.x,character.position.z);
+ gait.terrainLift=THREE.MathUtils.damp(
+  gait.terrainLift,supportTop-TERRAIN.floorTop,21,dt);
+ if(blend<.008&&crouch<.008&&gait.crawlBlend<.008&&gait.kneelTime>=CROUCH.settleSeconds){
+  setIdlePose(character);
+  character.position.y=gait.terrainLift;
+  gait.cycle=0;
+  for(let i=0;i<2;i++){
+   const p=footPosition(character,i);
+   const foot=gait.feet[i];foot.position.copy(p);foot.anchor.copy(p);
+   foot.from.copy(p);foot.contact=true;foot.heading=character.rotation.y;
+  }
+  return;
+ }
+ // Tactical crouch lowers the PELVIS; ankle IK keeps both soles supported.
+ // The running pelvis bob fades out while crouched.
+ const phase=gait.cycle*Math.PI*2;
+ const movingDrop=THREE.MathUtils.lerp(
+  THREE.MathUtils.lerp(.15,.18,mix),.04,crouch);
+ character.position.y=gait.terrainLift-movingDrop*blend-
+  (CROUCH.drop+CROUCH.idleExtra*kneelRest)*crouch+
+  Math.sin(phase*2)*.006*blend*(1-crouch);
+ const stance=THREE.MathUtils.lerp(
+  THREE.MathUtils.lerp(gait.walkStance,gait.runStance,mix),CROUCH.stance,crouch);
+ const lift=THREE.MathUtils.lerp(
+  THREE.MathUtils.lerp(gait.walkLift,gait.runLift,mix),CROUCH.lift,crouch);
+ const yaw=character.rotation.y;
+ const sin=Math.sin(yaw),cos=Math.cos(yaw);
+ for(let i=0;i<2;i++){
+  const leg=character.userData.rig.legs[i];
+  const foot=gait.feet[i];
+  const t=moving?((gait.cycle+i*.5)%1+1)%1:0;
+  const inContact=!moving||t<stance;
+  if(inContact&&!foot.contact){
+   foot.anchor.copy(foot.position);
+   foot.anchor.y=ankleGroundY(foot.anchor.x,foot.anchor.z,
+    character.position.x,character.position.z);
+   foot.heading=yaw;
+  }else if(!inContact&&foot.contact){
+   foot.from.copy(foot.position);
+  }
+  foot.contact=inContact;
+  if(!moving&&gait.kneelTime<CROUCH.settleSeconds){
+   // Resting stance: right foot advances, left knee drops behind.
+   // Stagger the adjustment: front foot first, rear foot second.
+   const start=i===1?0:.5;
+   const u=THREE.MathUtils.clamp((settleT-start)*2,0,1);
+   const eased=u*u*(3-2*u);
+   const offset=crouched?(i===1?CROUCH.frontFoot:CROUCH.rearFoot):0;
+   const restTarget=footPosition(character,i,offset);
+   const startFoot=gait.kneelFrom[i];
+   foot.position.lerpVectors(startFoot,restTarget,eased);
+   // The shoe rises on its deliberate shuffle step, never sinks.
+   foot.position.y=ankleGroundY(foot.position.x,foot.position.z,
+    character.position.x,character.position.z)+
+    Math.sin(Math.PI*u)*.09;
+   foot.anchor.copy(foot.position);
+   foot.heading=yaw;
+  }else if(inContact){
+   // The ankle stays fixed in world x/z during load-bearing stance.
+   foot.anchor.y=ankleGroundY(foot.anchor.x,foot.anchor.z,
+    character.position.x,character.position.z);
+   foot.position.copy(foot.anchor);
+  }else{
+   const s=(t-stance)/(1-stance);
+   const ease=s*s*(3-2*s);
+   const remainingTravel=(1-t)*step*2;
+   // A shorter step retains a slight right-front/left-rear split in motion.
+   const stagger=(i===1?1:-1)*CROUCH.strideBias*crouch;
+   const landing=footPosition(character,i,remainingTravel+stance*step+stagger);
+   foot.position.lerpVectors(foot.from,landing,ease);
+   // Extra swing clearance over a raised riser; it only affects the step
+    // that climbs to higher ground, not level travel or standing idle.
+    const stairLift=Math.max(0,Math.min(.20,
+      (landing.y-foot.from.y)*.62));
+    foot.position.y=THREE.MathUtils.lerp(foot.from.y,landing.y,ease)+
+     Math.sin(Math.PI*s)*(lift+stairLift);
+  }
+  // Inverse-transform the fixed world ankle into the moving character's
+  // skeleton coordinate system. World-space anchors survive turns.
+  const wx=foot.position.x-character.position.x;
+  const wz=foot.position.z-character.position.z;
+  let lx=cos*wx-sin*wz;
+  let ly=foot.position.y-character.position.y;
+  let lz=sin*wx+cos*wz;
+  // An idle crouch still needs full leg IK: movement blend alone is zero.
+  const ikBlend=Math.max(blend,crouch);
+  const side=i===0?-.24:.24;
+  lx=THREE.MathUtils.lerp(side,lx,ikBlend);
+  ly=THREE.MathUtils.lerp(FOOT_Y,ly,ikBlend);
+  lz*=ikBlend;
+  const swing=t>=stance?(t-stance)/(1-stance):0;
+  const pitch=inContact?
+   THREE.MathUtils.lerp(-.02,.23*mix+.08,t/stance):
+   Math.sin(Math.PI*swing)*(.11+.18*mix);
+  const plantYaw=inContact?THREE.MathUtils.clamp(foot.heading-yaw,-.55,.55)*blend:0;
+  solveLegTarget(leg,lx,ly,lz,pitch*blend,plantYaw);
+ }
+ const rig=character.userData.rig;
+ // Lean from the pelvis into a low, forward tactical profile. At rest the
+ // upper body leans farther forward above the supporting front knee.
+ rig.torso.rotation.x=THREE.MathUtils.lerp(.03,.18,mix)*blend*(1-crouch)+
+  (.43+.11*kneelRest)*crouch;
+ rig.torso.rotation.z=Math.sin(phase)*THREE.MathUtils.lerp(.018,.045,mix)*blend*(1-crouch)+
+  .023*crouch*kneelRest;
+ // Level the head relative to the forward-leaning spine to keep the gaze ahead.
+ rig.head.rotation.x=-rig.torso.rotation.x*.83;
+ const chestSway=Math.sin(phase)*.028*blend;
+ if(crouch>.005){
+  // The front knee position comes from the already-solved leg IK; the
+  // hand follows it as the character lowers into the stationary kneel.
+  rig.legs[1].knee.getWorldPosition(ARM_IK.kneeWorld);
+  const yaw=character.rotation.y;
+  ARM_IK.kneeWorld.x+=Math.cos(yaw)*.025+Math.sin(yaw)*.055;
+  ARM_IK.kneeWorld.y+=.14;
+  ARM_IK.kneeWorld.z-=Math.sin(yaw)*.025-Math.cos(yaw)*.055;
+  ARM_IK.kneeLocal.copy(rig.torso.worldToLocal(ARM_IK.kneeWorld));
+ }
+ rig.arms.forEach((arm,i)=>{
+  const counterSwing=Math.cos(phase+i*Math.PI);
+  const regularSwing=counterSwing*THREE.MathUtils.lerp(.32,.86,mix)*blend;
+  arm.shoulder.rotation.set(regularSwing,0,0);
+  arm.elbow.rotation.set(-THREE.MathUtils.lerp(.20,1.03,mix)*blend,0,0);
+  arm.wrist.rotation.set(0,0,0);
+  if(crouch>.005){
+   const hand=ARM_IK.handGoal;
+   if(i===1){
+    // Front-side hand ready on the knee during the kneeling pause.
+    hand.set(.20,.37,.45+chestSway);
+    hand.lerp(ARM_IK.kneeLocal,kneelRest);
+   }else{
+    // Free hand held ahead of the chest for balance, without holding a weapon.
+    hand.set(-.16,.42,.47-chestSway);
+   }
+   aimArmAt(arm,hand,i===0?-1:1,crouch);
+   arm.wrist.rotation.x=-.07*crouch;
+  }
+ });
+ // Override the crouch with a low, supported crawl only as the crawl blend
+ // rises. Its grounded contacts are independent from the upright gait.
+ if(gait.crawlBlend>.003)poseCrawlCharacter(character,travel,dt,moving);
+ else CRAWL.active=false;
+ // A rear knee has a physical ground contact at full crouched rest, with
+ // the shin folded backward. Keep the torso and knee distinct and grounded.
+ // Tactical crouch is a voluntary pose, not overextension or a fall.
+ if(!crouched&&!JUMP.active&&gait.cooldown<=0&&blend>.55){
+  gait.strainSeconds=gait.strain>.065?gait.strainSeconds+dt:Math.max(0,gait.strainSeconds-dt*2);
+  if(gait.strainSeconds>.19+.065*(balanceLevel-1))beginBalanceRecovery('Steady yourself',gait.strain);
+ }else gait.strainSeconds=0;
+}
+// PRONE CRAWLING: chest/abdomen almost against ground, hips low, long legs
+// behind the pelvis. Alternating palms anchor/pull while opposite toes drag
+// and push. Blend onto the same rig, keeping the crouch transition intact.
+function crawlWorldPoint(character,lateral,forward,soleHeight){
+ const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
+ const x=character.position.x+c*lateral+si*forward;
+ const z=character.position.z-si*lateral+c*forward;
+ return new THREE.Vector3(x,groundTopAt(x,z)+soleHeight,z);
+}
+function crawlContact(character,index,isHand){
+ const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
+ const forward=isHand?CRAWL.handAhead:CRAWL.footBack;
+ const p=crawlWorldPoint(character,lateral,forward,
+  isHand?CRAWL.palmHeight:TERRAIN.soleClearance);
+ return {position:p.clone(),anchor:p.clone(),from:p.clone(),
+  contact:true,heading:character.rotation.y};
+}
+function initializeCrawl(character){
+ CRAWL.active=true;CRAWL.cycle=0;CRAWL.motionBlend=0;
+ CRAWL.feet=[0,1].map(i=>crawlContact(character,i,false));
+ CRAWL.hands=[0,1].map(i=>crawlContact(character,i,true));
+}
+function stepCrawlContact(character,item,index,isHand,moving,step){
+ // Right hand and left leg alternate with left hand and right leg.
+ const t=((CRAWL.cycle+(isHand?(1-index):index)*.5)%1+1)%1;
+ const lateral=(index===0?-1:1)*(isHand?CRAWL.handSide:.24);
+ const height=isHand?CRAWL.palmHeight:TERRAIN.soleClearance;
+ if(!isHand){
+  // Frog-style military prone pull: bend each knee OUTSIDE its hip rather
+  // than lifting it vertically above the back. Toes draw forward AND sideways
+  // a little as that knee skims the floor, then extend/push back.
+  // Leg i shares its cycle with the opposite hand (diagonal coordination).
+  const phase=THREE.MathUtils.clamp(t/CRAWL.stance,0,1);
+  const stroke=t<CRAWL.stance?Math.sin(Math.PI*phase)*CRAWL.motionBlend:0;
+  const target=crawlWorldPoint(character,
+   lateral+(index===0?-1:1)*CRAWL.kneeOut*stroke,
+   CRAWL.footBack+CRAWL.kneeTuck*stroke,height);
+  item.position.copy(target);
+  item.position.y+=CRAWL.footLift*stroke;
+  item.stroke=stroke;
+  item.anchor.copy(item.position);
+  item.contact=true;
+  return;
+ }
+ const contact=!moving||t<CRAWL.stance;
+ if(contact&&!item.contact){
+  item.anchor.copy(item.position);
+  item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
+ }else if(!contact&&item.contact)item.from.copy(item.position);
+ item.contact=contact;
+ if(contact){
+  // A planted palm stays fixed horizontally while the torso advances over it.
+  item.anchor.y=groundTopAt(item.anchor.x,item.anchor.z)+height;
+  item.position.copy(item.anchor);
+ }else{
+  const q=(t-CRAWL.stance)/(1-CRAWL.stance);
+  const ease=q*q*(3-2*q);
+  const landing=crawlWorldPoint(character,lateral,
+   CRAWL.handAhead+CRAWL.stance*step*.28+(1-t)*step,height);
+  item.position.lerpVectors(item.from,landing,ease);
+  item.position.y=THREE.MathUtils.lerp(item.from.y,landing.y,ease)+
+   Math.sin(Math.PI*q)*CRAWL.handLift;
+ }
+}
+// 3-D two-bone IK for PRONE legs only. Instead of the sagittal (front/back)
+// bend used in normal walking, choose an outward knee pole near ground level.
+// Both thigh and shin retain their exact lengths. This makes each knee sweep
+// sideways against the floor while the opposite hand pulls the character.
+// The regular standing, running and tactical crouch solver stays unchanged.
+const PRONE_IK={
+ down:new THREE.Vector3(0,-1,0),target:new THREE.Vector3(),
+ dir:new THREE.Vector3(),pole:new THREE.Vector3(),knee:new THREE.Vector3(),
+ upper:new THREE.Vector3(),lower:new THREE.Vector3(),
+ hipQ:new THREE.Quaternion(),kneeQ:new THREE.Quaternion(),
+ inverseQ:new THREE.Quaternion(),ankleQ:new THREE.Quaternion(),
+ trailingQ:new THREE.Quaternion().setFromAxisAngle(
+  new THREE.Vector3(1,0,0),2.80)
+};
+function solveProneLegSide(leg,lx,ly,lz,side,blend){
+ const ik=PRONE_IK,U=LEG.upper,L=LEG.lower;
+ ik.target.set(lx-leg.hip.position.x,ly-LEG.hipY,lz);
+ const raw=ik.target.length();
+ if(raw<.01)return;
+ const reach=THREE.MathUtils.clamp(raw,Math.abs(U-L)+.008,U+L-.005);
+ ik.dir.copy(ik.target).multiplyScalar(1/raw);
+ const along=(U*U-L*L+reach*reach)/(2*reach);
+ const spread=Math.sqrt(Math.max(0,U*U-along*along));
+ // Outward knee rather than upward knee: allow the hip to abduct. The
+ // negative vertical pole keeps the knee close to the pavement, never
+ // pulling it high above the torso as the old mirrored IK branch did.
+ ik.pole.set(side,-.35,0);
+ ik.pole.addScaledVector(ik.dir,-ik.pole.dot(ik.dir));
+ if(ik.pole.lengthSq()<.0001)ik.pole.set(side,0,0);
+ ik.pole.normalize();
+ ik.knee.copy(ik.dir).multiplyScalar(along)
+  .addScaledVector(ik.pole,spread);
+ ik.upper.copy(ik.knee).normalize();
+ ik.lower.copy(ik.dir).multiplyScalar(reach).sub(ik.knee).normalize();
+ ik.hipQ.setFromUnitVectors(ik.down,ik.upper);
+ ik.inverseQ.copy(ik.hipQ).invert();
+ ik.lower.applyQuaternion(ik.inverseQ);
+ ik.kneeQ.setFromUnitVectors(ik.down,ik.lower);
+ leg.hip.quaternion.slerp(ik.hipQ,blend);
+ leg.knee.quaternion.slerp(ik.kneeQ,blend);
+ // Keep trailing shoes aimed backward rather than twisting up as the thigh
+ // swings sideways. This preserves the flat-on-ground toe silhouette.
+ ik.ankleQ.copy(leg.hip.quaternion).multiply(leg.knee.quaternion)
+  .invert().multiply(ik.trailingQ);
+ leg.ankle.quaternion.slerp(ik.ankleQ,blend);
+}
+const CRAWL_HAND_LOCAL=new THREE.Vector3();
+function poseCrawlCharacter(character,travel,dt,moving){
+ const gait=LOCOMOTION,weight=gait.crawlBlend,rig=character.userData.rig;
+ if(!CRAWL.active)initializeCrawl(character);
+ CRAWL.motionBlend=THREE.MathUtils.damp(
+  CRAWL.motionBlend,moving?1:0,8,dt);
+ if(moving)CRAWL.cycle+=travel/(2*CRAWL.step);
+ // Support is the flat grass/stone surface (or an explicitly walkable top).
+ const floor=groundTopAt(character.position.x,character.position.z);
+ const terrainOffset=floor-TERRAIN.floorTop;
+ character.position.y=THREE.MathUtils.lerp(
+  character.position.y,terrainOffset-CRAWL.drop+
+   (moving?Math.sin(CRAWL.cycle*Math.PI*4)*.003:0),weight);
+ // The ribs, sternum and abdomen run nearly parallel to the terrain.
+ // Head remains slightly raised and oriented forward, never face-down.
+ rig.torso.rotation.x=THREE.MathUtils.lerp(
+  rig.torso.rotation.x,CRAWL.torsoPitch+
+   (moving?Math.sin(CRAWL.cycle*Math.PI*2)*.012:0),weight);
+ rig.torso.rotation.z=THREE.MathUtils.lerp(
+  rig.torso.rotation.z,moving?Math.sin(CRAWL.cycle*Math.PI*2)*.012:0,weight);
+ rig.head.rotation.x=THREE.MathUtils.lerp(
+  rig.head.rotation.x,-1.27,weight);
+ const yaw=character.rotation.y,c=Math.cos(yaw),si=Math.sin(yaw);
+ for(let i=0;i<2;i++){
+  const foot=CRAWL.feet[i];
+  stepCrawlContact(character,foot,i,false,moving,CRAWL.step);
+  const dx=foot.position.x-character.position.x;
+  const dz=foot.position.z-character.position.z;
+  const lx=c*dx-si*dz,ly=foot.position.y-character.position.y;
+  const lz=si*dx+c*dz;
+  const leg=rig.legs[i];
+  // The knee now bends outward (left knee left, right knee right) and stays
+  // near the floor. The moving toe target stays ahead of the ankle only
+  // briefly, creating a pull-and-push without the old skyward knee action.
+  solveProneLegSide(leg,lx,ly,lz,i===0?-1:1,weight);
+ }
+ // Update world matrices after bending the torso, before converting the
+ // world-planted wrist targets into the shoulder's local coordinate space.
+ character.updateMatrixWorld(true);
+ for(let i=0;i<2;i++){
+  const hand=CRAWL.hands[i];
+  stepCrawlContact(character,hand,i,true,moving,CRAWL.step);
+  CRAWL_HAND_LOCAL.copy(hand.position);
+  rig.torso.worldToLocal(CRAWL_HAND_LOCAL);
+  aimArmAt(rig.arms[i],CRAWL_HAND_LOCAL,i===0?-1:1,weight,weight);
+  rig.arms[i].wrist.rotation.x=THREE.MathUtils.lerp(
+   rig.arms[i].wrist.rotation.x,-.18,weight);
+ }
+}
+// While swimming the player is buoyed up near the waterline, with alternating
+// arm strokes and leg kicks. No grounded foot IK runs in this state.
+function poseSwimmingCharacter(dt,travel){
+ const wet=WATER_STATE,water=wet.water,rig=player.userData.rig;
+ if(!water)return;
+ const speed=Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz);
+ const moving=speed>.04&&travel>.00001;
+ wet.cycle+=dt*(moving?2.1+speed*.48:.30);
+ wet.blend=THREE.MathUtils.damp(wet.blend,1,7,dt);
+ LOCOMOTION.terrainLift=water.floorY-TERRAIN.floorTop;
+ const floating=water.surfaceY-1.20+Math.sin(wet.cycle*2)*.026;
+ player.position.y=THREE.MathUtils.lerp(LOCOMOTION.terrainLift,
+  floating,wet.blend);
+ setIdlePose(player);
+ const sway=Math.sin(wet.cycle*2)*.05;
+ rig.torso.rotation.x=.72*wet.blend;
+ rig.torso.rotation.z=sway*wet.blend;
+ rig.head.rotation.x=-.39*wet.blend;
+ for(let i=0;i<2;i++){
+  const phase=wet.cycle*Math.PI*2+i*Math.PI;
+  const wave=Math.sin(phase);
+  const arm=rig.arms[i],leg=rig.legs[i];
+  arm.shoulder.rotation.x=(-1.10+wave*(moving?.57:.10))*wet.blend;
+  arm.shoulder.rotation.z=(i===0?-.18:.18)*wet.blend;
+  arm.elbow.rotation.x=(-.42-Math.max(0,wave)*.46)*wet.blend;
+  leg.hip.rotation.x=(.40+Math.sin(phase+Math.PI)*.34*
+   (moving?1:.22))*wet.blend;
+  leg.knee.rotation.x=(.36+Math.max(0,-wave)*.29)*wet.blend;
+  leg.ankle.rotation.x=-leg.hip.rotation.x*.45;
+ }
+ LOCOMOTION.strain=0;LOCOMOTION.strainSeconds=0;
+}
+function updateWaterVisual(dt){
+ const wet=WATER_STATE;
+ if(wet.mode!=='swim')wet.cycle+=dt*.4;
+ swimRipple.visible=wet.mode!=='dry'&&wet.water!==null;
+ if(swimRipple.visible){
+  swimRipple.position.set(player.position.x,WATER_SURFACE_Y+.025,
+   player.position.z);
+  const radius=(.75+.12*Math.sin(wet.cycle*2))*
+   (wet.mode==='swim'?1.5:1);
+  swimRipple.scale.set(radius,radius,1);
+  swimRipple.material.opacity=wet.mode==='swim'?.58:.32;
+ }
+ for(const water of WATER_VISUALS)
+  water.waterPlane.material.opacity=.69+
+   .035*Math.sin(wet.cycle+water.body.x*.3);
+ streamTime+=dt;
+ for(let i=0;i<streamFoam.length;i++){
+  const mark=streamFoam[i];
+  const distance=streamTime*(1.0+(i%3)*.24)+
+   RIVER_LENGTH*i/streamFoam.length;
+  const sample=riverPointAtDistance(distance);
+  const drift=Math.sin(i*5.23)*sample.width*.45;
+  mark.position.set(sample.x-sample.dirZ*drift,
+   WATER_SURFACE_Y+.026,sample.z+sample.dirX*drift);
+  const active=waterAt(mark.position.x,mark.position.z)!==null;
+  mark.visible=active;
+  mark.material.opacity=.25+.14*Math.sin(streamTime*2+i);
+ }
+
+}
+// Push-off drives acceleration during foot contact; momentum continues during
+// sprint flight, as it should in real physics. Contact and collisions govern
+// which movement the rig may actually perform.
+function stepLocomotion(dt,right,forward,runEnabled){
+ const gait=LOCOMOTION;
+ gait.cooldown=Math.max(0,gait.cooldown-dt);
+ updateWaterState();
+ const len=Math.hypot(right,forward);
+ let dx=0,dz=0;
+ if(len>.03){
+  right/=len;forward/=len;
+  // The joystick is camera-relative: forward goes toward the horizon,
+  // right goes toward the right edge of the third-person screen.
+  dx=forward*Math.sin(cameraHeading)-right*Math.cos(cameraHeading);
+  dz=forward*Math.cos(cameraHeading)+right*Math.sin(cameraHeading);
+  const previousFacing=player.rotation.y;
+  player.rotation.y=Math.atan2(dx,dz);
+  if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
+      groundTopAt(player.position.x,player.position.z),true))
+   player.rotation.y=previousFacing;
+ }
+ const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
+ if(len>.03&&wasStopped&&gait.moveBlend<.03){
+  // Begin midway through the first grounded step, not at full rearward reach.
+  gait.cycle=gait.walkStance*.5;
+ }
+ const grounded=WATER_STATE.mode==='swim'||(!JUMP.active&&
+  (gait.feet.some(f=>f.contact)||wasStopped));
+ const waterDepth=WATER_STATE.depth;
+ const wadeFactor=1-.37*Math.min(1,waterDepth/HIP_WATER_DEPTH);
+ const walkingSpeed=crawling?gait.walkSpeed*CRAWL.speed:
+  crouched?gait.walkSpeed*CROUCH.speed:
+  runEnabled?gait.runSpeed:gait.walkSpeed;
+ const aheadRise=len>.03&&!waterAt(player.position.x,player.position.z)?
+  groundTopAt(player.position.x+dx*.40,
+   player.position.z+dz*.40)-
+  groundTopAt(player.position.x,player.position.z):0;
+ const gradeEffort=THREE.MathUtils.clamp(aheadRise/.40,-1,1);
+ // Up slopes cost effort; traversable downward slopes are slightly faster.
+ const hillsideSpeed=gradeEffort>0?1-gradeEffort*.28:
+  1-gradeEffort*.07;
+ const swimSpeed=runEnabled?2.65:1.85;
+ const target=len>.03?(WATER_STATE.mode==='swim'?
+  swimSpeed:walkingSpeed*wadeFactor*hillsideSpeed):0;
+ const tx=dx*target,tz=dz*target;
+ const dvx=tx-gait.vx,dvz=tz-gait.vz;
+ const change=Math.hypot(dvx,dvz);
+ const maxChange=(target===0?17:runEnabled?22:14)*dt;
+ if(grounded){
+  const scale=change>maxChange?maxChange/change:1;
+  gait.vx+=dvx*scale;gait.vz+=dvz*scale;
+ }else{
+  // Airborne runner coasts; no new horizontal propulsion without contact.
+  const airDrag=Math.max(0,1-dt*.35);
+  gait.vx*=airDrag;gait.vz*=airDrag;
+ }
+ const startX=player.position.x,startZ=player.position.z;
+ const current=waterCurrentAt(startX,startZ);
+ const currentFactor=WATER_STATE.mode==='swim'?1:
+  WATER_STATE.mode==='wade'?.33:0;
+ const flowX=current.x*currentFactor,flowZ=current.z*currentFactor;
+ const expectedTravel=Math.hypot(gait.vx+flowX,gait.vz+flowZ)*dt;
+ const impactSpeed=Math.hypot(gait.vx,gait.vz);
+ moveWithCollisions((gait.vx+flowX)*dt,(gait.vz+flowZ)*dt);
+ updateWaterState();
+ const xDelta=player.position.x-startX,zDelta=player.position.z-startZ;
+ // A hard sprint impact triggers a protective stumble, never a fall.
+ if(WATER_STATE.mode!=='swim'&&runEnabled&&gait.cooldown<=0&&impactSpeed>3.8&&expectedTravel>.04&&
+  Math.hypot(xDelta,zDelta)<expectedTravel*.32){
+  beginBalanceRecovery('Watch the obstacle',Math.max(.44,impactSpeed/8));return;
+ }
+ // Obstacle response cancels blocked velocity (sideways sliding remains).
+ // Retain self-propulsion separately from river drift so letting go
+ // of the joystick doesn't cancel the downstream current.
+ gait.vx=xDelta/dt-flowX;gait.vz=zDelta/dt-flowZ;
+ gait.runBlend=THREE.MathUtils.damp(gait.runBlend,
+  runEnabled&&!crouched&&!crawling&&WATER_STATE.mode!=='swim'?1:0,8,dt);
+ const actualTravel=Math.hypot(xDelta,zDelta);
+ if(WATER_STATE.mode==='swim')poseSwimmingCharacter(dt,actualTravel);
+ else {
+  WATER_STATE.blend=THREE.MathUtils.damp(WATER_STATE.blend,0,10,dt);
+  poseGroundedCharacter(player,actualTravel,dt);
+  // Ease the last fraction of buoyancy out on a sloping bank.
+  if(WATER_STATE.blend>.003&&WATER_STATE.water)
+   player.position.y=THREE.MathUtils.lerp(player.position.y,
+    WATER_STATE.water.surfaceY-1.20,WATER_STATE.blend);
+ }
+}
+const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
+const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
+prepareFeet(player);
+// Cache architecture only for camera obstruction rays; never collide with
+// the animated skeleton, guardian or flat ground.
+for(const obj of scene.children){
+ if(obj===player||obj===guardian||obj===groundMesh||obj===pavement||
+    obj.userData.ignoreCameraRay)continue;
+ obj.traverse(node=>{
+  if(node.isMesh&&node.geometry!==tileGeometry)cameraOccluders.push(node);
+ });
+}
+function followPlayerCamera(dt){
+ // Keep the camera angle immutable while following the avatar.
+ const ground=groundTopAt(player.position.x,player.position.z);
+ const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
+ // Gentle look-ahead in the walking direction reveals the upcoming terrain.
+ // Unlike an orbit camera, this shifts only the center of the fixed view.
+ const leadX=LADDER_STATE.active?0:
+  THREE.MathUtils.clamp(LOCOMOTION.vx*.17,-.60,.60);
+ const leadZ=LADDER_STATE.active?0:
+  THREE.MathUtils.clamp(LOCOMOTION.vz*.17,-.60,.60);
+ cameraTarget.set(player.position.x+leadX,
+  LADDER_STATE.active?player.position.y+height:
+   WATER_STATE.mode==='swim'?WATER_SURFACE_Y+.55:ground+height,
+  player.position.z+leadZ);
+ // More distant camera and narrower FOV achieve the miniature diorama view.
+ // No abrupt zoom when climbing: keep the same base distance in all states.
+ const distance=16.5/cameraZoom;
+ const horizontal=distance*Math.cos(cameraPitch);
+ cameraDesired.set(
+  cameraTarget.x-Math.sin(cameraHeading)*horizontal,
+  cameraTarget.y+Math.sin(cameraPitch)*distance,
+  cameraTarget.z-Math.cos(cameraHeading)*horizontal
+ );
+ // Maintain fixed scale and direction even beside buildings.
+ // The old chase-camera ray collision shortened the distance suddenly
+ // near walls, creating large unwanted character-size changes.
+ // Geometry and its physical collision remain unchanged.
+ if(!cameraReady){
+  camera.position.copy(cameraDesired);
+  cameraLookAt.copy(cameraTarget);cameraReady=true;
+ }else{
+  camera.position.lerp(cameraDesired,1-Math.exp(-4.0*dt));
+  cameraLookAt.lerp(cameraTarget,1-Math.exp(-6*dt));
+ }
+ camera.lookAt(cameraLookAt);
+}
+// Lightweight collision footprints, independent of meshes and shadows.
+const PLAYER_RADIUS=.43;
+const obstacles=[
+  ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.48})),
+  ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.32})),
+  {x:guardian.position.x,z:guardian.position.z,r:.76},
+  // No outside castle walls or corner obstructions.
+];
+const BOUND=11.55*Math.sqrt(6); // Exactly 3× v0.30.0 playable area.
+const BODY_CLEARANCE={
+ stand:{radius:.40,height:2.13,points:[0]},
+ crouch:{radius:.38,height:1.72,points:[0]},
+ crawl:{radius:.30,height:.62,points:[-.51,0,.51]}
+};
+function currentPosture(){return crawling?'crawl':crouched?'crouch':'stand';}
+function circleTouchesBox(x,z,r,minX,maxX,minZ,maxZ){
+ const dx=x-THREE.MathUtils.clamp(x,minX,maxX);
+ const dz=z-THREE.MathUtils.clamp(z,minZ,maxZ);
+ return dx*dx+dz*dz<(r+.015)*(r+.015);
+}
+function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
+  duringTransition=false){
+ const body=BODY_CLEARANCE[posture];
+ const animatedHeight=THREE.MathUtils.lerp(
+  THREE.MathUtils.lerp(BODY_CLEARANCE.stand.height,
+   BODY_CLEARANCE.crouch.height,LOCOMOTION.crouchBlend),
+  BODY_CLEARANCE.crawl.height,LOCOMOTION.crawlBlend);
+ const height=duringTransition?Math.max(body.height,animatedHeight):body.height;
+ const bottom=floor+.025,top=floor+height;
+ const yaw=player.rotation.y,fx=Math.sin(yaw),fz=Math.cos(yaw);
+ for(const forward of body.points){
+  const px=x+fx*forward,pz=z+fz*forward,r=body.radius;
+  // The stone wall is one solid mass, not merely a walkable top surface.
+  if(bottom<WALL_TRAINING.topY-.005&&top>TERRAIN.floorTop&&
+     circleTouchesBox(px,pz,r,WALL_TRAINING.minX,WALL_TRAINING.maxX,
+      WALL_TRAINING.minZ,WALL_TRAINING.maxZ))return false;
+  // Solid tower walls: the platform is reached by its stairs, not phasing.
+  if(bottom<FIELD_TOWER.topY-.005&&top>TERRAIN.floorTop&&
+     circleTouchesBox(px,pz,r,FIELD_TOWER.minX,FIELD_TOWER.maxX,
+      FIELD_TOWER.minZ,FIELD_TOWER.maxZ))return false;
+  // The underside of the timber deck is solid: tall stances cannot walk
+  // through it, while genuinely low profiles can fit underneath.
+  const deckTop=TERRAIN.floorTop+BALCONY.steps*STEP_HEIGHT;
+  if(bottom<deckTop&&top>deckTop-.22&&
+     circleTouchesBox(px,pz,r,BALCONY.xMin,BALCONY.xMax,
+      BALCONY.zMin,BALCONY.zMax))return false;
+  // Stationary vertical rails and solid cross-rungs: no walk-through.
+  const lo=Math.max(bottom,LADDER.bottomY+.06);
+  const hi=Math.min(top,LADDER.railTopY);
+  if(lo<=hi){
+   const ladderZ=ladderZAtHeight(lo);
+   for(const side of [-1,1]){
+    const dx=px-(LADDER.x+side*LADDER.width*.5);
+    const dz=pz-ladderZ;
+    if(dx*dx+dz*dz<(r+.052)*(r+.052))return false;
+   }
+   for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;
+       y+=LADDER.rungSpacing){
+    if(y+.044<bottom||y-.044>top)continue;
+    const dx=px-THREE.MathUtils.clamp(px,
+      LADDER.x-LADDER.width*.5,LADDER.x+LADDER.width*.5);
+    const dz=pz-ladderZ;
+    if(dx*dx+dz*dz<(r+.044)*(r+.044))return false;
+   }
+  }
+ }
+ return true;
+}
+function canChangePosture(posture){
+ if(bodyVolumeFits(player.position.x,player.position.z,posture))return true;
+ document.getElementById('message').textContent=
+  'Not enough clearance to '+(posture==='stand'?'stand':
+    posture==='crouch'?'crouch':'crawl')+' here.';
+ return false;
+}
+function clearPosition(x,z){
+ if(x < -BOUND || x > BOUND || z < -BOUND || z > BOUND)return false;
+ for(const o of obstacles){const dx=x-o.x,dz=z-o.z,limit=PLAYER_RADIUS+o.r;
+  if(dx*dx+dz*dz<limit*limit)return false;}
+ // Railing footprint collisions apply to the entire horizontal player capsule.
+ for(const r of BALCONY_RAIL_COLLIDERS){
+  const nearX=THREE.MathUtils.clamp(x,r.minX,r.maxX);
+  const nearZ=THREE.MathUtils.clamp(z,r.minZ,r.maxZ);
+  const dx=x-nearX,dz=z-nearZ;
+  if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return false;
+ }
+ // Floaters collide at their real buoyant height, not at the lakebed.
+ // Walking and wading continue to use the actual sloping underwater floor.
+ const water=waterAt(x,z);
+ const floor=water&&water.depth>HIP_WATER_DEPTH?
+  water.surfaceY-1.20:groundTopAt(x,z);
+ return bodyVolumeFits(x,z,currentPosture(),floor,true);
+}
+// One 45-degree normal limit applies equally to hills and manufactured
+// ramps. Swimming and the intentional .30-unit stone stair risers are separate.
+function walkableStairAt(x,z){
+ for(const s of WALKABLE_ELEVATIONS){
+  if(s.kind!=='stairs')continue;
+  if(x>=s.minX&&x<=s.maxX&&z>=s.minZ&&z<=s.maxZ)return true;
+ }
+ return false;
+}
+function surfaceGradeAt(x,z){
+ const ramp=rampAt(x,z);
+ return ramp?ramp.grade:naturalGradeAt(x,z);
+}
+function canTraverseStep(x,z){
+ const fromX=player.position.x,fromZ=player.position.z;
+ const currentTop=groundTopAt(fromX,fromZ);
+ const candidateTop=groundTopAt(x,z);
+ const delta=candidateTop-currentTop;
+ const onStairs=walkableStairAt(fromX,fromZ)||
+  walkableStairAt(x,z);
+ const inWater=waterAt(fromX,fromZ)||waterAt(x,z);
+ if(!onStairs&&!inWater){
+  // Testing the actual surface gradient stops diagonal zigzags from
+  // bypassing a dangerous slope of 53 degrees.
+  const grade=Math.max(surfaceGradeAt(fromX,fromZ),
+   surfaceGradeAt(x,z));
+  if(grade>MAX_WALKABLE_GRADE+.012){
+   const now=performance.now();
+   if(now-lastSlopeNotice>1400){
+    lastSlopeNotice=now;
+    document.getElementById('message').textContent=
+     'Too steep to walk: maximum slope is 45°.';
+   }
+   return false;
+  }
+ }
+ // Large vertical side ledges are still impassable; existing stone stairs
+ // keep their deliberate riser gate.
+ const ascent=crawling?.075:MAX_STEP_UP;
+ const descent=crawling?.075:MAX_STEP_DOWN;
+ return delta<=ascent+.0001&&delta>=-descent-.0001;
+}
+function moveWithCollisions(dx,dz){
+ const initialX=player.position.x,initialZ=player.position.z;
+ // Small steps avoid tunneling when running; separate axes permit wall sliding.
+ const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.18));
+ const sx=dx/steps,sz=dz/steps;
+ for(let i=0;i<steps;i++){
+  if(clearPosition(player.position.x+sx,player.position.z)&&
+     canTraverseStep(player.position.x+sx,player.position.z))player.position.x+=sx;
+  if(clearPosition(player.position.x,player.position.z+sz)&&
+     canTraverseStep(player.position.x,player.position.z+sz))player.position.z+=sz;
+ }
+ return Math.hypot(player.position.x-initialX,player.position.z-initialZ);
+}
+// Counterbalance and a catch-step attempt use the same visible humanoid rig.
+function beginBalanceRecovery(reason,severity){
+ if(BALANCE.active||challengeOpen||LOCOMOTION.cooldown>0)return;
+ BALANCE.active=true;BALANCE.age=0;BALANCE.reason=reason;
+ BALANCE.severity=Math.max(0,severity);
+ // Agility shortens the protective reaction and makes its pose more precise.
+ BALANCE.duration=.42/(1+.22*(balanceLevel-1));
+ BALANCE.success=true;
+ BALANCE.side=Math.sin(player.rotation.y)>=0?1:-1;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;LOCOMOTION.strainSeconds=0;
+ document.getElementById('message').textContent='Recovering balance...';
+}
+function updateBalanceRecovery(dt){
+ if(!BALANCE.active)return;
+ BALANCE.age+=dt;
+ const p=Math.min(1,BALANCE.age/BALANCE.duration);
+ const effort=Math.sin(Math.PI*p),rig=player.userData.rig;
+ const amplitude=(1-.12*(balanceLevel-1))*THREE.MathUtils.clamp(.7+BALANCE.severity*.4,.65,1);
+ setIdlePose(player);player.position.y=LOCOMOTION.terrainLift-.065*effort;
+ // Reflex: lean back, flex knees and spread arms, lifting the catch foot.
+ rig.torso.rotation.x=-.19*effort*amplitude;
+ rig.torso.rotation.z=BALANCE.side*.14*effort*amplitude;
+ rig.head.rotation.x=.10*effort*amplitude;
+ rig.arms.forEach((arm,i)=>{
+  arm.shoulder.rotation.z=(i===0?-1:1)*(.85*effort*amplitude);
+  arm.shoulder.rotation.x=-.28*effort;arm.elbow.rotation.x=-.35*effort;
+ });
+ rig.legs.forEach((leg,i)=>{
+  const catchStep=i===(BALANCE.side>0?1:0)?1:0;
+  leg.hip.rotation.x=-.18*effort;
+  leg.hip.rotation.z=(i===0?-1:1)*(.22*catchStep*effort);
+  leg.knee.rotation.x=.38*effort*amplitude;
+  leg.ankle.rotation.x=-.20*effort;
+ });
+ if(p<1)return;
+ BALANCE.active=false;
+ // The recovery always ends upright: falling is disabled.
+ player.position.y=LOCOMOTION.terrainLift;setIdlePose(player);
+ Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:Math.max(.38,1.10-.20*(balanceLevel-1))});
+ prepareFeet(player);
+ document.getElementById('message').textContent='Steady again!';
+}
+// Lightweight Verlet/PBD ragdoll: real gravity, fixed-length limbs, friction,
+// obstacle contacts and repeated constraint projection. No external physics engine.
+const FALL={active:false,age:0,quiet:0,accumulator:0,nodes:[],links:[],limits:[],meshes:[],group:new THREE.Group(),lastCenter:new THREE.Vector3(),direction:new THREE.Vector3(0,0,1),reason:''};
+scene.add(FALL.group);
+FALL.group.visible=false;
+const B_HINT=document.getElementById('bHint');
+const C_HINT=document.getElementById('cHint');
+const FALL_JOINT_RADIUS=.065;
+const FALL_BONE_GEOMETRY=new THREE.CylinderGeometry(1,1,1,7);
+const FALL_Y_AXIS=new THREE.Vector3(0,1,0);
+const FALL_FLOOR=.045;
+// Collision projections are not impulses; keep ragdoll momentum bounded.
+const FALL_MAX_STEP_VELOCITY=.085;
+const rigid=(id,source,offset,radius,material)=>({
+ id,source,offset:new THREE.Vector3(...offset),radius,material
+});
+function ragdollBlueprint(){
+ const rig=player.userData.rig;
+ const skin=player.userData.materials.skin;
+ const blueprint=[
+  rigid('pelvis',rig.torso,TORSO_POINTS.pelvis,.10,skin),
+  rigid('lowerSpine',rig.torso,TORSO_POINTS.lowerSpine,.068,skin),
+  rigid('chest',rig.torso,TORSO_POINTS.chest,.09,skin),
+  rigid('neck',rig.torso,TORSO_POINTS.neck,.068,skin),
+  rigid('head',rig.head,[0,YOUTH_REFERENCE.headCenter,0],YOUTH_REFERENCE.headRadius,skin)
+ ];
+ for(let i=0;i<2;i++){
+  const a=rig.arms[i],l=rig.legs[i];
+  blueprint.push(
+   rigid('shoulder'+i,a.shoulder,[0,0,0],.082,skin),
+   rigid('elbow'+i,a.elbow,[0,0,0],.075,skin),
+   rigid('wrist'+i,a.wrist,[0,0,0],.065,skin),
+   rigid('hand'+i,a.wrist,[0,-.11,0],.070,skin),
+   rigid('hip'+i,l.hip,[0,0,0],.09,skin),
+   rigid('knee'+i,l.knee,[0,0,0],.082,skin),
+   rigid('ankle'+i,l.ankle,[0,0,0],.067,skin),
+   rigid('toe'+i,l.ankle,[0,-.045,.23],.055,skin)
+  );
+ }
+ return blueprint;
+}
+function ragdollEdges(){
+ // The visible ragdoll torso is constructed from the exact same topology
+ // used by person(). Extra constraints preserve stability but draw no mesh.
+ const visible=TORSO_BONES.map(([a,b,radius,kind])=>({a,b,radius,kind,visible:true}));
+ visible.push({a:'neck',b:'head',radius:.055,kind:'skin',visible:true});
+ for(let i=0;i<2;i++)visible.push(
+  {a:'shoulder'+i,b:'elbow'+i,radius:.055,kind:'body',visible:true},
+  {a:'elbow'+i,b:'wrist'+i,radius:.05,kind:'body',visible:true},
+  {a:'wrist'+i,b:'hand'+i,radius:.045,kind:'skin',visible:true},
+  {a:'hip'+i,b:'knee'+i,radius:.065,kind:'legs',visible:true},
+  {a:'knee'+i,b:'ankle'+i,radius:.055,kind:'legs',visible:true},
+  {a:'ankle'+i,b:'toe'+i,radius:.06,kind:'legs',visible:true}
+ );
+ const hidden=[
+  ['shoulder0','shoulder1'],['hip0','hip1'],
+  ['shoulder0','hip0'],['shoulder1','hip1'],
+  ['shoulder0','hip1'],['shoulder1','hip0']
+ ].map(([a,b])=>({a,b,visible:false}));
+ return [...visible,...hidden];
+}
+function fallObstacleList(){
+ return [
+  ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.34,height:2.6})),
+  ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.16,height:3})),
+  {x:guardian.position.x,z:guardian.position.z,r:.65,height:2.7},
+  // No outdoor corner towers.
+ ];
+}
+const FALL_COLLIDERS=fallObstacleList();
+// Prefer the natural forward tumble, but use a nearby clear direction when
+// an immediate wall or trunk would trap the upper body against the obstacle.
+function chooseFallDirection(){
+ const speed=Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz);
+ const heading=speed>.45?Math.atan2(LOCOMOTION.vx,LOCOMOTION.vz):player.rotation.y;
+ for(const offset of [0,-Math.PI/2,Math.PI/2,Math.PI]){
+  const a=heading+offset,dx=Math.sin(a),dz=Math.cos(a);
+  if(clearPosition(player.position.x+dx*.95,player.position.z+dz*.95)&&
+     clearPosition(player.position.x+dx*1.45,player.position.z+dz*1.45)){
+   return new THREE.Vector3(dx,0,dz);
+  }
+ }
+ // Very confined spaces still rely on the PBD solid-object contacts.
+ return new THREE.Vector3(Math.sin(heading),0,Math.cos(heading));
+}
+function beginFall(reason='Lost balance'){
+ if(!ENABLE_RAGDOLL||FALL.active||challengeOpen)return;
+ BALANCE.active=false;
+ FALL.active=true;FALL.reason=reason;
+ FALL.age=0;FALL.quiet=0;FALL.accumulator=0;
+ FALL.direction.copy(chooseFallDirection());
+ updateButtonHints();
+ clearActivePointers();
+ JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+ crouched=false;
+ player.updateMatrixWorld(true);
+ for(const child of [...FALL.group.children])FALL.group.remove(child);
+ FALL.nodes=[];FALL.links=[];FALL.limits=[];FALL.meshes=[];
+ const nodesByName=new Map();
+ const initialVelocity=new THREE.Vector3(LOCOMOTION.vx*.016,0,LOCOMOTION.vz*.016);
+ for(const b of ragdollBlueprint()){
+  const p=b.source.localToWorld(b.offset.clone());
+  p.y=Math.max(p.y,b.radius+.005);
+  const node={id:b.id,p,prev:p.clone().sub(initialVelocity),radius:b.radius,
+   collisionRadius:b.id==='chest'?.24:b.radius,contacts:new Map(),onFloor:false};
+  // Start the loss of balance with a small, controlled upper-body angular
+  // velocity. The legs start slower, so the body tips instead of translating.
+  const tip=node.id==='head'?.035:node.id==='neck'?.028:
+   node.id.startsWith('shoulder')?.025:node.id==='chest'?.022:
+   node.id==='lowerSpine'?.018:node.id==='pelvis'?.006:
+   node.id.startsWith('knee')?.009:0;
+  node.prev.addScaledVector(FALL.direction,-tip);
+  const m=new THREE.Mesh(jointGeometry,b.material);
+  m.scale.setScalar(b.radius);m.castShadow=true;FALL.group.add(m);
+  node.mesh=m;FALL.nodes.push(node);nodesByName.set(b.id,node);
+ }
+ for(const edge of ragdollEdges()){
+  const u=nodesByName.get(edge.a),v=nodesByName.get(edge.b);
+  if(!u||!v)throw Error('Ragdoll bone endpoint missing: '+edge.a+' / '+edge.b);
+  const length=u.p.distanceTo(v.p);
+  if(length<.04)continue;
+  let mesh=null;
+  if(edge.visible){
+   const material=player.userData.materials[edge.kind];
+   mesh=new THREE.Mesh(FALL_BONE_GEOMETRY,material);
+   mesh.castShadow=true;FALL.group.add(mesh);
+  }
+  FALL.links.push({a:u,b:v,length,mesh,visible:edge.visible,radius:edge.radius||.055});
+ }
+ // Move the exact same ribcage meshes out of the invisible standing avatar.
+ // Reattach them on Stand Up instead of rebuilding an altered torso.
+ FALL.group.add(player.userData.rig.ribcage);
+ // Prevent elbows/knees from collapsing into impossibly acute angles.
+ for(let i=0;i<2;i++){
+  FALL.limits.push({a:nodesByName.get('hip'+i),b:nodesByName.get('ankle'+i),min:.24});
+  FALL.limits.push({a:nodesByName.get('shoulder'+i),b:nodesByName.get('wrist'+i),min:.18});
+ }
+ player.visible=false;
+ FALL.group.visible=true;
+ bHeld=false;runButton.setAttribute('aria-pressed','false');
+ interactButton.disabled=true;updateButtonHints();
+ // A downward start helps the hips and knees buckle; no upward launch.
+ for(const n of FALL.nodes){
+  n.prev.y+=['pelvis','lowerSpine','chest','neck','head'].includes(n.id)?.020:.008;
+ }
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;
+ document.getElementById('message').textContent=reason+' — press Stand Up when ready.';
+ renderFallenBody();
+}
+function projectFallNode(n){
+  let floorContact=false;
+  if(n.p.y<n.collisionRadius+FALL_FLOOR){
+   n.p.y=n.collisionRadius+FALL_FLOOR;floorContact=true;n.onFloor=true;
+  }
+  // Walls are planes: cancel penetration, never bounce the body away.
+  // The wall normal does not affect downward velocity.
+  const bound=BOUND-n.collisionRadius;
+  if(n.p.x>bound){n.p.x=bound;n.contacts.set('east',{x:-1,z:0});}
+  if(n.p.x< -bound){n.p.x=-bound;n.contacts.set('west',{x:1,z:0});}
+  if(n.p.z>bound){n.p.z=bound;n.contacts.set('south',{x:0,z:-1});}
+  if(n.p.z< -bound){n.p.z=-bound;n.contacts.set('north',{x:0,z:1});}
+  for(const o of FALL_COLLIDERS){
+   if(n.p.y-n.collisionRadius>o.height)continue;
+   let dx=n.p.x-o.x,dz=n.p.z-o.z;
+   let d=Math.hypot(dx,dz),limit=o.r+n.collisionRadius;
+   if(d>=limit)continue;
+   if(d<1e-5){dx=1;dz=0;d=1;}
+   const normal={x:dx/d,z:dz/d};
+   n.p.x=o.x+normal.x*limit;
+   n.p.z=o.z+normal.z*limit;
+   n.contacts.set(o,normal);
+  }
+  return floorContact;
+}
+// Bone-vs-tree collision: prevent a limb from slicing through a narrow trunk
+// even if its two joints happen to lie on either side of it.
+function projectFallBone(link){
+ const a=link.a.p,b=link.b.p,dx=b.x-a.x,dz=b.z-a.z;
+ const denom=dx*dx+dz*dz;
+ if(denom<1e-7)return;
+ for(const o of FALL_COLLIDERS){
+  const u=THREE.MathUtils.clamp(((o.x-a.x)*dx+(o.z-a.z)*dz)/denom,0,1);
+  const y=a.y+(b.y-a.y)*u;
+  if(y-.055>o.height)continue;
+  const x=a.x+u*dx,z=a.z+u*dz;
+  let nx=x-o.x,nz=z-o.z,dist=Math.hypot(nx,nz);
+  const limit=o.r+.065;
+  if(dist>=limit)continue;
+  if(dist<1e-6){nx=-dz; nz=dx;dist=Math.hypot(nx,nz);}
+  if(dist<1e-6)continue;
+  const push=(limit-dist)*.60,ix=nx/dist*push,iz=nz/dist*push;
+  a.x+=ix*(1-u);a.z+=iz*(1-u);
+  b.x+=ix*u;b.z+=iz*u;
+ }
+}
+function physicsFallStep(dt){
+  let energy=0;
+  const pelvis=FALL.nodes.find(n=>n.id==='pelvis');
+  const head=FALL.nodes.find(n=>n.id==='head');
+  const upright=(pelvis&&pelvis.p.y>.55)||(head&&head.p.y>.82);
+  // Standing is mechanically stable without a loss-of-balance impulse.
+  // Drive a brief, decaying torso rotation until the head and hips actually
+  // reach the ground. Only upper nodes receive strong forward acceleration,
+  // while the knees and pelvis fold under gravity.
+  const tipDrive=upright?Math.max(.22,1-FALL.age/3):0;
+  for(const n of FALL.nodes){
+   n.contacts.clear();n.onFloor=false;
+   const velocity=n.p.clone().sub(n.prev).multiplyScalar(.976);
+   const upperForce=n.id==='head'?19:n.id==='neck'?16:
+    n.id.startsWith('shoulder')?13:n.id==='chest'?12:
+    n.id==='lowerSpine'?9:n.id==='pelvis'?3.5:
+    n.id.startsWith('knee')?2.5:0;
+   velocity.x+=FALL.direction.x*upperForce*tipDrive*dt*dt;
+   velocity.z+=FALL.direction.z*upperForce*tipDrive*dt*dt;
+   if(n.id==='pelvis'||n.id.startsWith('knee')){
+    velocity.y-=5*tipDrive*dt*dt;
+   }
+   velocity.clampLength(0,FALL_MAX_STEP_VELOCITY);
+   n.intent=velocity;
+   n.p.add(velocity);
+   n.p.y-=12.0*dt*dt;
+   // Distal limbs should keep dropping while the torso settles.
+   if(FALL.age>.3&&/^(elbow|wrist|hand|knee|ankle|toe)/.test(n.id))
+    n.p.y-=2.4*dt*dt;
+   n.predicted=n.p.clone();
+  }
+  for(let iteration=0;iteration<7;iteration++){
+   for(const link of FALL.links){
+    const d=link.b.p.clone().sub(link.a.p),distance=d.length();
+    if(distance<1e-7)continue;
+    const adjustment=d.multiplyScalar((distance-link.length)/distance*.5);
+    link.a.p.add(adjustment);link.b.p.sub(adjustment);
+   }
+   for(const limit of FALL.limits){
+    const d=limit.b.p.clone().sub(limit.a.p),distance=d.length();
+    if(distance>1e-6&&distance<limit.min){
+     const correction=d.multiplyScalar((limit.min-distance)/distance*.5);
+     limit.a.p.sub(correction);limit.b.p.add(correction);
+    }
+   }
+   for(const n of FALL.nodes)projectFallNode(n);
+   for(const link of FALL.links)if(link.visible)projectFallBone(link);
+  }
+  for(const n of FALL.nodes){
+   projectFallNode(n);
+   const correction=n.p.clone().sub(n.predicted);
+   const velocity=n.intent.clone().addScaledVector(correction,.10);
+   velocity.clampLength(0,FALL_MAX_STEP_VELOCITY);
+   for(const normal of n.contacts.values()){
+    const into=velocity.x*normal.x+velocity.z*normal.z;
+    if(into<0){velocity.x-=into*normal.x;velocity.z-=into*normal.z;}
+   }
+   if(n.onFloor){
+    if(velocity.y<0)velocity.y=0;
+    velocity.x*=.62;velocity.z*=.62;
+   }else if(n.contacts.size){
+    // Surface friction affects the horizontal slide, not gravity.
+    velocity.x*=.82;velocity.z*=.82;
+   }
+   n.prev.copy(n.p).sub(velocity);
+   energy+=velocity.lengthSq();
+  }
+  // Do not freeze the simulation in the notorious half-squat pose.
+  // Only sleep after the pelvis AND head have reached a low resting pose.
+  const resting=pelvis&&head&&pelvis.p.y<.58&&head.p.y<.82;
+  // Prevent sleeping with an arm or leg still unnaturally suspended.
+  const limbsSettled=FALL.nodes.every(n=>{
+   if(!/^(elbow|wrist|hand|knee|ankle|toe)/.test(n.id))return true;
+   const maxHeight=/^(elbow|knee)/.test(n.id)?.73:.45;
+   return n.p.y<maxHeight||n.contacts.size>0;
+  });
+  FALL.quiet=FALL.age>2&&resting&&limbsSettled&&energy/FALL.nodes.length<.00007?FALL.quiet+dt:0;
+}
+const RIB_WORLD_X=new THREE.Vector3(),RIB_WORLD_Y=new THREE.Vector3(),
+ RIB_WORLD_Z=new THREE.Vector3(),RIB_MATRIX=new THREE.Matrix4();
+function renderFallenRibcage(){
+ const chest=FALL.nodes.find(n=>n.id==='chest');
+ const waist=FALL.nodes.find(n=>n.id==='lowerSpine');
+ const left=FALL.nodes.find(n=>n.id==='shoulder0');
+ const right=FALL.nodes.find(n=>n.id==='shoulder1');
+ if(!chest||!waist||!left||!right)return;
+ const ribcage=player.userData.rig.ribcage;
+ // Longitudinal ribcage axis: waist -> chest. Lateral: left -> right.
+ RIB_WORLD_Y.subVectors(chest.p,waist.p);
+ RIB_WORLD_X.subVectors(right.p,left.p);
+ if(RIB_WORLD_Y.lengthSq()<.0001||RIB_WORLD_X.lengthSq()<.0001)return;
+ RIB_WORLD_Y.normalize();
+ RIB_WORLD_X.addScaledVector(RIB_WORLD_Y,-RIB_WORLD_X.dot(RIB_WORLD_Y));
+ if(RIB_WORLD_X.lengthSq()<.0001)return;
+ RIB_WORLD_X.normalize();
+ RIB_WORLD_Z.crossVectors(RIB_WORLD_X,RIB_WORLD_Y).normalize();
+ RIB_WORLD_Y.crossVectors(RIB_WORLD_Z,RIB_WORLD_X).normalize();
+ RIB_MATRIX.makeBasis(RIB_WORLD_X,RIB_WORLD_Y,RIB_WORLD_Z);
+ ribcage.position.copy(chest.p);
+ ribcage.quaternion.setFromRotationMatrix(RIB_MATRIX);
+}
+function renderFallenBody(){
+ const temp=new THREE.Vector3();
+ for(const n of FALL.nodes)n.mesh.position.copy(n.p);
+ renderFallenRibcage();
+ for(const link of FALL.links){
+  if(!link.mesh)continue; // Hidden physics braces must never render.
+  const direction=temp.subVectors(link.b.p,link.a.p);
+  const length=direction.length();
+  link.mesh.position.copy(link.a.p).addScaledVector(direction,.5);
+  link.mesh.quaternion.setFromUnitVectors(FALL_Y_AXIS,direction.normalize());
+  link.mesh.scale.set(link.radius,length,link.radius);
+ }
+ const pelvis=FALL.nodes.find(n=>n.id==='pelvis');
+ if(pelvis){
+  FALL.lastCenter.copy(pelvis.p);
+  // Keep the camera following the actual fallen pelvis.
+  player.position.x=pelvis.p.x;player.position.z=pelvis.p.z;
+ }
+}
+function updateFall(dt){
+ if(!FALL.active)return;
+ FALL.age+=dt;FALL.accumulator=Math.min(FALL.accumulator+dt,.1);
+ let steps=0;
+ while(FALL.accumulator>=1/60&&steps<5){
+  if(FALL.quiet<.9||FALL.age<1.5)physicsFallStep(1/60);
+  FALL.accumulator-=1/60;steps++;
+ }
+ renderFallenBody();
+ if(FALL.age>1.45)updateButtonHints();
+}
+function standUp(){
+ if(!FALL.active||FALL.age<1.35)return;
+ const pelvis=FALL.nodes.find(n=>n.id==='pelvis');
+ const p=pelvis?pelvis.p:player.position;
+ let spot=null;
+ for(let ring=0;ring<=10&&!spot;ring++){
+  for(let n=0;n<16;n++){
+   const angle=Math.PI*2*n/16;
+   const x=THREE.MathUtils.clamp(p.x+ring*.32*Math.cos(angle),-11,11);
+   const z=THREE.MathUtils.clamp(p.z+ring*.32*Math.sin(angle),-11,11);
+   if(clearPosition(x,z)){spot={x,z};break;}
+  }
+ }
+ if(!spot)spot={x:0,z:5};
+ FALL.active=false;FALL.group.visible=false;
+ JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+ crouched=false;
+ // Restore the *same* rib meshes to the standing torso and their rest pose.
+ const ribcage=player.userData.rig.ribcage;
+ player.userData.rig.torso.add(ribcage);
+ ribcage.position.set(...TORSO_POINTS.chest);
+ ribcage.quaternion.identity();ribcage.scale.set(1,1,1);
+ interactButton.disabled=false;updateButtonHints();
+ player.visible=true;player.position.set(spot.x,0,spot.z);
+ setIdlePose(player);
+ Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:2.5});
+ prepareFeet(player);
+ bHeld=false;runButton.setAttribute('aria-pressed','false');
+ updateButtonHints();keys.clear();resetStick();
+ document.getElementById('message').textContent='Back on your feet. Watch your step!';
+}
+// Falling disabled. No public or debug entry point; legacy solver remains archived in this file.
+// The A/B/C cluster handles context-menu suppression and pointer cancellation.
+
+const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;
+const SAVE_KEY='adventure-academy-progression-v1';
+let xp=0,stage=0,balanceLevel=1,challengeOpen=false,questionIndex=0,picked=[];
+try{
+ const saved=JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+ xp=Math.max(0,Math.floor(Number(saved.xp)||0));
+ stage=saved.stage===1?1:0;
+ balanceLevel=THREE.MathUtils.clamp(Math.floor(Number(saved.balanceLevel)||1),1,4);
+}catch(_){}
+if(stage===1)marker.visible=false;
+const skillStatus=document.getElementById('skillStatus'),balanceUpgrade=document.getElementById('balanceUpgrade');
+function upgradeCost(){return balanceLevel>=4?0:10+balanceLevel*10;}
+function saveProgress(){
+ try{localStorage.setItem(SAVE_KEY,JSON.stringify({xp,stage,balanceLevel}));}catch(_){}
+}
+function renderProgress(){
+ skillStatus.textContent='XP '+xp+' · Agility Lv '+balanceLevel;
+ balanceUpgrade.textContent=balanceLevel>=4?'Max Agility':'+ Agility ('+upgradeCost()+' XP)';
+ balanceUpgrade.disabled=balanceLevel>=4||xp<upgradeCost();
+ document.getElementById('xp').textContent='XP: '+xp+(stage?' · Apprentice Trial completed':' · Quest: Talk to the guardian');
+}
+balanceUpgrade.addEventListener('click',()=>{
+ const cost=upgradeCost();
+ if(balanceLevel>=4||xp<cost||FALL.active||BALANCE.active)return;
+ xp-=cost;balanceLevel++;saveProgress();renderProgress();
+ document.getElementById('message').textContent='Movement control improved — Agility Lv '+balanceLevel+'!';
+});
+renderProgress();
+const keys=new Set();
+const runButton=document.getElementById('runButton');
+const interactButton=document.getElementById('interactButton');
+const cancelButton=document.getElementById('cancelButton');
+let bHeld=false,bPointer=null,bDownAt=0;
+let bKeyHeld=false,bKeyDownAt=0;
+let ladderPromptVisible=false;
+function updateLadderPrompt(){
+ const nearby=!challengeOpen&&!LADDER_STATE.active&&ladderEntry()!==null;
+ if(nearby===ladderPromptVisible)return;
+ ladderPromptVisible=nearby;
+ interactButton.querySelector('small').textContent=nearby?'Climb':'Action';
+ interactButton.setAttribute('aria-label',nearby?
+  'A: Climb the fixed wall ladder':'A: Interact and talk');
+ if(nearby)document.getElementById('message').textContent=
+  'Press Space / A to climb the wall-mounted ladder.';
+ else if(document.getElementById('message').textContent.startsWith(
+  'Press Space / A to climb the wall-mounted ladder'))
+  document.getElementById('message').textContent=
+   'Explore the stone steps or climb the north wall ladder.';
+}
+const C_HOLD_MS=520;
+let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
+let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
+function updateButtonHints(){
+ B_HINT.textContent=LADDER_STATE.active?'Rest':WATER_STATE.mode==='swim'?'Swim Fast':(bHeld||bKeyHeld)?'Running':crawling?'Rest':'Run / Jump';
+ C_HINT.textContent=LADDER_STATE.active?'Exit':WATER_STATE.mode==='swim'?'—':challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
+ document.body.classList.toggle('dialog-open',challengeOpen);
+ runButton.disabled=crawling||LADDER_STATE.active;
+ cancelButton.setAttribute('aria-pressed',String(crouched||crawling));
+ cancelButton.disabled=WATER_STATE.mode==='swim'&&!challengeOpen;
+ runButton.setAttribute('aria-pressed',String(bHeld||bKeyHeld));
+ cancelButton.setAttribute('aria-label',LADDER_STATE.active?
+  'C: exit safely from the ladder':challengeOpen?'C: cancel dialog':
+  crawling?'C: tap or hold to return to tactical crouch':
+  crouched?'C: tap to stand, hold to crawl':
+  'C: tap to crouch, hold to crawl');
+ cancelButton.title=LADDER_STATE.active?'C: exit or return safely along the ladder':
+  crawling?'Tap or hold C to rise into crouch':
+  'Tap C for crouch/stand · hold C for low crawl';
+}
+function stopBPointer(){
+ bPointer=null;bHeld=false;
+ runButton.classList.remove('is-active');
+ updateButtonHints();
+}
+function cancelAction(){
+ if(LADDER_STATE.active){cancelLadder();return;}
+ if(WATER_STATE.mode==='swim')return;
+ if(challengeOpen){closeChallenge();updateButtonHints();return;}
+ if(crawling){
+  if(!canChangePosture('crouch'))return;
+  crawling=false;crouched=true;
+  LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
+  updateButtonHints();
+  document.getElementById('message').textContent='Tactical crouch.';
+  return;
+ }
+ if(crouched){
+  if(!canChangePosture('stand'))return;
+  crouched=false;updateButtonHints();return;
+ }
+ if(BALANCE.active)return;
+ if(!FALL.active&&!JUMP.active){
+  if(!canChangePosture('crouch'))return;
+  crouched=true;updateButtonHints();
+  document.getElementById('message').textContent=
+   'Tactical crouch — hold C to enter the low crawl.';
+ }
+}
+function clearCHoldTimer(){
+ if(cHoldTimer!==null)clearTimeout(cHoldTimer);
+ cHoldTimer=null;
+}
+function clearCKeyTimer(){
+ if(cKeyTimer!==null)clearTimeout(cKeyTimer);
+ cKeyTimer=null;
+}
+// The keyboard mirrors the touch AB C cluster:
+// Space = A (interact / ladder), F = B (tap jump / hold run or swim),
+// CapsLock = C (tap crouch / hold crawl / safe ladder exit).
+// WASD stays dedicated to movement, including KeyA for strafe-left.
+addEventListener('keydown',e=>{
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space',
+      'KeyF','CapsLock'].includes(e.code)||
+   ((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'))e.preventDefault();
+ if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){
+  if(!e.repeat)undoCameraChange();
+  return;
+ }
+ if(challengeOpen){
+  if(e.code==='Escape'||e.code==='CapsLock'){
+   closeChallenge();updateButtonHints();
+  }
+  return;
+ }
+ keys.add(e.code);
+ if(e.repeat)return;
+ if(e.code==='Space')interact();
+ if(e.code==='Escape')cancelAction();
+ if(e.code==='CapsLock'){
+  cKeyHeld=true;cKeyTriggered=false;clearCKeyTimer();
+  cKeyTimer=setTimeout(()=>{
+   cKeyTimer=null;
+   if(cKeyHeld){cKeyTriggered=true;toggleCrawl();}
+  },C_HOLD_MS);
+ }
+ if(e.code==='KeyF'){
+  if(BALANCE.active||challengeOpen||crawling||LADDER_STATE.active)return;
+  if(crouched&&!canChangePosture('stand'))return;
+  if(crouched)crouched=false;
+  bKeyHeld=true;bKeyDownAt=performance.now();
+  updateButtonHints();
+ }
+});
+addEventListener('keyup',e=>{
+ keys.delete(e.code);
+ if(e.code==='CapsLock'&&cKeyHeld){
+  cKeyHeld=false;clearCKeyTimer();
+  if(!cKeyTriggered)cancelAction();
+  cKeyTriggered=false;
+ }
+ if(e.code==='KeyF'&&bKeyHeld){
+  const wasTap=performance.now()-bKeyDownAt<205;
+  bKeyHeld=false;updateButtonHints();
+  if(wasTap)startJump();
+ }
+});
+const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
+let stickX=0,stickY=0,stickPointer=null;
+function resetStick(){stickPointer=null;stickX=0;stickY=0;knob.style.transform='translate(0px,0px)'}
+function moveStick(e){
+ const rect=touch.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+ const radius=rect.width*.34,dx=e.clientX-cx,dy=e.clientY-cy,length=Math.hypot(dx,dy),scale=length>radius?radius/length:1;
+ stickX=dx*scale/radius;stickY=dy*scale/radius;
+ knob.style.transform='translate('+dx*scale+'px,'+dy*scale+'px)';
+}
+for(const type of ['contextmenu','selectstart','dragstart']){
+ for(const element of [touch,runButton,interactButton,cancelButton])
+  element.addEventListener(type,e=>e.preventDefault());
+}
+touch.addEventListener('pointerdown',e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;touch.setPointerCapture(e.pointerId);moveStick(e)},{passive:false});
+touch.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e)}},{passive:false});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])
+ touch.addEventListener(type,e=>{if(e.pointerId===stickPointer)resetStick()});
+// B: held => sprint; quick tap => jump; no fall/stand action.
+// Pointer capture ensures a release outside the button stops the sprint.
+runButton.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ if(bPointer!==null)return;
+ if(BALANCE.active||challengeOpen||crawling||LADDER_STATE.active)return;
+ if(crouched&&!canChangePosture('stand'))return;
+ if(crouched)crouched=false;
+ bPointer=e.pointerId;bDownAt=performance.now();bHeld=true;
+ try{runButton.setPointerCapture(e.pointerId)}catch(_){}
+ runButton.classList.add('is-active');updateButtonHints();
+},{passive:false});
+runButton.addEventListener('pointerup',e=>{
+ if(e.pointerId!==bPointer)return;
+ e.preventDefault();
+ const wasTap=performance.now()-bDownAt<205;
+ stopBPointer();
+ if(wasTap)startJump();
+},{passive:false});
+for(const type of ['pointercancel','lostpointercapture'])
+ runButton.addEventListener(type,e=>{if(e.pointerId===bPointer)stopBPointer()});
+runButton.addEventListener('click',e=>{
+ if(e.detail!==0)return; // keyboard accessibility; pointer already handled
+ startJump();
+});
+interactButton.addEventListener('click',interact);
+// C supports both taps and intentional holds. The delayed action fires while
+// still pressed, not only after release, and avoids native long-tap menus.
+cancelButton.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ if(cPointer!==null)return;
+ if(challengeOpen){cancelAction();return;}
+ cPointer=e.pointerId;cHoldTriggered=false;clearCHoldTimer();
+ try{cancelButton.setPointerCapture(e.pointerId)}catch(_){}
+ cHoldTimer=setTimeout(()=>{
+  cHoldTimer=null;
+  if(cPointer!==null){
+   cHoldTriggered=true;toggleCrawl();
+  }
+ },C_HOLD_MS);
+},{passive:false});
+cancelButton.addEventListener('pointerup',e=>{
+ if(e.pointerId!==cPointer)return;
+ e.preventDefault();
+ clearCHoldTimer();
+ cPointer=null;
+ if(!cHoldTriggered)cancelAction();
+ cHoldTriggered=false;
+},{passive:false});
+for(const type of ['pointercancel','lostpointercapture']){
+ cancelButton.addEventListener(type,e=>{
+  if(e.pointerId!==cPointer)return;
+  clearCHoldTimer();cPointer=null;cHoldTriggered=false;
+ });
+}
+cancelButton.addEventListener('click',e=>{
+ if(e.detail===0)cancelAction(); // keyboard / accessibility click only
+});
+function clearActivePointers(){
+ keys.clear();resetStick();stopBPointer();
+ clearCHoldTimer();cPointer=null;cHoldTriggered=false;
+ clearCKeyTimer();cKeyHeld=false;cKeyTriggered=false;
+ bKeyHeld=false;updateButtonHints();
+}
+window.addEventListener('blur',clearActivePointers);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearActivePointers()});
+updateButtonHints();
+document.getElementById('landscapeButton').addEventListener('click',async()=>{
+ try{
+  if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
+  if(screen.orientation&&screen.orientation.lock)await screen.orientation.lock('landscape');
+ }catch(e){document.querySelector('#landscapePrompt small').textContent='Your browser cannot lock screen orientation. Enable auto-rotate and turn your device.'}
+});
+const msg=document.getElementById('message'),status=document.getElementById('xp');
+const challenge=document.getElementById('challenge'),progress=document.getElementById('progress'),question=document.getElementById('question'),answers=document.getElementById('answers'),feedback=document.getElementById('feedback');
+const bank=[
+['On which continent are the Pyramids of Giza?',['Africa','Asia','Europe'],0],
+['Which tool helps you find north?',['Thermometer','Compass','Stopwatch'],1],
+['Which planet is called the Red Planet?',['Mars','Venus','Jupiter'],0],
+['Which country is home to the Eiffel Tower?',['Spain','France','Italy'],1],
+['How many sides does a hexagon have?',['Five','Six','Eight'],1],
+['Which is the largest ocean?',['Atlantic','Pacific','Indian'],1],
+['Which of these animals is a mammal?',['Shark','Trout','Dolphin'],2]
+];
+function closeChallenge(){challenge.hidden=true;challengeOpen=false;keys.clear();updateButtonHints()}
+document.getElementById('exit').addEventListener('click',closeChallenge);
+function showQuestion(){
+ feedback.textContent='';answers.replaceChildren();progress.textContent='Question '+(questionIndex+1)+' of 3';
+ const [q,choices,correct]=picked[questionIndex];question.textContent=q;
+ choices.forEach((choice,i)=>{const b=document.createElement('button');b.textContent=choice;b.type='button';b.addEventListener('click',()=>{
+ if(i!==correct){feedback.textContent='Try again. You can do it!';return}
+ questionIndex++;
+ if(questionIndex<3){showQuestion();return}
+ progress.textContent='Trial completed';question.textContent='You completed all three challenges!';answers.replaceChildren();
+ if(stage===0){stage=1;xp+=25;marker.visible=false;saveProgress();renderProgress();feedback.textContent='You earned 25 XP! Upgrade Agility in the corner.';msg.textContent='Guardian: Congratulations, apprentice! You can practice again.'}
+ else {xp+=10;saveProgress();renderProgress();feedback.textContent='Practice completed — you earned 10 XP!';msg.textContent='Guardian: Excellent practice! Keep learning to upgrade Agility.';}
+ });answers.append(b)});
+}
+function interact(){
+ if(challengeOpen||FALL.active||BALANCE.active||LADDER_STATE.active)return;
+ if(startLadder())return;
+ if(player.position.distanceTo(guardian.position)>2.8){msg.textContent='Move closer to the guardian to talk.';return}
+ picked=[...bank].sort(()=>Math.random()-.5).slice(0,3);questionIndex=0;keys.clear();challengeOpen=true;challenge.hidden=false;updateButtonHints();showQuestion();
+}
+let lastReloadAttempt=0;
+function applyUpdateIfSafe(){
+ if(!pendingBuild||challengeOpen||BALANCE.active||LADDER_STATE.active||
+   Math.hypot(stickX,stickY)>.1||keys.size)return;
+ if(Date.now()-lastReloadAttempt<10000)return;
+ lastReloadAttempt=Date.now();
+ const url=new URL(location.href);url.searchParams.set('v',pendingBuild);
+ location.replace(url.href);
+}
+const clock=new THREE.Clock();
+function animate(){
+ requestAnimationFrame(animate);applyUpdateIfSafe();
+ const dt=Math.max(.0001,Math.min(clock.getDelta(),.04));
+ let right=stickX,forward=-stickY;
+ if(keys.has('KeyW'))forward+=1;
+ if(keys.has('KeyS'))forward-=1;
+ if(keys.has('KeyA'))right-=1;
+ if(keys.has('KeyD'))right+=1;
+ // Keyboard arrows no longer rotate or tilt the fixed view.
+ if(ENABLE_RAGDOLL&&FALL.active){updateFall(dt);}
+ else if(BALANCE.active){updateBalanceRecovery(dt);}
+ else if(LADDER_STATE.active){stepLadder(dt,forward);}
+ else{
+  if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
+  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||bKeyHeld)&&!challengeOpen&&!crouched&&!crawling);
+  stepJump(dt);
+ }
+ updateLadderPrompt();
+ updateSlopeStatus();
+ followPlayerCamera(dt);
+ updateWaterVisual(dt);
+ marker.rotation.y+=dt;renderer.render(scene,camera);
+}
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
+</script></body></html>
