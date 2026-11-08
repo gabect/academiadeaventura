@@ -368,6 +368,8 @@ function toggleCrawl(){
  if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
  crawling=!crawling;
  crouched=true; // exiting crawl returns to tactical crouch, not standing.
+ // A simultaneous B press must not leave a sprint latched behind the crawl.
+ if(crawling&&bHeld)stopBPointer();
  LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
  updateButtonHints();
  document.getElementById('message').textContent=crawling?
