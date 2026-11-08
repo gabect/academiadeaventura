@@ -183,7 +183,7 @@ const LADDER={
  x:-3.50,wallZ:WALL_TRAINING.maxZ,standoff:.16,
  bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
  railTopY:WALL_TRAINING.topY+.18,rungTopY:WALL_TRAINING.topY-.10,
- width:.70,rungSpacing:.27,climbSpeed:.79,topRootProgress:.86,
+ width:.70,rungSpacing:.27,climbSpeed:.79,topRootProgress:.80,
  bottomExitZ:-9.08,topExitZ:WALL_TRAINING.maxZ-.19
 };
 const BALCONY_RAIL_COLLIDERS=[];
@@ -592,7 +592,7 @@ const LADDER_LOCAL=new THREE.Vector3();
 function ladderRootAt(progress,out){
  const height=(LADDER.deckY-LADDER.bottomY)*progress;
  // The player travels straight up, staying outside both rail and wall.
- return out.set(LADDER.x,height,ladderZAtHeight(LADDER.bottomY)+.46);
+ return out.set(LADDER.x,height,ladderZAtHeight(LADDER.bottomY)+.38);
 }
 function ladderEntry(){
  if(LADDER_STATE.active)return null;
@@ -642,6 +642,9 @@ function startLadderExit(top){
 function cancelLadder(){
  const climb=LADDER_STATE;
  if(!climb.active||climb.mode==='exit')return;
+ // While stepping backward off the wall, C cancels safely onto the wall,
+ // not directly into the climbing track on the far side of the lip.
+ if(climb.mode==='mount'){startLadderExit(true);return;}
  const toTop=climb.progress>.76;
  climb.mode='climb';climb.direction=toTop?1:-1;
  document.getElementById('message').textContent=toTop?
@@ -785,10 +788,10 @@ function stepLadder(dt,verticalInput){
    Math.cos(Math.PI-climb.fromYaw));
   player.rotation.y=climb.fromYaw+angle*yawEase;
   const stepBack=ladderEase(.34,.78,t);
-  const lower=ladderEase(.78,1,t);
+  const lower=ladderEase(.68,1,t);
   ladderRootAt(LADDER.topRootProgress,LADDER_TMP);
   player.position.set(
-   THREE.MathUtils.lerp(climb.from.x,LADDER.x,stepBack),
+   THREE.MathUtils.lerp(climb.from.x,LADDER.x,ladderEase(.10,.34,t)),
    THREE.MathUtils.lerp(climb.from.y,LADDER_TMP.y,lower),
    THREE.MathUtils.lerp(climb.from.z,LADDER_TMP.z,stepBack));
   poseLadderTransfer(dt,t,true);
