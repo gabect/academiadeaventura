@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.27.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.27.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.27.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.27.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.27.0';let pendingBuild=null;
+const BUILD='0.27.1';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -46,36 +46,28 @@ async function checkUpdate(){try{const response=await fetch('./version.json?chec
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
 const camera=new THREE.PerspectiveCamera(48,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
-// Elevated semi-isometric diorama camera: perspective depth without orbiting after every turn.
-// Drag/arrows still orbit manually; zoom remains distance-based.
+// Fixed-angle semi-isometric diorama view: no touch, mouse or keyboard orbit.
+// The camera tracks player position, with adjustable zoom only.
 const ZOOM_MIN=.70,ZOOM_MAX=2.6;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
-let cameraZoom=1,cameraHeading=Math.PI+Math.PI/4,cameraPitch=.94,cameraReady=false;
-const CAMERA_DEADZONE=40*Math.PI/180;
-const CAMERA_RATE=1.25,CAMERA_MANUAL_HOLD_MS=2500;
-let cameraAutoTurn=false,cameraManualUntil=0,cameraTurnVelocity=0;
+let cameraZoom=1,cameraReady=false;
+// Permanently fixed diagonal heading and high-angle elevation.
+const cameraHeading=Math.PI+Math.PI/4,cameraPitch=.94;
 const cameraHistory=[];
 const cameraUndoButton=document.getElementById('cameraUndo');
-function cameraSnapshot(){
- return {heading:cameraHeading,pitch:cameraPitch,zoom:cameraZoom};
-}
 function recordCameraChange(){
- const last=cameraHistory[cameraHistory.length-1];
- const now=cameraSnapshot();
- if(last&&Math.abs(Math.atan2(Math.sin(last.heading-now.heading),Math.cos(last.heading-now.heading)))<.003&&
-  Math.abs(last.pitch-now.pitch)<.003&&Math.abs(last.zoom-now.zoom)<.003)return;
- cameraHistory.push(now);
+ // Camera undo now records zoom only; no camera-angle history exists.
+ const previous=cameraHistory[cameraHistory.length-1];
+ if(previous!==undefined&&Math.abs(previous-cameraZoom)<.003)return;
+ cameraHistory.push(cameraZoom);
  if(cameraHistory.length>12)cameraHistory.shift();
  cameraUndoButton.disabled=false;
 }
 function undoCameraChange(){
- const previous=cameraHistory.pop();
- if(!previous)return;
- cameraHeading=previous.heading;cameraPitch=previous.pitch;
- setCameraZoom(previous.zoom);
- cameraAutoTurn=false;cameraTurnVelocity=0;
- cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
+ const previousZoom=cameraHistory.pop();
+ if(previousZoom===undefined)return;
+ setCameraZoom(previousZoom);
  cameraUndoButton.disabled=cameraHistory.length===0;
 }
 cameraUndoButton.addEventListener('click',undoCameraChange);
@@ -111,52 +103,39 @@ renderer.domElement.addEventListener('wheel',e=>{
  lastZoomWheelAt=now;
  setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
 },{passive:false});
-// On the canvas, one finger/mouse drag orbits; two fingers pinch to zoom.
-// These pointers are separate from the left joystick and A/B/C buttons.
+// A single finger/mouse drag cannot rotate the camera.
+// Two fingers can still pinch zoom without affecting its fixed orientation.
 const cameraPointers=new Map();
-let pinchDistance=0,pinchActive=false;
-function setManualCameraTurn(deltaX,deltaY){
- cameraHeading-=deltaX*.005;
- cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*.003,.48,1.23);
- cameraAutoTurn=false;cameraTurnVelocity=0;
- cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
-}
+let pinchDistance=0,pinchRecorded=false;
 renderer.domElement.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
  e.preventDefault();
- cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY,downX:e.clientX,downY:e.clientY,changed:false});
+ cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
  try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
  if(cameraPointers.size===2){
-  pinchActive=true;
   const [a,b]=[...cameraPointers.values()];
   pinchDistance=Math.hypot(a.x-b.x,a.y-b.y);
+  pinchRecorded=false;
  }
 },{passive:false});
 renderer.domElement.addEventListener('pointermove',e=>{
  const p=cameraPointers.get(e.pointerId);if(!p)return;
  e.preventDefault();
- const dx=e.clientX-p.x,dy=e.clientY-p.y;
  p.x=e.clientX;p.y=e.clientY;
  if(cameraPointers.size===2){
   const [a,b]=[...cameraPointers.values()];
   const dist=Math.hypot(a.x-b.x,a.y-b.y);
-  if(!p.changed&&Math.abs(dist-pinchDistance)>3){
-   recordCameraChange();p.changed=true;
+  if(!pinchRecorded&&Math.abs(dist-pinchDistance)>3){
+   recordCameraChange();pinchRecorded=true;
   }
   if(pinchDistance>0&&dist>0)setCameraZoom(cameraZoom*dist/pinchDistance);
   pinchDistance=dist;
- }else if(!pinchActive&&cameraPointers.size===1){
-  if(!p.changed&&Math.hypot(p.x-p.downX,p.y-p.downY)>5){
-   recordCameraChange();p.changed=true;
-  }
-  if(p.changed)setManualCameraTurn(dx,dy);
  }
 },{passive:false});
 for(const type of ['pointerup','pointercancel','lostpointercapture']){
  renderer.domElement.addEventListener(type,e=>{
   cameraPointers.delete(e.pointerId);
-  if(cameraPointers.size<2)pinchDistance=0;
-  if(cameraPointers.size===0)pinchActive=false;
+  if(cameraPointers.size<2){pinchDistance=0;pinchRecorded=false;}
  });
 }
 setCameraZoom(1);
@@ -1304,8 +1283,7 @@ for(const obj of scene.children){
  });
 }
 function followPlayerCamera(dt){
- // Stable diorama orientation when the character walks, turns or climbs.
- // Only deliberate player camera input changes heading.
+ // Keep the camera angle immutable while following the avatar.
  const ground=groundTopAt(player.position.x,player.position.z);
  const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
  cameraTarget.set(player.position.x,
@@ -2111,7 +2089,6 @@ function applyUpdateIfSafe(){
  const url=new URL(location.href);url.searchParams.set('v',pendingBuild);
  location.replace(url.href);
 }
-let cameraKeysEditing=false;
 const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);applyUpdateIfSafe();
@@ -2121,12 +2098,7 @@ function animate(){
  if(keys.has('KeyS'))forward-=1;
  if(keys.has('KeyA'))right-=1;
  if(keys.has('KeyD'))right+=1;
- const yawInput=(keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0);
- const pitchInput=(keys.has('ArrowDown')?1:0)-(keys.has('ArrowUp')?1:0);
- if((yawInput||pitchInput)&&!challengeOpen){
-  if(!cameraKeysEditing){recordCameraChange();cameraKeysEditing=true;}
-  setManualCameraTurn(-yawInput*285*dt,pitchInput*285*dt);
- }else cameraKeysEditing=false;
+ // Keyboard arrows no longer rotate or tilt the fixed view.
  if(ENABLE_RAGDOLL&&FALL.active){updateFall(dt);}
  else if(BALANCE.active){updateBalanceRecovery(dt);}
  else if(LADDER_STATE.active){stepLadder(dt,forward);}
