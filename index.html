@@ -750,6 +750,7 @@ const CRAWL={
 function toggleCrawl(){
  if(LADDER_STATE.active){cancelLadder();return;}
  if(challengeOpen||BALANCE.active||JUMP.active||FALL.active)return;
+ if(!canChangePosture(crawling?'crouch':'crawl'))return;
  crawling=!crawling;
  crouched=true; // exiting crawl returns to tactical crouch, not standing.
  // A simultaneous B press must not leave a sprint latched behind the crawl.
@@ -1816,15 +1817,20 @@ function cancelAction(){
  if(LADDER_STATE.active){cancelLadder();return;}
  if(challengeOpen){closeChallenge();updateButtonHints();return;}
  if(crawling){
+  if(!canChangePosture('crouch'))return;
   crawling=false;crouched=true;
   LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
   updateButtonHints();
   document.getElementById('message').textContent='Tactical crouch.';
   return;
  }
- if(crouched){crouched=false;updateButtonHints();return;}
+ if(crouched){
+  if(!canChangePosture('stand'))return;
+  crouched=false;updateButtonHints();return;
+ }
  if(BALANCE.active)return;
  if(!FALL.active&&!JUMP.active){
+  if(!canChangePosture('crouch'))return;
   crouched=true;updateButtonHints();
   document.getElementById('message').textContent=
    'Tactical crouch — hold C to enter the low crawl.';
@@ -1894,6 +1900,7 @@ runButton.addEventListener('pointerdown',e=>{
  e.preventDefault();
  if(bPointer!==null)return;
  if(BALANCE.active||challengeOpen||crawling||LADDER_STATE.active)return;
+ if(crouched&&!canChangePosture('stand'))return;
  if(crouched)crouched=false;
  bPointer=e.pointerId;bDownAt=performance.now();bHeld=true;
  try{runButton.setPointerCapture(e.pointerId)}catch(_){}
