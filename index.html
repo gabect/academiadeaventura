@@ -33,7 +33,7 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.23.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps to the wooden balcony on the right.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.23.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.23.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder against the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.23.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -625,9 +625,11 @@ function startLadderExit(top){
 function cancelLadder(){
  const climb=LADDER_STATE;
  if(!climb.active||climb.mode==='exit')return;
- if(climb.progress>.76){startLadderExit(true);return;}
- climb.mode='climb';climb.direction=-1;
- document.getElementById('message').textContent='Descending safely to the courtyard...';
+ const toTop=climb.progress>.76;
+ climb.mode='climb';climb.direction=toTop?1:-1;
+ document.getElementById('message').textContent=toTop?
+  'Completing the climb to the wall safely...':
+  'Descending safely to the courtyard...';
 }
 function finishLadder(){
  const climb=LADDER_STATE,top=climb.toTop;
@@ -1717,13 +1719,13 @@ function updateLadderPrompt(){
  else if(document.getElementById('message').textContent.startsWith(
   'Press A / Action to climb the leaning ladder'))
   document.getElementById('message').textContent=
-   'Explore the stone steps and wooden balcony.';
+   'Explore the stone steps or climb the north wall ladder.';
 }
 const C_HOLD_MS=520;
 let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
 let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
 function updateButtonHints(){
- B_HINT.textContent=LADDER_STATE.active?'Climb':bHeld?'Running':crawling?'Rest':'Run / Jump';
+ B_HINT.textContent=LADDER_STATE.active?'Rest':bHeld?'Running':crawling?'Rest':'Run / Jump';
  C_HINT.textContent=LADDER_STATE.active?'Exit':challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
  document.body.classList.toggle('dialog-open',challengeOpen);
  runButton.disabled=crawling||LADDER_STATE.active;
