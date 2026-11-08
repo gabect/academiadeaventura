@@ -954,9 +954,7 @@ function updateSlopeStatus(){
   }
  }
  if(ramp){
-  const degrees=Math.atan(ramp.rise===undefined?ramp.grade:
-   ramp.rise/ramp.length)*180/Math.PI;
-  // rampSampleAt returns {ramp,grade}; near-foot samples use the same.
+  // rampSampleAt and the nearby-base preview both contain {ramp,grade}.
   const angle=Math.round(Math.atan(
    ramp.ramp.rise/ramp.ramp.length)*180/Math.PI);
   const blocked=angle>45;
