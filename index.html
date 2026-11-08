@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.0 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · fixed camera · Ctrl+Z: undo zoom · E: interact</p></div><div id="message">Campo de pruebas: explora lomas, rampas, torre, lago y río.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.31.1 · Campo de pruebas</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Space: A · F: B · Caps Lock: C · fixed camera</p></div><div id="message">Campo de pruebas: explora lomas, rampas, torre, lago y río.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Campo · v0.31.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Fixed view</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.31.0';let pendingBuild=null;
+const BUILD='0.31.1';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -2445,6 +2445,7 @@ const runButton=document.getElementById('runButton');
 const interactButton=document.getElementById('interactButton');
 const cancelButton=document.getElementById('cancelButton');
 let bHeld=false,bPointer=null,bDownAt=0;
+let bKeyHeld=false,bKeyDownAt=0;
 let ladderPromptVisible=false;
 function updateLadderPrompt(){
  const nearby=!challengeOpen&&!LADDER_STATE.active&&ladderEntry()!==null;
@@ -2454,9 +2455,9 @@ function updateLadderPrompt(){
  interactButton.setAttribute('aria-label',nearby?
   'A: Climb the fixed wall ladder':'A: Interact and talk');
  if(nearby)document.getElementById('message').textContent=
-  'Press A / Action to climb the wall-mounted ladder.';
+  'Press Space / A to climb the wall-mounted ladder.';
  else if(document.getElementById('message').textContent.startsWith(
-  'Press A / Action to climb the wall-mounted ladder'))
+  'Press Space / A to climb the wall-mounted ladder'))
   document.getElementById('message').textContent=
    'Explore the stone steps or climb the north wall ladder.';
 }
@@ -2464,13 +2465,13 @@ const C_HOLD_MS=520;
 let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
 let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
 function updateButtonHints(){
- B_HINT.textContent=LADDER_STATE.active?'Rest':WATER_STATE.mode==='swim'?'Swim Fast':bHeld?'Running':crawling?'Rest':'Run / Jump';
+ B_HINT.textContent=LADDER_STATE.active?'Rest':WATER_STATE.mode==='swim'?'Swim Fast':(bHeld||bKeyHeld)?'Running':crawling?'Rest':'Run / Jump';
  C_HINT.textContent=LADDER_STATE.active?'Exit':WATER_STATE.mode==='swim'?'—':challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
  document.body.classList.toggle('dialog-open',challengeOpen);
  runButton.disabled=crawling||LADDER_STATE.active;
  cancelButton.setAttribute('aria-pressed',String(crouched||crawling));
  cancelButton.disabled=WATER_STATE.mode==='swim'&&!challengeOpen;
- runButton.setAttribute('aria-pressed',String(bHeld));
+ runButton.setAttribute('aria-pressed',String(bHeld||bKeyHeld));
  cancelButton.setAttribute('aria-label',LADDER_STATE.active?
   'C: exit safely from the ladder':challengeOpen?'C: cancel dialog':
   crawling?'C: tap or hold to return to tactical crouch':
@@ -2517,36 +2518,54 @@ function clearCKeyTimer(){
  if(cKeyTimer!==null)clearTimeout(cKeyTimer);
  cKeyTimer=null;
 }
+// The keyboard mirrors the touch AB C cluster:
+// Space = A (interact / ladder), F = B (tap jump / hold run or swim),
+// CapsLock = C (tap crouch / hold crawl / safe ladder exit).
+// WASD stays dedicated to movement, including KeyA for strafe-left.
 addEventListener('keydown',e=>{
- if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)||
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space',
+      'KeyF','CapsLock'].includes(e.code)||
    ((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'))e.preventDefault();
  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){
   if(!e.repeat)undoCameraChange();
   return;
  }
  if(challengeOpen){
-  if(e.code==='Escape'||e.code==='KeyC'){closeChallenge();updateButtonHints();}
+  if(e.code==='Escape'||e.code==='CapsLock'){
+   closeChallenge();updateButtonHints();
+  }
   return;
  }
  keys.add(e.code);
  if(e.repeat)return;
- if(e.code==='KeyE')interact();
+ if(e.code==='Space')interact();
  if(e.code==='Escape')cancelAction();
- if(e.code==='KeyC'){
+ if(e.code==='CapsLock'){
   cKeyHeld=true;cKeyTriggered=false;clearCKeyTimer();
   cKeyTimer=setTimeout(()=>{
    cKeyTimer=null;
    if(cKeyHeld){cKeyTriggered=true;toggleCrawl();}
   },C_HOLD_MS);
  }
- if(e.code==='KeyB'||e.code==='Space')startJump();
+ if(e.code==='KeyF'){
+  if(BALANCE.active||challengeOpen||crawling||LADDER_STATE.active)return;
+  if(crouched&&!canChangePosture('stand'))return;
+  if(crouched)crouched=false;
+  bKeyHeld=true;bKeyDownAt=performance.now();
+  updateButtonHints();
+ }
 });
 addEventListener('keyup',e=>{
  keys.delete(e.code);
- if(e.code==='KeyC'&&cKeyHeld){
+ if(e.code==='CapsLock'&&cKeyHeld){
   cKeyHeld=false;clearCKeyTimer();
   if(!cKeyTriggered)cancelAction();
   cKeyTriggered=false;
+ }
+ if(e.code==='KeyF'&&bKeyHeld){
+  const wasTap=performance.now()-bKeyDownAt<205;
+  bKeyHeld=false;updateButtonHints();
+  if(wasTap)startJump();
  }
 });
 const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
@@ -2630,6 +2649,7 @@ function clearActivePointers(){
  keys.clear();resetStick();stopBPointer();
  clearCHoldTimer();cPointer=null;cHoldTriggered=false;
  clearCKeyTimer();cKeyHeld=false;cKeyTriggered=false;
+ bKeyHeld=false;updateButtonHints();
 }
 window.addEventListener('blur',clearActivePointers);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearActivePointers()});
@@ -2695,7 +2715,7 @@ function animate(){
  else if(LADDER_STATE.active){stepLadder(dt,forward);}
  else{
   if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
-  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched&&!crawling);
+  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||bKeyHeld)&&!challengeOpen&&!crouched&&!crawling);
   stepJump(dt);
  }
  updateLadderPrompt();
