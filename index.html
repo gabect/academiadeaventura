@@ -324,7 +324,7 @@ const BALCONY={
 const WALL_TRAINING={
  minX:-4.75,maxX:-2.25,minZ:-12.35,maxZ:-10.50,topY:2.0
 };
-const LADDER={
+const ORIGINAL_LADDER={
  // Vertical, bracket-mounted ladder. The open top rung area lets the
  // climber transfer at the wall lip instead of walking through crossbars.
  x:-3.50,wallZ:WALL_TRAINING.maxZ,standoff:.16,
@@ -333,6 +333,8 @@ const LADDER={
  width:.70,rungSpacing:.27,climbSpeed:.79,topRootProgress:.80,
  bottomExitZ:-9.08,topExitZ:WALL_TRAINING.maxZ-.19
 };
+let LADDER=ORIGINAL_LADDER;
+const LADDER_SPOTS=[ORIGINAL_LADDER];
 const BALCONY_RAIL_COLLIDERS=[];
 const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
  BALCONY_EDGE=mat('#593a29'),STAIR_STONE=mat('#b7b4a5'),
@@ -712,27 +714,26 @@ function buildTrainingWall(){
  addRailCollider(w.minX,w.maxX,w.minZ,w.minZ+.16);
 }
 buildTrainingWall();
-function ladderZAtHeight(y){
- // Shared constant wall offset for render geometry, IK and collisions.
- return LADDER.wallZ+LADDER.standoff;
+function ladderZAtHeight(y,ladder=LADDER){
+ return ladder.wallZ+ladder.standoff;
 }
-function buildWallMountedLadder(){
+function buildWallMountedLadder(ladder=LADDER){
  const group=new THREE.Group();
  group.userData.ignoreCameraRay=true;
  scene.add(group);
- const left=LADDER.x-LADDER.width*.5,right=LADDER.x+LADDER.width*.5;
- const baseY=LADDER.bottomY+.06,topY=LADDER.railTopY;
- const z=ladderZAtHeight(baseY);
+ const left=ladder.x-ladder.width*.5,right=ladder.x+ladder.width*.5;
+ const baseY=ladder.bottomY+.06,topY=ladder.railTopY;
+ const z=ladderZAtHeight(baseY,ladder);
  const side=mat('#825735'),rungMat=mat('#b88a4d');
  const mountMat=mat('#4a5554');
  for(const x of [left,right]){
   // Back-mounted metal anchors meet the actual masonry plane.
-  for(const y of [LADDER.bottomY+.40,LADDER.bottomY+1.12,
-                  LADDER.bottomY+1.84])
-   rod(group,[x,y,LADDER.wallZ+.008],[x,y,z],.034,mountMat);
+  for(const y of [ladder.bottomY+.40,ladder.bottomY+1.12,
+                  ladder.bottomY+1.84])
+   rod(group,[x,y,ladder.wallZ+.008],[x,y,z],.034,mountMat);
   rod(group,[x,baseY,z],[x,topY,z],.052,side);
  }
- for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;y+=LADDER.rungSpacing)
+ for(let y=ladder.bottomY+.22;y<ladder.rungTopY;y+=ladder.rungSpacing)
   rod(group,[left,y,z],[right,y,z],.044,rungMat);
 }
 // Open field: NO perimeter walls, fortifications, or corner towers.
@@ -1154,22 +1155,26 @@ function ladderRootAt(progress,out){
 }
 function ladderEntry(){
  if(LADDER_STATE.active)return null;
- const x=player.position.x,z=player.position.z;
- const level=groundTopAt(x,z);
- if(level<TERRAIN.floorTop+.12&&
-    Math.abs(x-LADDER.x)<.68&&
-    z>ladderZAtHeight(LADDER.bottomY)+.42&&
-    z<LADDER.bottomExitZ+.25)return 'bottom';
- // The descent starts only at the actual top lip, not a distant point
- // from which the avatar would need to glide across the masonry.
- if(level>LADDER.deckY-.12&&
-    Math.abs(x-LADDER.x)<.58&&
-    z>=LADDER.topExitZ-.48&&z<=LADDER.wallZ-.10)return 'top';
+ const x=player.position.x,z=player.position.z,
+  level=groundTopAt(x,z);
+ for(const ladder of LADDER_SPOTS){
+  const rungZ=ladderZAtHeight(ladder.bottomY,ladder);
+  if(level<ladder.bottomY+.18&&
+    Math.abs(x-ladder.x)<.70&&
+    z>rungZ+.41&&z<ladder.bottomExitZ+.25)
+   return {ladder,entry:'bottom'};
+  if(level>ladder.deckY-.12&&
+    Math.abs(x-ladder.x)<.58&&
+    z>=ladder.topExitZ-.48&&z<=ladder.wallZ-.10)
+   return {ladder,entry:'top'};
+ }
  return null;
 }
 function startLadder(){
- const entry=ladderEntry();
- if(!entry||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
+ const choice=ladderEntry();
+ if(!choice||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
+ LADDER=choice.ladder;
+ const entry=choice.entry;
  const climb=LADDER_STATE;
  climb.active=true;climb.mode=entry==='top'?'mount':'enter';climb.time=0;
  climb.progress=entry==='top'?LADDER.topRootProgress:0;
@@ -2048,23 +2053,25 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
      circleTouchesBox(px,pz,r,BALCONY.xMin,BALCONY.xMax,
       BALCONY.zMin,BALCONY.zMax))return false;
   // Stationary vertical rails and solid cross-rungs: no walk-through.
-  const lo=Math.max(bottom,LADDER.bottomY+.06);
-  const hi=Math.min(top,LADDER.railTopY);
+  for(const ladder of LADDER_SPOTS){
+  const lo=Math.max(bottom,ladder.bottomY+.06);
+  const hi=Math.min(top,ladder.railTopY);
   if(lo<=hi){
-   const ladderZ=ladderZAtHeight(lo);
+   const ladderZ=ladderZAtHeight(lo,ladder);
    for(const side of [-1,1]){
-    const dx=px-(LADDER.x+side*LADDER.width*.5);
+    const dx=px-(ladder.x+side*ladder.width*.5);
     const dz=pz-ladderZ;
     if(dx*dx+dz*dz<(r+.052)*(r+.052))return false;
    }
-   for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;
-       y+=LADDER.rungSpacing){
+   for(let y=ladder.bottomY+.22;y<ladder.rungTopY;
+       y+=ladder.rungSpacing){
     if(y+.044<bottom||y-.044>top)continue;
     const dx=px-THREE.MathUtils.clamp(px,
-      LADDER.x-LADDER.width*.5,LADDER.x+LADDER.width*.5);
+      ladder.x-ladder.width*.5,ladder.x+ladder.width*.5);
     const dz=pz-ladderZ;
     if(dx*dx+dz*dz<(r+.044)*(r+.044))return false;
    }
+  }
   }
  }
  return true;
