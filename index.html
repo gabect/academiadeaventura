@@ -909,8 +909,9 @@ function followPlayerCamera(dt){
  const angle=Math.atan2(Math.sin(targetHeading-cameraHeading),
   Math.cos(targetHeading-cameraHeading));
  cameraHeading+=angle*(1-Math.exp(-5*dt));
- const height=crawling?.42:crouched?.75:1.10;
- cameraTarget.set(player.position.x,player.position.y+height,player.position.z);
+ const ground=groundTopAt(player.position.x,player.position.z);
+ const height=crawling?.40:crouched?.83:1.05;
+ cameraTarget.set(player.position.x,ground+height,player.position.z);
  const distance=6.1/cameraZoom;
  cameraDesired.set(
   cameraTarget.x-Math.sin(cameraHeading)*distance,
