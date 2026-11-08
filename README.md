@@ -5,15 +5,23 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; **tap C** for crouch/stand, **hold C ~0.52 seconds** to enter/leave low crawl; Escape cancels dialogs. **R no longer serves a stand-up action**.
-- **Touchscreen:** left joystick and compact lower-right A/B/C: **A** = interact/talk; **B** = hold to run or tap to jump; **C** = tap to crouch/stand, hold for ~0.52 seconds to crawl or return to crouch. In crawl, B's run/jump is disabled until the player rises. C also cancels open dialogs. No fall/stand-up mode.
+- **Keyboard:** WASD moves the avatar; arrow left/right rotates the camera, arrow up/down tilts it; Ctrl+Z (Cmd+Z on Mac) undoes the last manual camera/zoom change. E interacts; Shift runs; Space / B jumps; tap C for crouch/stand and hold C ~0.52s to crawl; Escape cancels dialogs.
+- **Touchscreen:** left joystick moves; swipe with one finger over the 3D scene to orbit/tilt the third-person camera (without using the joystick); pinch with two fingers to zoom, or use +/-; tap ↶ to undo the last camera adjustment. A interacts, B hold runs/tap jumps, and C tap crouches/stands or hold ~0.52s crawls/rises. Sprint/jump is disabled while crawling.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
-- **Third-person camera:** a perspective chase camera tracks the player's facing direction. **+** moves closer and **−** pulls back; mouse wheel or two-finger pinch works on the game canvas. Movement is relative to the direction shown by the camera.
+- **Third-person camera:** smooth camera follows behind after a 40° heading deviation. **+** approaches and **−** pulls back; mouse wheel/two-finger pinch zoom, one-finger/mouse drag orbits, arrow keys control manual camera, and Ctrl+Z/↶ undoes the last manual camera adjustment.
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.20.0 — November 8, 2026
+## Current version: 0.21.0 — November 8, 2026
+- Third-person camera now has a 40-degree heading dead zone. It follows the avatar's position without revolving during small direction changes. If the moving avatar turns more than 40 degrees away from the current camera heading, the camera gently accelerates into a catch-up turn and then decelerates behind the avatar. Camera position and aim are separately smoothed.
+- Independent controls: **WASD** controls avatar movement, while **arrow left/right** orbits the camera and **arrow up/down** tilts it. Arrow keys no longer move the character. A manual orbit suppresses automatic recentering temporarily; while the avatar remains still, the camera view stays wherever the user leaves it.
+- On touchscreen or with a mouse, **drag across the gameplay canvas** with one finger to orbit/tilt without touching the joystick or A/B/C. A **two-finger pinch** keeps its prior zoom function. Input surfaces remain independent, so walking with the left thumb and looking around on the canvas are possible simultaneously.
+- Camera-only **undo**: **Ctrl+Z** (Cmd+Z on macOS) or the new **↶** button under +/- restores the previous manual camera orientation, tilt, or zoom. This is intentionally not an undo for player positions, XP or challenge actions. Camera history is bounded to 12 checkpoints.
+- Camera ray collision and the zoom controls remain. The tactical crouch, prone crawl, stairs, guardian, XP and no-fall behavior are not replaced. Code changes reuse the existing follow camera rather than creating a second camera controller.
+- Verified with JavaScript parse checks, camera turn easing samples and uniqueness checks for the principal camera/movement functions. The new mouse/touch interactions have not been visually QA-tested on the user's Android device.
+
+## Previous version: 0.20.0 — November 8, 2026
 - **Perspective third-person follow camera:** the fixed isometric/orthographic view has been replaced by a perspective camera trailing behind the avatar, slightly above the shoulders. The camera rotates smoothly to match the character's travel heading, follows the character across the new balcony/stairs, and raises/lowers its aim point for standing, kneeling, and prone crawling.
 - **Camera-relative locomotion:** the joystick and WASD/arrows now move the character relative to the follow camera's view, not the old hard-coded isometric axes. The player starts facing the rear of the courtyard toward the guardian (Y rotation PI), with the camera behind the avatar.
 - **Zoom now adjusts follow distance:** + and - buttons, mouse wheel and two-finger canvas pinch are preserved; they control camera follow distance instead of orthographic zoom. The perspective FOV is 58 degrees and the viewport aspect ratio updates on resize.
@@ -159,6 +167,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.21.0 (2026-11-08):** 40° deferred smooth-follow camera, WASD movement/arrow-key manual camera, one-finger drag/two-finger pinch, bounded Ctrl+Z/↶ camera undo.
 - **0.20.0 (2026-11-08):** perspective behind-the-avatar camera with smoothed rotation, camera-relative joystick/WASD movement, obstacle-aware follow distance and posture-aware framing.
 - **0.19.1 (2026-11-08):** relocated balcony/steps away from the foreground tower; static checked collisions and kept existing stair system intact.
 - **0.19.0 (2026-11-08):** wooden courtyard balcony, four walkable stone stairs, radius-checked railings, collision-aware 30-cm automatic step-up/down, elevated foot IK and camera tracking.
