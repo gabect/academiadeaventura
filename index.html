@@ -33,24 +33,25 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.26.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.26.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.27.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.27.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.26.0';let pendingBuild=null;
+const BUILD='0.27.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
-const camera=new THREE.PerspectiveCamera(58,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
-// Perspective chase camera; zoom changes follow distance, not projection.
+const camera=new THREE.PerspectiveCamera(48,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+// Elevated semi-isometric diorama camera: perspective depth without orbiting after every turn.
+// Drag/arrows still orbit manually; zoom remains distance-based.
 const ZOOM_MIN=.70,ZOOM_MAX=2.6;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
-let cameraZoom=1,cameraHeading=Math.PI,cameraPitch=.35,cameraReady=false;
+let cameraZoom=1,cameraHeading=Math.PI+Math.PI/4,cameraPitch=.94,cameraReady=false;
 const CAMERA_DEADZONE=40*Math.PI/180;
 const CAMERA_RATE=1.25,CAMERA_MANUAL_HOLD_MS=2500;
 let cameraAutoTurn=false,cameraManualUntil=0,cameraTurnVelocity=0;
@@ -116,7 +117,7 @@ const cameraPointers=new Map();
 let pinchDistance=0,pinchActive=false;
 function setManualCameraTurn(deltaX,deltaY){
  cameraHeading-=deltaX*.005;
- cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*.003,.12,.78);
+ cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*.003,.48,1.23);
  cameraAutoTurn=false;cameraTurnVelocity=0;
  cameraManualUntil=performance.now()+CAMERA_MANUAL_HOLD_MS;
 }
@@ -1303,32 +1304,20 @@ for(const obj of scene.children){
  });
 }
 function followPlayerCamera(dt){
- const difference=Math.atan2(
-  Math.sin(player.rotation.y-cameraHeading),
-  Math.cos(player.rotation.y-cameraHeading));
- const manual=performance.now()<cameraManualUntil;
- if(LADDER_STATE.active&&!manual)cameraAutoTurn=true;
- // Begin automatic recentering only beyond 40°, then finish the gentle turn
- // while moving. Manual orbit holds the camera independently for 2.5 seconds.
- if(!manual&&Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz)>.08&&
-    Math.abs(difference)>CAMERA_DEADZONE)cameraAutoTurn=true;
- if(manual)cameraAutoTurn=false;
- const desiredRate=cameraAutoTurn?
-  THREE.MathUtils.clamp(difference*1.35,-CAMERA_RATE,CAMERA_RATE):0;
- cameraTurnVelocity=THREE.MathUtils.damp(cameraTurnVelocity,desiredRate,5,dt);
- cameraHeading+=cameraTurnVelocity*dt;
- if(cameraAutoTurn&&Math.abs(difference)<.035&&Math.abs(cameraTurnVelocity)<.06)
-  cameraAutoTurn=false;
+ // Stable diorama orientation when the character walks, turns or climbs.
+ // Only deliberate player camera input changes heading.
  const ground=groundTopAt(player.position.x,player.position.z);
  const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
  cameraTarget.set(player.position.x,
   LADDER_STATE.active?player.position.y+height:ground+height,
   player.position.z);
- const distance=(LADDER_STATE.active?4.7:6.1)/cameraZoom;
+ const distance=(LADDER_STATE.active?7.0:8.5)/cameraZoom;
+ // Use the elevation as a true angle above the horizontal plane.
+ const horizontal=distance*Math.cos(cameraPitch);
  cameraDesired.set(
-  cameraTarget.x-Math.sin(cameraHeading)*distance,
+  cameraTarget.x-Math.sin(cameraHeading)*horizontal,
   cameraTarget.y+Math.sin(cameraPitch)*distance,
-  cameraTarget.z-Math.cos(cameraHeading)*distance
+  cameraTarget.z-Math.cos(cameraHeading)*horizontal
  );
  // Pull closer through architectural occlusions; no instant target jump.
  cameraDelta.subVectors(cameraDesired,cameraTarget);
