@@ -177,7 +177,7 @@ const BALCONY={
 const LADDER={
  bottomX:10.98,topX:10.15,z:-3.50,
  bottomY:TERRAIN.floorTop,deckY:TERRAIN.floorTop+STEP_HEIGHT*4,
- railTopY:TERRAIN.floorTop+STEP_HEIGHT*4+.88,
+ railTopY:TERRAIN.floorTop+STEP_HEIGHT*4+1.14,
  width:.68,rungSpacing:.17,climbSpeed:.59,
  bottomExitX:11.10,topExitX:9.50
 };
@@ -545,6 +545,156 @@ const LOCOMOTION={
 const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
 const JUMP={active:false,height:0,velocity:0};
 let crouched=false,crawling=false;
+const LADDER_STATE={
+ active:false,mode:'none',progress:0,time:0,cycle:0,from:new THREE.Vector3(),
+ target:new THREE.Vector3(),handHeights:[null,null],footHeights:[null,null],
+ fromYaw:0,toTop:false
+};
+const LADDER_TMP=new THREE.Vector3();
+const LADDER_LOCAL=new THREE.Vector3();
+function ladderRootAt(progress,out){
+ return out.set(
+  THREE.MathUtils.lerp(LADDER.bottomX,LADDER.topX,progress)-.14,
+  (LADDER.deckY-LADDER.bottomY)*progress,LADDER.z);
+}
+function ladderEntry(){
+ if(LADDER_STATE.active)return null;
+ const x=player.position.x,z=player.position.z;
+ const level=groundTopAt(x,z);
+ if(level<TERRAIN.floorTop+.12&&
+    Math.hypot(x-LADDER.bottomX,z-LADDER.z)<.97)return 'bottom';
+ if(level>LADDER.deckY-.12&&
+    Math.hypot(x-LADDER.topExitX,z-LADDER.z)<1.05)return 'top';
+ return null;
+}
+function startLadder(){
+ const entry=ladderEntry();
+ if(!entry||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
+ const climb=LADDER_STATE;
+ climb.active=true;climb.mode='enter';climb.time=0;
+ climb.progress=entry==='top'?1:0;climb.cycle=0;
+ climb.handHeights=[null,null];climb.footHeights=[null,null];
+ climb.from.copy(player.position);climb.fromYaw=player.rotation.y;
+ crouched=false;crawling=false;CRAWL.active=false;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;
+ LOCOMOTION.moveBlend=0;LOCOMOTION.crouchBlend=0;LOCOMOTION.crawlBlend=0;
+ LOCOMOTION.runBlend=0;
+ if(bHeld)stopBPointer();
+ updateButtonHints();
+ document.getElementById('message').textContent=entry==='bottom'?
+  'Ladder: W / joystick up to climb, S / down to descend. C: return safely.':
+  'Ladder: S / joystick down to descend. W: step onto balcony.';
+ return true;
+}
+function startLadderExit(top){
+ const climb=LADDER_STATE;
+ if(!climb.active||climb.mode==='exit')return;
+ climb.mode='exit';climb.toTop=top;climb.time=0;
+ climb.from.copy(player.position);
+ climb.target.set(top?LADDER.topExitX:LADDER.bottomExitX,
+  top?LADDER.deckY-TERRAIN.floorTop:0,LADDER.z);
+}
+function cancelLadder(){
+ const climb=LADDER_STATE;
+ if(!climb.active||climb.mode==='exit')return;
+ if(climb.progress>=.96){startLadderExit(true);return;}
+ climb.mode='descend';
+ document.getElementById('message').textContent='Returning safely to the foot of the ladder...';
+}
+function finishLadder(){
+ const climb=LADDER_STATE,top=climb.toTop;
+ player.position.copy(climb.target);
+ climb.active=false;climb.mode='none';
+ LOCOMOTION.terrainLift=top?LADDER.deckY-TERRAIN.floorTop:0;
+ LOCOMOTION.vx=0;LOCOMOTION.vz=0;
+ LOCOMOTION.moveBlend=0;LOCOMOTION.kneelMode=null;
+ setIdlePose(player);prepareFeet(player);
+ updateButtonHints();
+ document.getElementById('message').textContent=top?
+  'On the balcony. Press A near the ladder to descend.':
+  'Back on the ground.';
+}
+function ladderRungAt(y){
+ const first=LADDER.bottomY+.18;
+ const last=Math.floor((LADDER.railTopY-.11-first)/LADDER.rungSpacing);
+ const index=THREE.MathUtils.clamp(
+  Math.round((y-first)/LADDER.rungSpacing),0,last);
+ return first+index*LADDER.rungSpacing;
+}
+function poseLadder(dt,weight,moving){
+ const rig=player.userData.rig,climb=LADDER_STATE;
+ setIdlePose(player);
+ rig.torso.rotation.x=.26*weight;
+ rig.head.rotation.x=-.18*weight;
+ const yaw=player.rotation.y,c=Math.cos(yaw),sin=Math.sin(yaw);
+ for(let i=0;i<2;i++){
+  const phase=Math.sin(climb.cycle+(1-i)*Math.PI);
+  const requested=player.position.y+.24+(moving?Math.max(0,phase)*.18:0);
+  const desired=ladderRungAt(requested+TERRAIN.floorTop);
+  const previous=climb.footHeights[i];
+  const y=climb.footHeights[i]=previous===null?desired:
+   THREE.MathUtils.damp(previous,desired,12,dt);
+  const x=ladderXAtHeight(y),z=LADDER.z+(i===0?-.21:.21);
+  const dx=x-player.position.x,dz=z-player.position.z;
+  const localX=c*dx-sin*dz,localZ=sin*dx+c*dz;
+  const leg=rig.legs[i];
+  solveLegTarget(leg,localX,y-player.position.y,localZ,.10);
+  leg.hip.rotation.x*=weight;leg.hip.rotation.z*=weight;
+  leg.knee.rotation.x*=weight;leg.ankle.rotation.x*=weight;
+ }
+ player.updateMatrixWorld(true);
+ for(let i=0;i<2;i++){
+  const phase=Math.sin(climb.cycle+i*Math.PI);
+  const requested=player.position.y+1.05+(moving?Math.max(0,phase)*.19:0);
+  const desired=ladderRungAt(requested+TERRAIN.floorTop);
+  const previous=climb.handHeights[i];
+  const y=climb.handHeights[i]=previous===null?desired:
+   THREE.MathUtils.damp(previous,desired,11,dt);
+  LADDER_TMP.set(ladderXAtHeight(y),y,LADDER.z+(i===0?-.22:.22));
+  LADDER_LOCAL.copy(LADDER_TMP);
+  rig.torso.worldToLocal(LADDER_LOCAL);
+  aimArmAt(rig.arms[i],LADDER_LOCAL,i===0?-1:1,weight);
+  rig.arms[i].wrist.rotation.x=-.10*weight;
+ }
+}
+function stepLadder(dt,verticalInput){
+ const climb=LADDER_STATE;
+ if(!climb.active)return;
+ const input=THREE.MathUtils.clamp(verticalInput,-1,1);
+ if(climb.mode==='enter'){
+  climb.time+=dt;
+  const t=THREE.MathUtils.clamp(climb.time/.38,0,1);
+  const ease=t*t*(3-2*t);
+  ladderRootAt(climb.progress,LADDER_TMP);
+  player.position.lerpVectors(climb.from,LADDER_TMP,ease);
+  const angle=Math.atan2(Math.sin(-Math.PI/2-climb.fromYaw),
+   Math.cos(-Math.PI/2-climb.fromYaw));
+  player.rotation.y=climb.fromYaw+angle*ease;
+  poseLadder(dt,ease,false);
+  if(t>=1)climb.mode='climb';
+  return;
+ }
+ if(climb.mode==='exit'){
+  climb.time+=dt;
+  const t=THREE.MathUtils.clamp(climb.time/.40,0,1),ease=t*t*(3-2*t);
+  player.position.lerpVectors(climb.from,climb.target,ease);
+  poseLadder(dt,1-ease,false);
+  if(t>=1)finishLadder();
+  return;
+ }
+ const command=climb.mode==='descend'?-1:input;
+ const before=climb.progress;
+ climb.progress=THREE.MathUtils.clamp(before+
+  command*LADDER.climbSpeed*dt/(LADDER.deckY-LADDER.bottomY),0,1);
+ const delta=climb.progress-before;
+ climb.cycle+=Math.abs(delta)*(LADDER.deckY-LADDER.bottomY)*
+  Math.PI/LADDER.rungSpacing;
+ ladderRootAt(climb.progress,player.position);
+ player.rotation.y=-Math.PI/2;
+ poseLadder(dt,1,Math.abs(delta)>.00001);
+ if(climb.progress>=1&&command>.05)startLadderExit(true);
+ if(climb.progress<=0&&command<-.05)startLadderExit(false);
+}
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
 // support and swing phases. Hands and ankles have ground-anchored contacts.
 // Chest-to-ground / prone military crawl. The low hip and almost-horizontal
@@ -988,7 +1138,8 @@ prepareFeet(player);
 // Cache architecture only for camera obstruction rays; never collide with
 // the animated skeleton, guardian or flat ground.
 for(const obj of scene.children){
- if(obj===player||obj===guardian||obj===groundMesh||obj===pavement)continue;
+ if(obj===player||obj===guardian||obj===groundMesh||obj===pavement||
+    obj.userData.ignoreCameraRay)continue;
  obj.traverse(node=>{
   if(node.isMesh&&node.geometry!==tileGeometry)cameraOccluders.push(node);
  });
@@ -998,6 +1149,7 @@ function followPlayerCamera(dt){
   Math.sin(player.rotation.y-cameraHeading),
   Math.cos(player.rotation.y-cameraHeading));
  const manual=performance.now()<cameraManualUntil;
+ if(LADDER_STATE.active&&!manual)cameraAutoTurn=true;
  // Begin automatic recentering only beyond 40°, then finish the gentle turn
  // while moving. Manual orbit holds the camera independently for 2.5 seconds.
  if(!manual&&Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz)>.08&&
@@ -1010,9 +1162,11 @@ function followPlayerCamera(dt){
  if(cameraAutoTurn&&Math.abs(difference)<.035&&Math.abs(cameraTurnVelocity)<.06)
   cameraAutoTurn=false;
  const ground=groundTopAt(player.position.x,player.position.z);
- const height=crawling?.40:crouched?.83:1.05;
- cameraTarget.set(player.position.x,ground+height,player.position.z);
- const distance=6.1/cameraZoom;
+ const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
+ cameraTarget.set(player.position.x,
+  LADDER_STATE.active?player.position.y+height:ground+height,
+  player.position.z);
+ const distance=(LADDER_STATE.active?4.7:6.1)/cameraZoom;
  cameraDesired.set(
   cameraTarget.x-Math.sin(cameraHeading)*distance,
   cameraTarget.y+Math.sin(cameraPitch)*distance,
