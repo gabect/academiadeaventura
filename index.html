@@ -30,31 +30,36 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.19.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Explore the stone steps to the wooden balcony on the right.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.19.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.20.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Explore the stone steps to the wooden balcony on the right.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.20.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.19.1';let pendingBuild=null;
+const BUILD='0.20.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
-const camera=new THREE.OrthographicCamera(-10,10,6,-6,.1,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
-// Camera zoom stays centered on the player and preserves the isometric perspective.
-const ZOOM_MIN=.70,ZOOM_MAX=3.5;
+const camera=new THREE.PerspectiveCamera(58,16/9,.08,100);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+// Perspective chase camera; zoom changes follow distance, not projection.
+const ZOOM_MIN=.70,ZOOM_MAX=2.6;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
+let cameraZoom=1,cameraHeading=Math.PI,cameraReady=false;
+const cameraTarget=new THREE.Vector3();
+const cameraDesired=new THREE.Vector3();
+const cameraDelta=new THREE.Vector3();
+const cameraRay=new THREE.Raycaster();
+const cameraOccluders=[];
 function setCameraZoom(next){
- camera.zoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
- camera.updateProjectionMatrix();
- zoomInButton.disabled=camera.zoom>=ZOOM_MAX-.001;
- zoomOutButton.disabled=camera.zoom<=ZOOM_MIN+.001;
+ cameraZoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
+ zoomInButton.disabled=cameraZoom>=ZOOM_MAX-.001;
+ zoomOutButton.disabled=cameraZoom<=ZOOM_MIN+.001;
 }
-zoomInButton.addEventListener('click',()=>setCameraZoom(camera.zoom*1.25));
-zoomOutButton.addEventListener('click',()=>setCameraZoom(camera.zoom/1.25));
+zoomInButton.addEventListener('click',()=>setCameraZoom(cameraZoom*1.25));
+zoomOutButton.addEventListener('click',()=>setCameraZoom(cameraZoom/1.25));
 for(const button of [zoomInButton,zoomOutButton]){
  for(const eventName of ['contextmenu','selectstart','dragstart']){
   button.addEventListener(eventName,e=>e.preventDefault());
@@ -63,7 +68,7 @@ for(const button of [zoomInButton,zoomOutButton]){
 renderer.domElement.style.touchAction='none';
 renderer.domElement.addEventListener('wheel',e=>{
  e.preventDefault();
- if(e.deltaY!==0)setCameraZoom(camera.zoom*(e.deltaY<0?1.12:1/1.12));
+ if(e.deltaY!==0)setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
 },{passive:false});
 // Pinch on the 3D canvas; joystick and action-button pointer events stay independent.
 const zoomPointers=new Map();
@@ -84,7 +89,7 @@ renderer.domElement.addEventListener('pointermove',e=>{
  e.preventDefault();
  const [a,b]=[...zoomPointers.values()];
  const distance=Math.hypot(a.x-b.x,a.y-b.y);
- if(pinchDistance>0&&distance>0)setCameraZoom(camera.zoom*distance/pinchDistance);
+ if(pinchDistance>0&&distance>0)setCameraZoom(cameraZoom*distance/pinchDistance);
  pinchDistance=distance;
 },{passive:false});
 for(const type of ['pointerup','pointercancel','lostpointercapture']){
@@ -121,7 +126,7 @@ function addRailCollider(minX,maxX,minZ,maxZ){
  BALCONY_RAIL_COLLIDERS.push({minX,maxX,minZ,maxZ});
 }
 const FLOOR_DECAL_OFFSET=.002;
-box(36,.5,36,grass,0,-.3,0); // top face = -.05
+const groundMesh=box(36,.5,36,grass,0,-.3,0); // top face = -.05
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
 pavement.rotation.x=-Math.PI/2;
 pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
@@ -848,10 +853,11 @@ function stepLocomotion(dt,right,forward,runEnabled){
  let dx=0,dz=0;
  if(len>.03){
   right/=len;forward/=len;
-  dx=right*.794-forward*.608;
-  dz=-right*.608-forward*.794;
-  const yaw=Math.atan2(dx,dz);
-  player.rotation.y=yaw;
+  // The joystick is camera-relative: forward goes toward the horizon,
+  // right goes toward the right edge of the third-person screen.
+  dx=forward*Math.sin(cameraHeading)-right*Math.cos(cameraHeading);
+  dz=forward*Math.cos(cameraHeading)+right*Math.sin(cameraHeading);
+  player.rotation.y=Math.atan2(dx,dz);
  }
  const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
  if(len>.03&&wasStopped&&gait.moveBlend<.03){
@@ -887,9 +893,43 @@ function stepLocomotion(dt,right,forward,runEnabled){
  gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled&&!crouched&&!crawling?1:0,8,dt);
  poseGroundedCharacter(player,Math.hypot(xDelta,zDelta),dt);
 }
-const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
+const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
 prepareFeet(player);
+// Cache architecture only for camera obstruction rays; never collide with
+// the animated skeleton, guardian or flat ground.
+for(const obj of scene.children){
+ if(obj===player||obj===guardian||obj===groundMesh||obj===pavement)continue;
+ obj.traverse(node=>{
+  if(node.isMesh&&node.geometry!==tileGeometry)cameraOccluders.push(node);
+ });
+}
+function followPlayerCamera(dt){
+ const targetHeading=player.rotation.y;
+ const angle=Math.atan2(Math.sin(targetHeading-cameraHeading),
+  Math.cos(targetHeading-cameraHeading));
+ cameraHeading+=angle*(1-Math.exp(-5*dt));
+ const height=crawling?.42:crouched?.75:1.10;
+ cameraTarget.set(player.position.x,player.position.y+height,player.position.z);
+ const distance=6.1/cameraZoom;
+ cameraDesired.set(
+  cameraTarget.x-Math.sin(cameraHeading)*distance,
+  cameraTarget.y+Math.max(1.0,2.45/cameraZoom),
+  cameraTarget.z-Math.cos(cameraHeading)*distance
+ );
+ // Push the camera forward when tower, balcony or railing blocks the view.
+ cameraDelta.subVectors(cameraDesired,cameraTarget);
+ const total=cameraDelta.length();
+ cameraRay.set(cameraTarget,cameraDelta.normalize());
+ cameraRay.far=total;
+ const hit=cameraRay.intersectObjects(cameraOccluders,false)[0];
+ if(hit)cameraDesired.copy(cameraTarget).addScaledVector(
+  cameraDelta,Math.max(.6,hit.distance-.20));
+ if(!cameraReady){
+  camera.position.copy(cameraDesired);cameraReady=true;
+ }else camera.position.lerp(cameraDesired,1-Math.exp(-8*dt));
+ camera.lookAt(cameraTarget);
+}
 // Lightweight collision footprints, independent of meshes and shadows.
 const PLAYER_RADIUS=.43;
 const obstacles=[
@@ -1588,9 +1628,8 @@ function animate(){
   stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched&&!crawling);
   stepJump(dt);
  }
- camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);
- camera.lookAt(player.position.x,player.position.y+1,player.position.z);
+ followPlayerCamera(dt);
  marker.rotation.y+=dt;renderer.render(scene,camera);
 }
-function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
+function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>
