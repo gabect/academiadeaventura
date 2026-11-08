@@ -1156,7 +1156,11 @@ function stepLocomotion(dt,right,forward,runEnabled){
   // right goes toward the right edge of the third-person screen.
   dx=forward*Math.sin(cameraHeading)-right*Math.cos(cameraHeading);
   dz=forward*Math.cos(cameraHeading)+right*Math.sin(cameraHeading);
+  const previousFacing=player.rotation.y;
   player.rotation.y=Math.atan2(dx,dz);
+  if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
+      groundTopAt(player.position.x,player.position.z),true))
+   player.rotation.y=previousFacing;
  }
  const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
  if(len>.03&&wasStopped&&gait.moveBlend<.03){
