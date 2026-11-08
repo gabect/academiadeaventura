@@ -5,15 +5,23 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD or arrow keys to move; E to talk to the guardian.
-- **Touchscreen:** use the circular left joystick to move; tap **Talk** to interact.
-- **Run:** tap **Run** to enable faster movement and **Walk** to return to walking; running also applies to keyboard movement.
+- **Keyboard:** WASD or arrow keys to move; E / A to interact; hold Shift to run; Space / B to jump; C to crouch/cancel; R to stand after falling.
+- **Touchscreen:** left analog joystick for movement, and three compact contextual buttons at bottom right: **A** = interact / talk; **B** = press and hold to run, tap to jump, or press after a fall to stand up; **C** = cancel an active conversation or toggle crouch when no dialog is open. Hold C is not required. B's quick-tap jump and press-and-hold run are mutually exclusive.
+- **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
-- **Falling:** the player first tries to regain balance when physically overextended or struck; touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
+- **Falling:** the player first tries to regain balance when physically overextended or struck; press **B** (or keyboard R) after a fall to stand. The dedicated Stand Up button was removed. Use `?debug=1` to expose the QA-only **Fall** button.
 - **Motor Control:** spend XP with **+ Balance** at the top left. The guardian's three-question trial grants 25 XP once and 10 XP for each completed practice round afterward.
 
-## Current version: 0.12.0 — November 8, 2026
+## Current version: 0.13.0 — November 8, 2026
+- **Real A/B/C control implementation** in the main GitHub Pages project; no image-only UI mockup. The lower-right cluster has smaller touch buttons (roughly 43–72px, even more compact in landscape).
+- **A: interact** with NPCs and initiate educational dialogs; future contextual item grabbing remains unimplemented until pick-up objects exist.
+- **B: context-sensitive movement.** Hold it to sprint, release to stop sprinting; quick tap on B triggers a simple gravity-based hop. When the avatar is fallen, press B to stand after the normal 1.35-second fall delay. Shift on keyboard also runs; Space/B jumps.
+- **C: cancel or crouch.** If a quiz/dialog is open, C or Escape closes it. Otherwise C toggles a short crouch posture with reduced movement speed; pressing again returns upright. The on-screen label updates with context.
+- **Safety and touch behavior:** B uses pointer capture to avoid stuck sprint if a finger slides off it. Window blur or visibility loss clears active movement inputs. The old dedicated Run, Talk and Stand Up buttons have been replaced.
+- **QA still required:** check click/touch gestures on actual Android/Chromebook, especially short tap B vs held B, A interaction, C cancel, crouch, jump elevation/landing and stand-up after ragdoll. Jump/crouch are lightweight prototype motion, not full rigid-body motor simulation.
+
+## Previous version: 0.12.0 — November 8, 2026
 - **Protective balance reflex for every player:** dangerous foot overreach/joint angles and hard sprint impacts first trigger an automatic counterbalance animation (arms extend, knees bend and a catch step attempts to regain footing). The reflex succeeds only when severity is within the current skill threshold; otherwise it transitions to a ragdoll fall. It is an approximated gameplay reflex, not full active-body physics.
 - **Optional Motor Control / Balance progression:** the top-left status panel shows available XP and Balance level (1–4). The **+ Balance** button costs **20, 30, then 40 XP** for successive levels; upgrades increase the threshold for successful recovery attempts. No character sex or height selection is required; the basic reflex belongs to everyone.
 - **Earnable progression:** the guardian's first three-question trial grants **25 XP**, and completing subsequent rounds grants **10 XP per round**, making all Balance upgrades attainable. XP, quest completion and skill level are stored locally in the browser, not in a server-side account.
@@ -54,10 +62,11 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - Additional minimum-separation constraints help prevent elbows and knees from folding into implausibly sharp angles.
 - A touch-friendly **Stand Up** button appears after the body falls; press **R** on the keyboard to stand up. Recovery finds a clear nearby position, restores upright locomotion and includes a short cooldown.
 - The fall temporarily disables movement, Run and Talk; camera follow, English UI, zoom, educational quest and current map are otherwise preserved.
-- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.12.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
+- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.13.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.13.0 (2026-11-08):** compact working contextual A/B/C touch controls, B sprint hold and tap jump/fall recovery, C cancel/crouch, Shift sprint and Space jump.
 - **0.12.0 (2026-11-08):** automatic protective balance/catch-step animation; upgradeable motor skill (Balance levels 1–4) using XP; repeatable quiz XP; softer ragdoll limb settling and safer sleep gating.
 - **0.11.0 (2026-11-07):** lightweight anatomical rib cage + sternum reused across standing and fallen characters; neutral 12–13-year-old proportions, additional torso clearance.
 - **0.10.0 (2026-11-07):** shared anatomical torso skeleton across live and ragdoll states, hidden physics-only braces and consistent materials.
@@ -77,7 +86,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.12.1, feature 0.13.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.13.1, feature 0.14.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
