@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.25.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.25.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.26.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.26.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.25.0';let pendingBuild=null;
+const BUILD='0.26.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -178,13 +178,13 @@ const WALL_TRAINING={
  minX:-4.75,maxX:-2.25,minZ:-12.35,maxZ:-10.50,topY:2.0
 };
 const LADDER={
- // A permanent vertical ladder: rails and rungs remain parallel to the wall.
- // Small mounting brackets provide foot clearance without any lean.
+ // Vertical, bracket-mounted ladder. The open top rung area lets the
+ // climber transfer at the wall lip instead of walking through crossbars.
  x:-3.50,wallZ:WALL_TRAINING.maxZ,standoff:.16,
  bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
- railTopY:WALL_TRAINING.topY+1.20,
- width:.70,rungSpacing:.27,climbSpeed:.79,
- bottomExitZ:-9.08,topExitZ:-11.14
+ railTopY:WALL_TRAINING.topY+.18,rungTopY:WALL_TRAINING.topY-.10,
+ width:.70,rungSpacing:.27,climbSpeed:.79,topRootProgress:.86,
+ bottomExitZ:-9.08,topExitZ:WALL_TRAINING.maxZ-.19
 };
 const BALCONY_RAIL_COLLIDERS=[];
 const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
@@ -345,7 +345,7 @@ function buildWallMountedLadder(){
    rod(group,[x,y,LADDER.wallZ+.008],[x,y,z],.034,mountMat);
   rod(group,[x,baseY,z],[x,topY,z],.052,side);
  }
- for(let y=LADDER.bottomY+.22;y<LADDER.railTopY-.11;y+=LADDER.rungSpacing)
+ for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;y+=LADDER.rungSpacing)
   rod(group,[left,y,z],[right,y,z],.044,rungMat);
 }
 for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
@@ -602,16 +602,19 @@ function ladderEntry(){
     Math.abs(x-LADDER.x)<.68&&
     z>ladderZAtHeight(LADDER.bottomY)+.42&&
     z<LADDER.bottomExitZ+.25)return 'bottom';
+ // The descent starts only at the actual top lip, not a distant point
+ // from which the avatar would need to glide across the masonry.
  if(level>LADDER.deckY-.12&&
-    Math.hypot(x-LADDER.x,z-LADDER.topExitZ)<1.10)return 'top';
+    Math.abs(x-LADDER.x)<.58&&
+    z>=LADDER.topExitZ-.48&&z<=LADDER.wallZ-.10)return 'top';
  return null;
 }
 function startLadder(){
  const entry=ladderEntry();
  if(!entry||FALL.active||BALANCE.active||JUMP.active||challengeOpen)return false;
  const climb=LADDER_STATE;
- climb.active=true;climb.mode='enter';climb.time=0;
- climb.progress=entry==='top'?1:0;
+ climb.active=true;climb.mode=entry==='top'?'mount':'enter';climb.time=0;
+ climb.progress=entry==='top'?LADDER.topRootProgress:0;
  climb.direction=entry==='top'?-1:1;
  climb.cycle=0;
  climb.handHeights=[null,null];climb.footHeights=[null,null];
@@ -660,10 +663,62 @@ function finishLadder(){
 }
 function ladderRungAt(y){
  const first=LADDER.bottomY+.22;
- const last=Math.floor((LADDER.railTopY-.11-first)/LADDER.rungSpacing);
+ const last=Math.floor((LADDER.rungTopY-first-.00001)/LADDER.rungSpacing);
  const index=THREE.MathUtils.clamp(
   Math.round((y-first)/LADDER.rungSpacing),0,last);
  return first+index*LADDER.rungSpacing;
+}
+// Explicit ledge contacts for dismounting and reversing into the ladder.
+// The standing side is the stone wall (negative Z). The climber backs
+// outward (+Z), with one foot reaching a rung before lowering the hips.
+function ladderEase(a,b,t){
+ const v=THREE.MathUtils.clamp((t-a)/(b-a),0,1);
+ return v*v*(3-2*v);
+}
+function poseLadderTransfer(dt,t,descending){
+ const rig=player.userData.rig;
+ setIdlePose(player);
+ const bend=descending?
+  .46*Math.sin(Math.PI*t)+.22*ladderEase(.65,1,t):
+  .24*(1-ladderEase(.35,1,t))+.15*Math.sin(Math.PI*t);
+ rig.torso.rotation.x=bend;
+ rig.head.rotation.x=-.13*Math.sin(Math.PI*t);
+ const c=Math.cos(player.rotation.y),si=Math.sin(player.rotation.y);
+ const rungZ=ladderZAtHeight(LADDER.deckY);
+ const footOnWallY=LADDER.deckY+TERRAIN.soleClearance;
+ const upper=ladderRungAt(LADDER.deckY-.20);
+ const lower=ladderRungAt(LADDER.deckY-.48);
+ for(let i=0;i<2;i++){
+  // For ascent, the first foot steps over the lip, then the second.
+  // For descent, the first foot searches for a rung BEFORE the torso
+  // moves outward; the second follows as weight shifts to the ladder.
+  const wallFoot=descending?
+   1-ladderEase(i===0?.30:.53,i===0?.65:.94,t):
+   ladderEase(i===0?.23:.56,i===0?.62:.96,t);
+  const goalZ=THREE.MathUtils.lerp(rungZ,LADDER.topExitZ-.05,wallFoot);
+  const goalY=THREE.MathUtils.lerp(
+   i===0?upper:lower,footOnWallY,wallFoot);
+  const goalX=LADDER.x+(i===0?.20:-.20);
+  const dx=goalX-player.position.x,dz=goalZ-player.position.z;
+  const leg=rig.legs[i];
+  solveLegTarget(leg,c*dx-si*dz,goalY-player.position.y,
+   si*dx+c*dz,.09);
+  const weight=descending?ladderEase(.10,.44,t):
+   1-ladderEase(.76,1,t);
+  leg.hip.rotation.x*=weight;leg.hip.rotation.z*=weight;
+  leg.knee.rotation.x*=weight;leg.ankle.rotation.x*=weight;
+ }
+ player.updateMatrixWorld(true);
+ const handWeight=descending?ladderEase(.10,.40,t):
+  1-ladderEase(.50,.98,t);
+ for(let i=0;i<2;i++){
+  // Fixed grip on the two short handholds, never through a cross-rung.
+  LADDER_TMP.set(LADDER.x+(i===0?.34:-.34),
+   LADDER.deckY+.09,rungZ);
+  LADDER_LOCAL.copy(LADDER_TMP);
+  rig.torso.worldToLocal(LADDER_LOCAL);
+  aimArmAt(rig.arms[i],LADDER_LOCAL,i===0?-1:1,handWeight);
+ }
 }
 function poseLadder(dt,weight,moving){
  const rig=player.userData.rig,climb=LADDER_STATE;
@@ -707,9 +762,10 @@ function stepLadder(dt,verticalInput){
  if(!climb.active)return;
  const input=THREE.MathUtils.clamp(verticalInput,-1,1);
  if(climb.mode==='enter'){
+  // Ground-level grab; no change to the normal automatic climb.
   climb.time+=dt;
   const t=THREE.MathUtils.clamp(climb.time/.38,0,1);
-  const ease=t*t*(3-2*t);
+  const ease=ladderEase(0,1,t);
   ladderRootAt(climb.progress,LADDER_TMP);
   player.position.lerpVectors(climb.from,LADDER_TMP,ease);
   const angle=Math.atan2(Math.sin(Math.PI-climb.fromYaw),
@@ -719,28 +775,55 @@ function stepLadder(dt,verticalInput){
   if(t>=1)climb.mode='climb';
   return;
  }
- if(climb.mode==='exit'){
+ if(climb.mode==='mount'){
+  // To go DOWN: face inward, lower into a crouch, feel for the first
+  // rung with one foot, back over the rim, and finally lower the hips.
   climb.time+=dt;
-  const t=THREE.MathUtils.clamp(climb.time/.58,0,1);
-  const ease=t*t*(3-2*t);
-  if(climb.toTop){
-   // First rise above the masonry, then step across its top edge.
-   const up=THREE.MathUtils.clamp(t/.45,0,1);
-   const across=THREE.MathUtils.clamp((t-.45)/.55,0,1);
-   const rise=up*up*(3-2*up),step=across*across*(3-2*across);
-   player.position.set(climb.from.x,
-    THREE.MathUtils.lerp(climb.from.y,climb.target.y,rise),
-    THREE.MathUtils.lerp(climb.from.z,climb.target.z,step));
-  }else{
-   player.position.lerpVectors(climb.from,climb.target,ease);
-   player.rotation.y=Math.PI;
+  const t=THREE.MathUtils.clamp(climb.time/1.18,0,1);
+  const yawEase=ladderEase(0,.26,t);
+  const angle=Math.atan2(Math.sin(Math.PI-climb.fromYaw),
+   Math.cos(Math.PI-climb.fromYaw));
+  player.rotation.y=climb.fromYaw+angle*yawEase;
+  const stepBack=ladderEase(.34,.78,t);
+  const lower=ladderEase(.78,1,t);
+  ladderRootAt(LADDER.topRootProgress,LADDER_TMP);
+  player.position.set(
+   THREE.MathUtils.lerp(climb.from.x,LADDER.x,stepBack),
+   THREE.MathUtils.lerp(climb.from.y,LADDER_TMP.y,lower),
+   THREE.MathUtils.lerp(climb.from.z,LADDER_TMP.z,stepBack));
+  poseLadderTransfer(dt,t,true);
+  if(t>=1){
+   climb.mode='climb';climb.direction=-1;
+   climb.handHeights=[null,null];climb.footHeights=[null,null];
   }
-  poseLadder(dt,1-ease,false);
-  if(t>=1)finishLadder();
   return;
  }
- // A / Action starts an automatic journey. Strong W/S or joystick input
- // can reverse it; release continues toward the selected landing.
+ if(climb.mode==='exit'){
+  climb.time+=dt;
+  if(climb.toTop){
+   // To go UP: the player braces on the lip, pushes vertically,
+   // then steps a SHORT distance onto the wall, above the last rung.
+   const t=THREE.MathUtils.clamp(climb.time/.92,0,1);
+   const push=ladderEase(0,.53,t);
+   const step=ladderEase(.53,1,t);
+   player.position.set(climb.from.x,
+    THREE.MathUtils.lerp(climb.from.y,climb.target.y,push),
+    THREE.MathUtils.lerp(climb.from.z,climb.target.z,step));
+   player.rotation.y=Math.PI;
+   poseLadderTransfer(dt,t,false);
+   if(t>=1)finishLadder();
+  }else{
+   // The lower release backs away from the wall, not through it.
+   const t=THREE.MathUtils.clamp(climb.time/.58,0,1);
+   const ease=ladderEase(0,1,t);
+   player.position.lerpVectors(climb.from,climb.target,ease);
+   player.rotation.y=Math.PI;
+   poseLadder(dt,1-ease,false);
+   if(t>=1)finishLadder();
+  }
+  return;
+ }
+ // One press A/E begins an automatic trip. Joystick/W/S may reverse.
  if(input>.24)climb.direction=1;
  else if(input<-.24)climb.direction=-1;
  const before=climb.progress;
@@ -752,7 +835,8 @@ function stepLadder(dt,verticalInput){
  ladderRootAt(climb.progress,player.position);
  player.rotation.y=Math.PI;
  poseLadder(dt,1,Math.abs(delta)>.00001);
- if(climb.direction>0&&climb.progress>=.995)startLadderExit(true);
+ if(climb.direction>0&&climb.progress>=LADDER.topRootProgress)
+  startLadderExit(true);
  if(climb.direction<0&&climb.progress<=.005)startLadderExit(false);
 }
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
@@ -1312,7 +1396,7 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
     const dz=pz-ladderZ;
     if(dx*dx+dz*dz<(r+.052)*(r+.052))return false;
    }
-   for(let y=LADDER.bottomY+.22;y<LADDER.railTopY-.11;
+   for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;
        y+=LADDER.rungSpacing){
     if(y+.044<bottom||y-.044>top)continue;
     const dx=px-THREE.MathUtils.clamp(px,
