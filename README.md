@@ -13,7 +13,14 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.15.0 — November 8, 2026
+## Current version: 0.15.1 — November 8, 2026
+- **Paving at ground level:** the main courtyard pavement is a flat horizontal surface on the same physical plane as the grass (both **Y = −0.05**). The previous elevated stone slab was removed. Stone paving markers are also flat visual decals, rather than raised blocks.
+- **Visual layers versus physics:** ultra-thin rendering offsets avoid flickering where the paving and grass are drawn together; they are not steps or collision heights. Crouch, walk, run, jump and foot IK all reference one continuous ground height across the grass/pavement boundary.
+- **Future elevated structures:** introduced an empty `WALKABLE_ELEVATIONS` registry for explicitly walkable stairs, stages and platforms. A future object only raises foot support when its surface is registered with `walkable: true` and bounds/top height. Decorative and non-walkable interactive objects remain separate obstacles; no stairs or stages are being added by this patch.
+- **Preserved:** tactical crouch, A/B/C touchscreen controls, Agile XP progression, guardian trial, zoom, trees/walls collisions and disabled falls.
+- **Device QA needed:** verify the level seam between grass and pavement from multiple zooms and foot placement when crossing that seam. Future elevated walkable assets require separate collision/step-up implementation before production use.
+
+## Previous version: 0.15.0 — November 8, 2026
 - **True multi-surface ground sampling:** ground contact is now taken from the exact top faces of the scene's grass (-0.05), central stone slab (+0.08), and raised stone tiles (+0.125) rather than a universal ground height. Ankles target the sampled surface plus a sole-clearance offset; a smoothed terrain lift adjusts pelvis/root height.
 - **Tactical crouch replaces fake sinking:** pressing C transitions into a coordinated low stance with the pelvis lowered through the same grounded inverse-kinematics leg solver. The old post-animation `player.position.y -= .13` and ad-hoc knee angle offsets were removed.
 - **Stable foot placement on grass and stone:** crouching while still uses leg IK even when walking blend is zero. Supporting feet preserve their world x/z anchor and continually resample the height below them. Swing feet interpolate between measured ground heights, improving stone-edge and tile transitions.
@@ -83,6 +90,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.15.1 (2026-11-08):** flattened stone pavement and paving detail to grass ground level; separated rendered markings from physical walkable elevation.
 - **0.15.0 (2026-11-08):** terrain-aware feet on grass, stone and raised tiles; IK-grounded unarmed tactical crouch, shorter crouched strides, no fake sinking.
 - **0.14.0 (2026-11-08):** fall feature disabled; permanent reflex recovery; Agility XP progression preserving legacy Balance levels; removed debug Fall and stand-up actions.
 - **0.13.0 (2026-11-08):** compact working contextual A/B/C touch controls, B sprint hold and tap jump/fall recovery, C cancel/crouch, Shift sprint and Space jump.
@@ -105,7 +113,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.15.1, feature 0.16.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.15.2, feature 0.16.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
