@@ -10,9 +10,18 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Run:** tap **Run** to enable faster movement and **Walk** to return to walking; running also applies to keyboard movement.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
-- **Falling:** touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
+- **Falling:** the player first tries to regain balance when physically overextended or struck; touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
+- **Motor Control:** spend XP with **+ Balance** at the top left. The guardian's three-question trial grants 25 XP once and 10 XP for each completed practice round afterward.
 
-## Current version: 0.11.0 — November 7, 2026
+## Current version: 0.12.0 — November 8, 2026
+- **Protective balance reflex for every player:** dangerous foot overreach/joint angles and hard sprint impacts first trigger an automatic counterbalance animation (arms extend, knees bend and a catch step attempts to regain footing). The reflex succeeds only when severity is within the current skill threshold; otherwise it transitions to a ragdoll fall. It is an approximated gameplay reflex, not full active-body physics.
+- **Optional Motor Control / Balance progression:** the top-left status panel shows available XP and Balance level (1–4). The **+ Balance** button costs **20, 30, then 40 XP** for successive levels; upgrades increase the threshold for successful recovery attempts. No character sex or height selection is required; the basic reflex belongs to everyone.
+- **Earnable progression:** the guardian's first three-question trial grants **25 XP**, and completing subsequent rounds grants **10 XP per round**, making all Balance upgrades attainable. XP, quest completion and skill level are stored locally in the browser, not in a server-side account.
+- **Softer ragdoll limb settling:** gravity pulls elbows, wrists, hands, knees, ankles and toes downward while maintaining connected bone lengths and simple joint safety constraints. Physics sleeping now requires a low torso/head position and reasonably settled limbs; this reduces frozen raised limbs, but does not guarantee exact real-world biomechanics.
+- **Shared anatomy retained:** one juvenile ribcage with three pairs of ribs, sternum, spine and pelvis remains consistent across walking, sprinting, attempted balance recovery and falling. Existing collisions, camera zoom, joystick, education and **Stand Up** remain available.
+- **QA still needed:** test reflexes at different levels, each XP upgrade and persistence after a reload, falls next to walls/trees, loose arm/leg resting, and mobile/Chromebook framerate. A syntax check alone cannot establish visual or collision correctness.
+
+## Previous version: 0.11.0 — November 7, 2026
 - **Juvenile anatomy (ages 10–15):** introduced a neutral **12–13-year-old** reference profile with a slightly smaller head, narrower shoulders and shorter upper torso, while retaining the existing leg lengths, IK foot planting and run/walk speeds. This is a stylized, not clinical, anatomical proportion target.
 - **Shared 3D rib cage:** added three pairs of gently curved low-poly ribs and a sternum in front of the spine; pelvis, split spine, clavicles and neck remain visible as thin bones. The rib cage is an identifiable lightweight skeleton structure rather than a solid chest mesh or clothing.
 - **One visual mesh across states:** the actual rib-cage object re-parents from the standing humanoid to the ragdoll on falling, follows a chest-oriented frame estimated from the falling chest, lower spine and shoulders, and returns to the upright rig on **Stand Up**. No ribs appear or disappear during state transitions.
@@ -45,10 +54,11 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - Additional minimum-separation constraints help prevent elbows and knees from folding into implausibly sharp angles.
 - A touch-friendly **Stand Up** button appears after the body falls; press **R** on the keyboard to stand up. Recovery finds a clear nearby position, restores upright locomotion and includes a short cooldown.
 - The fall temporarily disables movement, Run and Talk; camera follow, English UI, zoom, educational quest and current map are otherwise preserved.
-- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.11.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
+- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.12.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.12.0 (2026-11-08):** automatic protective balance/catch-step animation; upgradeable motor skill (Balance levels 1–4) using XP; repeatable quiz XP; softer ragdoll limb settling and safer sleep gating.
 - **0.11.0 (2026-11-07):** lightweight anatomical rib cage + sternum reused across standing and fallen characters; neutral 12–13-year-old proportions, additional torso clearance.
 - **0.10.0 (2026-11-07):** shared anatomical torso skeleton across live and ragdoll states, hidden physics-only braces and consistent materials.
 - **0.9.2 (2026-11-07):** fixed half-standing ragdoll by sustaining a bounded tipping moment until ground contact, and only permitting physics sleep once the body is down.
@@ -67,7 +77,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.11.1, feature 0.12.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.12.1, feature 0.13.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
