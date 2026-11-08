@@ -13,7 +13,13 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.23.0 — November 8, 2026
+## Current version: 0.23.1 — November 8, 2026
+- **Ladder limb crossing fix:** when facing toward the north wall (world yaw PI), the left leg/arm targets must be on the world +X side and the right leg/arm targets on world -X. The previous global-space signs were reversed, making the limbs cross in front of the torso. Both handed and foot rung targets are corrected; the existing ladder IK/controller is reused.
+- **No apparent automatic wall climbing without A:** the ordinary grounded body height now follows the walkable surface directly beneath the character center, rather than taking the *maximum* height below any foot. A separate sole-height guard permits normal 0.30-unit stone stair steps but refuses to plant a foot on the 2.00-unit wall when the center is still at courtyard level. Pressing A/E is still the only trigger to enter the ladder state.
+- **Scope:** targeted replacements only; no new climbing controller, change to the north wall, or deletion of other locomotion modes. The 40-degree camera, Agility progress, military crouch/crawl and regular stairs remain intact.
+- **Verification:** JavaScript module syntax, unique ladder-start call site, side assignment and grounded-height guards checked. Full mobile animation QA remains necessary.
+
+## Previous version: 0.23.0 — November 8, 2026
 - The **existing** leaning wooden ladder was relocated from the deck to a short stone training section of the **north courtyard wall** (X -4.75 to -2.25, Z -12.35 to -10.50). The wall top at Y 2.0 is walkable, with parapets and a central ladder gap. The balcony's missing east railing was restored.
 - **Automatic climb and dismount:** approach the ladder foot and tap A / Action (E on keyboard) once. The avatar climbs and steps onto the stone wall automatically, without holding the joystick or requiring a final push. From the wall top, tap A/E to descend automatically. Manual W/S or joystick up/down can reverse direction.
 - **C / Exit** sends the avatar toward a safe landing through the ladder; when close enough to the wall top it completes the ascent, otherwise it returns to the courtyard. Jump/sprint are still disabled while climbing. The existing skeletal IK, camera and collision systems are reused.
@@ -183,6 +189,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.23.1 (2026-11-08):** fixed left/right hands and legs crossing on the north-facing ladder; prevented feet sampling an unreachable wall top and visually lifting the body without A.
 - **0.23.0 (2026-11-08):** moved ladder to the north wall, repaired auto-dismount and simplified A/E single-tap interaction, restored balcony railing.
 - **0.22.0 (2026-11-08):** leaning ladder beside balcony, opening in safety rail, E/A entry, W/S/joystick climb, procedural rung-contact animation, C safe exit and climb camera follow.
 - **0.21.0 (2026-11-08):** 40° deferred smooth-follow camera, WASD movement/arrow-key manual camera, one-finger drag/two-finger pinch, bounded Ctrl+Z/↶ camera undo.
