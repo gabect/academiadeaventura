@@ -5,15 +5,23 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 **Play:** https://gabect.github.io/academiadeaventura/
 
 ## Controls
-- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; C to crouch/cancel. **R no longer serves a stand-up action**.
-- **Touchscreen:** left analog joystick for movement, and compact lower-right A/B/C controls: **A** = interact/talk; **B** = hold to run or tap to jump; **C** = close a dialog, otherwise toggle crouch. No fall/stand-up mode. B's tap and hold controls are mutually exclusive.
+- **Keyboard:** WASD or arrow keys to move; E to interact; hold Shift to run; Space / B to jump; **tap C** for crouch/stand, **hold C ~0.52 seconds** to enter/leave low crawl; Escape cancels dialogs. **R no longer serves a stand-up action**.
+- **Touchscreen:** left joystick and compact lower-right A/B/C: **A** = interact/talk; **B** = hold to run or tap to jump; **C** = tap to crouch/stand, hold for ~0.52 seconds to crawl or return to crouch. In crawl, B's run/jump is disabled until the player rises. C also cancels open dialogs. No fall/stand-up mode.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.16.1 — November 8, 2026
+## Current version: 0.17.0 — November 8, 2026
+- **New unarmed low military crawl:** a distinct procedural crawl locomotion state, not a stretched crouch animation. The pelvis and chest descend toward the ground, the torso pitches forward, and the hands and bent knees/legs alternate in diagonally coordinated support/swing pairs.
+- **Distance-driven contacts:** each hand and foot has a world-anchored planted position and a lifted, interpolated swing phase. Opposite arms and legs share a movement phase. The cycle advances with real courtyard distance traveled, rather than an in-place timer; idle limbs rest against the ground. This is a kinematic simulation, **not** force-driven rigid-body locomotion.
+- **Control C:** short tap toggles crouch/stand, while holding **C** for about 0.52 seconds toggles low crawl. From crawl, either tap or hold C rises back to tactical crouch; another tap stands. Supported via Android pointer capture and keyboard C key holds (Escape still cancels dialogs). A/B are unchanged, but B run/jump is disabled while crawling.
+- **Low crawl motion:** approximately 0.90 world units/s (28% of walking speed), grounded palms/hands, short knee/leg slides and reach steps, minimal bobbing and a lowered torso with head counter-rotation. The same teenager rig and ribcage are reused; no weapons or new assets.
+- **Preserved:** level grass/pavement, all solid-object collisions, crouch/kneel transitions, guardian quiz, Agility XP saves, joystick, camera zoom, no-falling gameplay, and English UI.
+- **QA priority:** on-device test hold vs tap C, side-view hand/knee/foot contacts, crossing grass/pavement, running B while crawling, stopping/reversing motion, and return to crouch and standing. Source syntax, structural and sample leg-reach checks passed; no claim of full live mobile validation.
+
+## Previous version: 0.16.1 — November 8, 2026
 - **Tactical crouch upper body:** a more pronounced forward lean from the pelvis in the low posture (roughly 25–31 degrees) and counter-rotated neck/head so the face remains oriented forward rather than looking down.
 - **Anatomically controlled hands:** a lightweight two-segment arm IK solver places each wrist near a reachable 3D goal. In a stationary one-knee kneel, the **right wrist follows the forward right knee** and the hand settles close to it; the **left arm stays bent, forward of the chest for balance**. No props or firearms are added.
 - **Moving tactical pose:** as the player shuffles crouched, both arms hold naturally bent guard/balance positions with small gait-linked motion. The right hand blends toward the actual knee only when the low kneeling pause settles, avoiding rigidly attaching it to the knee while walking.
@@ -105,6 +113,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.17.0 (2026-11-08):** low military crawl with paired opposite arm/leg stepping, grounded hand/ankle targets and long-press C controls on touch and keyboard.
 - **0.16.1 (2026-11-08):** forward-leaning tactical torso, horizon-oriented head, two-bone arm IK, right hand follows lead knee at crouch rest and left hand balances.
 - **0.16.0 (2026-11-08):** deeper asymmetric unarmed tactical crouch: right foot forward, left knee touching ground when stopped, shuffled foot transitions and short low steps.
 - **0.15.1 (2026-11-08):** flattened stone pavement and paving detail to grass ground level; separated rendered markings from physical walkable elevation.
@@ -130,7 +139,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.16.2, feature 0.17.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.17.1, feature 0.18.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
