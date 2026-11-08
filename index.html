@@ -158,7 +158,9 @@ const WALKABLE_ELEVATIONS=[];
 const WORLD={half:83,limit:78,plateauHeight:10,faceZ:-16,crestZ:-60};
 const WATER_BODIES=[
  {id:'shallow-pool',kind:'puddle',x:-9,z:7,rx:2.1,rz:1.2,maxDepth:.32},
- {id:'lake-organic',kind:'lake',x:38,z:11,rx:20,rz:26,maxDepth:5.0}
+ {id:'lake-organic',kind:'lake',x:38,z:11,rx:20,rz:26,maxDepth:5.0},
+ {id:'waterfall-plunge',kind:'plunge',x:34,z:-12,
+  rx:5.5,rz:6.1,maxDepth:4.5}
 ];
 // Eight downstream nodes: lake outflow follows the southern edge.
 const RIVER_NODES=[
@@ -1331,7 +1333,7 @@ function updateRegionStatus(){
  else if(water?.body.kind==='upper-river')region='Río de la cumbre';
  else if(z< -32)region='Valle alto';
  else if(x>23&&z< -14&&z> -35)region='Acantilado';
- else if(water?.body.kind==='lake')region='Lago de la cascada';
+ else if(water?.body.kind==='lake'||water?.body.kind==='plunge')region='Lago de la cascada';
  else if(water?.body.kind==='river')region='Río del sur';
  else if(x< -46&&z>13&&z<29)region='Torre de vigilancia';
  else if(x>8&&z>16&&z<29)region='Plataforma del lago';
