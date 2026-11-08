@@ -141,7 +141,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
  });
 }
 setCameraZoom(1);
-scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);
+scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);scene.add(sun.target);
 const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
 const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${n}`;if(!cylCache.has(k))cylCache.set(k,new THREE.CylinderGeometry(rt,rb,h,n));const o=new THREE.Mesh(cylCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
@@ -1006,12 +1006,12 @@ const FIELD_TREE_POSITIONS=[
  [-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15],
  [-24,-4],[-25,5],[-16,23],[9,24],[-8,24],
  [-67,9],[-64,19],[-67,34],[-61,40],[-56,48],[-48,43],
- [-42,47],[-34,41],[-39,24],[-62,-5],[-66,-17],
+ [-42,47],[-34,41],[-39,24],[-62,-5],[-66,-8],
  [-54,-29],[-52,-45],[-43,-50],[-34,-52],[-25,-54],
  [-18,-47],[-6,-55],[2,-47],[10,-46],[16,-53],
  [-73,28],[-72,45],[-59,58],[-26,37],[-3,39],
- [10,38],[5,-2],[-3,-10],[-36,-10],[-46,-22],
- [-64,-37],[-45,-57],[-34,-62],[-24,-66],
+ [10,38],[5,-2],[-3,-10],[-36,-10],[-46,-9],
+ [-64,-37],[-45,-57],[-34,-57],[-21,-55],
  [58,4],[64,12],[58,24],[64,35],[56,43],
  [53,-5],[62,-14],[55,-28],[53,-42]
 ];
@@ -2212,6 +2212,11 @@ function followPlayerCamera(dt){
   cameraLookAt.lerp(cameraTarget,1-Math.exp(-6*dt));
  }
  camera.lookAt(cameraLookAt);
+ // In this much larger world, follow the avatar with the light's local
+ // shadow region. The visual camera heading/pitch remain unchanged.
+ sun.position.set(player.position.x-16,ground+30,player.position.z+17);
+ sun.target.position.set(player.position.x,ground,player.position.z);
+ sun.target.updateMatrixWorld();
 }
 // Lightweight collision footprints, independent of meshes and shadows.
 const PLAYER_RADIUS=.43;
