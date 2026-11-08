@@ -12,7 +12,16 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
 - **Falling:** touch **Stand Up** or press **R** after a fall. Use `?debug=1` while testing to expose the **Fall** button.
 
-## Current version: 0.10.0 — November 7, 2026
+## Current version: 0.11.0 — November 7, 2026
+- **Juvenile anatomy (ages 10–15):** introduced a neutral **12–13-year-old** reference profile with a slightly smaller head, narrower shoulders and shorter upper torso, while retaining the existing leg lengths, IK foot planting and run/walk speeds. This is a stylized, not clinical, anatomical proportion target.
+- **Shared 3D rib cage:** added three pairs of gently curved low-poly ribs and a sternum in front of the spine; pelvis, split spine, clavicles and neck remain visible as thin bones. The rib cage is an identifiable lightweight skeleton structure rather than a solid chest mesh or clothing.
+- **One visual mesh across states:** the actual rib-cage object re-parents from the standing humanoid to the ragdoll on falling, follows a chest-oriented frame estimated from the falling chest, lower spine and shoulders, and returns to the upright rig on **Stand Up**. No ribs appear or disappear during state transitions.
+- **Fall collision clearance:** the chest receives a slightly larger invisible collision radius so the torso can rest on the floor and against solid walls/trunks with less mesh penetration.
+- **Future avatar selection:** a neutral age-reference configuration supports future height/proportion options for ages 10–15. Selecting boy/girl should not require different skeleton topology or sex-specific gait / game advantages; **the chooser itself is not yet implemented**.
+- Preserves zoom, touchscreen controls, speed settings, guardian challenge and existing fall/collision features.
+- **Testing required:** inspect rib alignment from front, side and while falling against walls and trees on mobile. Syntax validation and GitHub publishing do not establish visual or performance perfection.
+
+## Previous version: 0.10.0 — November 7, 2026
 - Unified the standing, walking, running, and falling torso visual topology. The spine now has **pelvis → lower spine → chest → neck → head**, with clavicle-to-shoulder and pelvis-to-hip connections, rather than one long torso stick.
 - Both rendered modes reuse the exact same `TORSO_BONES` definition. The ragdoll retains invisible stabilizing shoulder/hip braces so physics constraints no longer appear as extra bones or diagonal torso sticks.
 - Matched the ragdoll's skin, body and leg materials to the standing avatar. Visible arm, leg, hand and foot segments follow the same anatomy.
@@ -36,10 +45,11 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - Additional minimum-separation constraints help prevent elbows and knees from folding into implausibly sharp angles.
 - A touch-friendly **Stand Up** button appears after the body falls; press **R** on the keyboard to stand up. Recovery finds a clear nearby position, restores upright locomotion and includes a short cooldown.
 - The fall temporarily disables movement, Run and Talk; camera follow, English UI, zoom, educational quest and current map are otherwise preserved.
-- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.10.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
+- **QA fall test:** open `https://gabect.github.io/academiadeaventura/?v=0.11.0&debug=1` to show a temporary **Fall** test button. This additional control is hidden for regular players.
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.11.0 (2026-11-07):** lightweight anatomical rib cage + sternum reused across standing and fallen characters; neutral 12–13-year-old proportions, additional torso clearance.
 - **0.10.0 (2026-11-07):** shared anatomical torso skeleton across live and ragdoll states, hidden physics-only braces and consistent materials.
 - **0.9.2 (2026-11-07):** fixed half-standing ragdoll by sustaining a bounded tipping moment until ground contact, and only permitting physics sleep once the body is down.
 - **0.9.1 (2026-11-07):** corrected wall-induced ragdoll launches, neutralized artificial collision momentum, added wall contact damping and downward startup.
@@ -57,7 +67,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 ## Release process
 1. Change only the components approved for the release.
-2. Increment the semantic version (patch 0.10.1, feature 0.11.0, breaking 1.0.0).
+2. Increment the semantic version (patch 0.11.1, feature 0.12.0, breaking 1.0.0).
 3. Update `BUILD` and the `buildLabel` element in `index.html`.
 4. Update this README with the release date and change summary.
 5. Update `version.json` **last**, after committing the HTML, to let browsers detect the new build.
