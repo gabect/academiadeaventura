@@ -2217,6 +2217,7 @@ function followPlayerCamera(dt){
 const PLAYER_RADIUS=.43;
 const obstacles=[
   ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.48})),
+  ...AMBIENT_NPCS.map(npc=>({x:npc.position.x,z:npc.position.z,r:.60})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.32})),
   {x:guardian.position.x,z:guardian.position.z,r:.76},
   // No outside castle walls or corner obstructions.
@@ -2253,6 +2254,27 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
   if(bottom<FIELD_TOWER.topY-.005&&top>TERRAIN.floorTop&&
      circleTouchesBox(px,pz,r,FIELD_TOWER.minX,FIELD_TOWER.maxX,
       FIELD_TOWER.minZ,FIELD_TOWER.maxZ))return false;
+  // The cabin is closed: the exterior ramp reaches its porch, but no
+  // humanoid can phase through the walls or the locked front facade.
+  if(bottom<CABIN.floorY+2.8&&top>CABIN.floorY-.12&&
+     circleTouchesBox(px,pz,r,CABIN.minX,CABIN.maxX,
+      CABIN.minZ,CABIN.maxZ))return false;
+  // Deck planking is physically solid; crawl underneath only when
+  // there is enough genuine headroom.
+  for(const raised of [
+   {minX:CABIN.minX,maxX:CABIN.maxX,
+    minZ:CABIN.porchMinZ,maxZ:CABIN.porchMaxZ,topY:CABIN.floorY},
+   {minX:LAKE_PLATFORM.minX,maxX:LAKE_PLATFORM.maxX,
+    minZ:LAKE_PLATFORM.minZ,maxZ:LAKE_PLATFORM.maxZ,
+    topY:LAKE_PLATFORM.topY},
+   {minX:LAKE_PLATFORM.maxX,maxX:LAKE_PLATFORM.extensionMaxX,
+    minZ:LAKE_PLATFORM.extensionMinZ,
+    maxZ:LAKE_PLATFORM.extensionMaxZ,topY:LAKE_PLATFORM.topY}
+  ]){
+   if(bottom<raised.topY&&top>raised.topY-.24&&
+      circleTouchesBox(px,pz,r,raised.minX,raised.maxX,
+       raised.minZ,raised.maxZ))return false;
+  }
   // The underside of the timber deck is solid: tall stances cannot walk
   // through it, while genuinely low profiles can fit underneath.
   const deckTop=TERRAIN.floorTop+BALCONY.steps*STEP_HEIGHT;
@@ -2292,6 +2314,9 @@ function canChangePosture(posture){
 }
 function clearPosition(x,z){
  if(x < -BOUND || x > BOUND || z < -BOUND || z > BOUND)return false;
+ // Even an athletic swimmer cannot continue through the inaccessible
+ // cordillera at the headwaters; its distant spring remains visible.
+ if(z< -69)return false;
  for(const o of obstacles){const dx=x-o.x,dz=z-o.z,limit=PLAYER_RADIUS+o.r;
   if(dx*dx+dz*dz<limit*limit)return false;}
  // Railing footprint collisions apply to the entire horizontal player capsule.
