@@ -2361,6 +2361,27 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
       circleTouchesBox(px,pz,r,raised.minX,raised.maxX,
        raised.minZ,raised.maxZ))return false;
   }
+  // Four independent load-bearing cabin posts are collision-solid even
+  // for a player crawling underneath the raised floor.
+  if(bottom<CABIN.floorY&&top>9.95){
+   for(const postX of [CABIN.minX+.42,CABIN.maxX-.42])
+    for(const postZ of [CABIN.minZ+.42,CABIN.maxZ-.42])
+     if(Math.hypot(px-postX,pz-postZ)<r+.19)return false;
+  }
+  // The lake platform's submerged timber legs also have physical volume.
+  if(bottom<LAKE_PLATFORM.topY){
+   for(const postX of [LAKE_PLATFORM.minX+.4,
+    LAKE_PLATFORM.maxX-.45,LAKE_PLATFORM.extensionMaxX-.45]){
+    for(const postZ of [LAKE_PLATFORM.minZ+.4,
+     LAKE_PLATFORM.maxZ-.4]){
+     if(postX>LAKE_PLATFORM.maxX&&
+      (postZ<LAKE_PLATFORM.extensionMinZ||
+       postZ>LAKE_PLATFORM.extensionMaxZ))continue;
+     if(Math.hypot(px-postX,pz-postZ)<r+.14&&
+      top>naturalSurfaceY(postX,postZ))return false;
+    }
+   }
+  }
   // The underside of the timber deck is solid: tall stances cannot walk
   // through it, while genuinely low profiles can fit underneath.
   const deckTop=TERRAIN.floorTop+BALCONY.steps*STEP_HEIGHT;
