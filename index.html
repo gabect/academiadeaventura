@@ -311,7 +311,6 @@ function buildLeaningLadder(){
   rod(group,[ladderXAtHeight(y),y,left],[ladderXAtHeight(y),y,right],
    .044,rungMat);
 }
-buildLeaningLadder();
 for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
 for(let z=-10;z<=10;z+=2.1){box(2,2,1.5,wall,-13,1,z);box(2,2,1.5,wall,13,1,z)}for(let x=-11;x<=11;x+=2.1){box(1.5,2,2,wall,x,1,-13);box(1.5,2,2,wall,x,1,13)}
 function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864');cylinder(0,1.65,3,leaves,x,3.3,z,scene,7);cylinder(0,1.2,2.2,leaves,x,4.6,z,scene,7)}
@@ -337,6 +336,7 @@ function rod(parent,start,end,radius,material){
  mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
  return mesh;
 }
+buildLeaningLadder();
 // Neutral 12–13-year-old reference rig, adjustable for a future 10–15-year-old
 // avatar creator. Sex does not change the joint topology or movement physics.
 const YOUTH_REFERENCE={ageBand:'10-15',referenceAge:13,headRadius:.19,
