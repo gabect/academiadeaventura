@@ -9,11 +9,19 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Touchscreen:** left joystick and compact lower-right A/B/C: **A** = interact/talk; **B** = hold to run or tap to jump; **C** = tap to crouch/stand, hold for ~0.52 seconds to crawl or return to crouch. In crawl, B's run/jump is disabled until the player rises. C also cancels open dialogs. No fall/stand-up mode.
 - **A** will be used to grab objects when pick-up mechanics are added, but objects are not yet pickable in this prototype.
 - **Landscape:** the game requests landscape orientation when supported; browser restrictions can prevent orientation lock.
-- **Camera zoom:** tap **+** to inspect the skeleton closely or **−** to see more of the courtyard; use the mouse wheel on desktop or pinch with two fingers on the game canvas.
+- **Third-person camera:** a perspective chase camera tracks the player's facing direction. **+** moves closer and **−** pulls back; mouse wheel or two-finger pinch works on the game canvas. Movement is relative to the direction shown by the camera.
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.19.1 — November 8, 2026
+## Current version: 0.20.0 — November 8, 2026
+- **Perspective third-person follow camera:** the fixed isometric/orthographic view has been replaced by a perspective camera trailing behind the avatar, slightly above the shoulders. The camera rotates smoothly to match the character's travel heading, follows the character across the new balcony/stairs, and raises/lowers its aim point for standing, kneeling, and prone crawling.
+- **Camera-relative locomotion:** the joystick and WASD/arrows now move the character relative to the follow camera's view, not the old hard-coded isometric axes. The player starts facing the rear of the courtyard toward the guardian (Y rotation PI), with the camera behind the avatar.
+- **Zoom now adjusts follow distance:** + and - buttons, mouse wheel and two-finger canvas pinch are preserved; they control camera follow distance instead of orthographic zoom. The perspective FOV is 58 degrees and the viewport aspect ratio updates on resize.
+- **Architecture occlusion mitigation:** an architectural mesh cache is ray-tested between the camera's target and the desired trailing position. When a tower, balcony or railing blocks the line of sight, the camera pulls forward rather than staying behind that obstruction. Player and guardian skeletons, the base grass plane and pavement overlays are excluded from these camera rays.
+- **Preserved:** tactical crouch, floor-hugging lateral-knee military crawl, level paving, balcony step-up/down, collision, A/B/C buttons, XP/Agility and the no-falls rule.
+- **QA required:** this was validated by JavaScript syntax/structural assertions and target-height calculations, not a live Android device test. Test chasing a character around a tower, ascending the wooden balcony, diagonal joystick movement, quick 180-degree turns, crouching/crawling, and pinch/zoom.
+
+## Previous version: 0.19.1 — November 8, 2026
 - Repositioned the existing balcony and four-step staircase north/backward along the Z axis to improve visibility from the fixed isometric camera; no movement or physics subsystem was replaced.
 - New balcony bounds: X 7.10–10.10, Z -5.80 to -1.20. The staircase remains on its west side, now Z -4.80 to -2.20. Height, risers, rails, geometry and all controls are unchanged.
 - Static verification: module syntax valid; all four risers remain traversable at 0.30 rise; no overlap within player-radius clearance of existing trees, lamp, guardian or corner towers. Each key terrain/movement function occurs once. This is not live Android visual validation.
@@ -151,6 +159,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.20.0 (2026-11-08):** perspective behind-the-avatar camera with smoothed rotation, camera-relative joystick/WASD movement, obstacle-aware follow distance and posture-aware framing.
 - **0.19.1 (2026-11-08):** relocated balcony/steps away from the foreground tower; static checked collisions and kept existing stair system intact.
 - **0.19.0 (2026-11-08):** wooden courtyard balcony, four walkable stone stairs, radius-checked railings, collision-aware 30-cm automatic step-up/down, elevated foot IK and camera tracking.
 - **0.18.2 (2026-11-08):** changed prone leg IK to lateral, floor-hugging knee tuck/push; left and right knees open to their respective sides in phase with the opposite pulling hand.
