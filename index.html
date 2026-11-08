@@ -3,32 +3,39 @@
 html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
-#interactButton{position:fixed;right:max(24px,env(safe-area-inset-right));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:15px;font-weight:700;touch-action:none;-webkit-touch-callout:none;user-select:none}
-#runButton{position:fixed;right:max(112px,calc(env(safe-area-inset-right) + 112px));bottom:max(45px,env(safe-area-inset-bottom));z-index:5;width:76px;height:76px;border-radius:50%;background:#203f49d9;border:3px solid #ffffffb0;color:white;font-size:14px;font-weight:700;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}#runButton[aria-pressed="true"]{background:#497e9e;border-color:#efc56a}#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}#standButton{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:140px;z-index:7;border:2px solid #fff9;border-radius:14px;background:#284c54;color:white;font:700 15px system-ui,sans-serif;padding:13px 17px;touch-action:manipulation;-webkit-touch-callout:none;user-select:none}
-#standButton[hidden]{display:none!important}
+/* Compact three-button touchscreen cluster, 42px+ touch targets. */
+#actionCluster{position:fixed;right:max(13px,env(safe-area-inset-right));bottom:max(17px,env(safe-area-inset-bottom));width:167px;height:137px;z-index:7;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overscroll-behavior:contain}
+#actionCluster button{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:0;border-radius:50%;background:#203f49e8;border:2px solid #ffffffb9;color:#fff;font:700 27px/1 system-ui,sans-serif;box-shadow:0 3px 11px #172c3745;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:pointer;padding:3px}
+#actionCluster button small{font:600 10px/1.15 system-ui,sans-serif;white-space:nowrap;margin-top:3px}
+#interactButton{width:58px;height:58px;left:0;bottom:0}
+#runButton{width:72px;height:72px;right:0;bottom:0;font-size:31px!important}
+#cancelButton{width:46px;height:46px;right:57px;bottom:84px;font-size:22px!important}
+#cancelButton small{font-size:8px!important;margin-top:1px!important}
+#actionCluster button[aria-pressed="true"],#actionCluster button.is-active{background:#497e9e;border-color:#efc56a}
+#actionCluster button:disabled{opacity:.45;cursor:default}
+#buildLabel{position:fixed;right:10px;top:8px;color:#17323c;background:#ffffffa6;border-radius:5px;padding:2px 6px;font-size:11px;pointer-events:none;z-index:3}
 #skillPanel{position:fixed;left:max(10px,env(safe-area-inset-left));top:8px;z-index:6;display:flex;gap:7px;align-items:center;flex-wrap:wrap;max-width:60%;color:#17323c;background:#ffffffe0;border:1px solid #ffffffad;border-radius:9px;padding:5px 8px;font:600 12px system-ui,sans-serif}
 #balanceUpgrade{border:1px solid #678080;border-radius:7px;background:#284c54;color:white;font:600 12px system-ui,sans-serif;padding:6px 8px;touch-action:manipulation}
 #balanceUpgrade:disabled{opacity:.5}
-@media(max-height:430px){#standButton{bottom:99px;right:20px;padding:9px 12px}}
+@media(max-height:430px){#actionCluster{width:149px;height:113px;right:max(11px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom))}#interactButton{width:53px;height:53px}#runButton{width:65px;height:65px}#cancelButton{width:43px;height:43px;right:51px;bottom:69px}#actionCluster button{font-size:24px}#actionCluster button small{font-size:9px}}
 #zoomControls{position:fixed;right:max(12px,env(safe-area-inset-right));top:39px;display:flex;flex-direction:column;gap:7px;z-index:6;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 #zoomControls button{width:44px;height:44px;border-radius:12px;border:2px solid #ffffffa8;background:#203f49e6;color:#fff;font:700 26px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
 #zoomControls button:disabled{opacity:.45;cursor:default}
-#runButton:disabled,#interactButton:disabled{opacity:.5}
 #zoomControls #debugFall{width:54px;height:35px;font-size:11px}
 #landscapePrompt{display:none;position:fixed;inset:0;z-index:20;background:#142831;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;padding:20px}
 #landscapePrompt button{background:#e8d9ac;border:0;border-radius:10px;padding:12px 18px;font-size:16px}
 @media(orientation:portrait) and (pointer:coarse){#landscapePrompt{display:flex}}
-@media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#interactButton,#runButton{width:65px;height:65px;bottom:25px}#runButton{right:max(102px,calc(env(safe-area-inset-right) + 102px))}#message{bottom:12px;font-size:12px;max-width:45%}}
+@media(max-height:430px){#touch{width:116px;height:116px;bottom:12px}#stickKnob{width:54px;height:54px;left:31px;top:31px}#message{bottom:12px;font-size:12px;max-width:45%}}
 #challenge{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:#102533bb;padding:15px}
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.12.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><button id="interactButton" type="button" aria-label="Interact">Talk</button><button id="runButton" type="button" aria-label="Enable running" aria-pressed="false">Run</button><button id="standButton" type="button" hidden>Stand Up</button><div id="skillPanel"><span id="skillStatus">XP 0 · Balance Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Balance</button></div><span id="buildLabel">v0.12.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.13.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD / arrows: move · E: interact</p></div><div id="message">Approach the guardian near the tower.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run, tap to jump, or stand up" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: Cancel or crouch"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Balance Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Balance</button></div><span id="buildLabel">v0.13.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="debugFall" type="button" title="Test a fall" hidden>Fall</button></div><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.12.0';let pendingBuild=null;
+const BUILD='0.13.0';let pendingBuild=null;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9d4ee');scene.fog=new THREE.Fog('#a9d4ee',25,65);
@@ -255,6 +262,19 @@ const LOCOMOTION={
 };
 // Shared protective reflexes for all avatars. XP can improve motor control.
 const BALANCE={active:false,age:0,duration:0,severity:0,success:false,reason:'',side:1};
+const JUMP={active:false,height:0,velocity:0};
+let crouched=false;
+function startJump(){
+ if(FALL.active||BALANCE.active||challengeOpen||JUMP.active||crouched)return;
+ JUMP.active=true;JUMP.height=0;JUMP.velocity=3.1;
+}
+function stepJump(dt){
+ if(!JUMP.active)return;
+ JUMP.velocity-=13*dt;
+ JUMP.height+=JUMP.velocity*dt;
+ if(JUMP.height<=0){JUMP.height=0;JUMP.velocity=0;JUMP.active=false;}
+ player.position.y+=JUMP.height;
+}
 function footPosition(root,index,forward=0,height=FOOT_Y){
  const lateral=index===0?-.24:.24,yaw=root.rotation.y;
  return new THREE.Vector3(root.position.x+Math.cos(yaw)*lateral+Math.sin(yaw)*forward,
@@ -379,8 +399,8 @@ function stepLocomotion(dt,right,forward,runEnabled){
   // Begin midway through the first grounded step, not at full rearward reach.
   gait.cycle=gait.walkStance*.5;
  }
- const grounded=gait.feet.some(f=>f.contact)||wasStopped;
- const target=len>.03?(runEnabled?gait.runSpeed:gait.walkSpeed):0;
+ const grounded=!JUMP.active&&(gait.feet.some(f=>f.contact)||wasStopped);
+ const target=len>.03?(crouched?gait.walkSpeed*.47:runEnabled?gait.runSpeed:gait.walkSpeed):0;
  const tx=dx*target,tz=dz*target;
  const dvx=tx-gait.vx,dvz=tz-gait.vz;
  const change=Math.hypot(dvx,dvz);
@@ -407,6 +427,12 @@ function stepLocomotion(dt,right,forward,runEnabled){
  gait.vx=xDelta/dt;gait.vz=zDelta/dt;
  gait.runBlend=THREE.MathUtils.damp(gait.runBlend,runEnabled?1:0,8,dt);
  poseGroundedCharacter(player,Math.hypot(xDelta,zDelta),dt);
+ if(crouched){
+  player.position.y-=.13;
+  const r=player.userData.rig;
+  for(const leg of r.legs){leg.hip.rotation.x-=.09;leg.knee.rotation.x+=.20;leg.ankle.rotation.x-=.11;}
+  r.torso.rotation.x+=.075;
+ }
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -482,7 +508,8 @@ function updateBalanceRecovery(dt){
 const FALL={active:false,age:0,quiet:0,accumulator:0,nodes:[],links:[],limits:[],meshes:[],group:new THREE.Group(),lastCenter:new THREE.Vector3(),direction:new THREE.Vector3(0,0,1),reason:''};
 scene.add(FALL.group);
 FALL.group.visible=false;
-const STAND_BUTTON=document.getElementById('standButton');
+const B_HINT=document.getElementById('bHint');
+const C_HINT=document.getElementById('cHint');
 const FALL_JOINT_RADIUS=.065;
 const FALL_BONE_GEOMETRY=new THREE.CylinderGeometry(1,1,1,7);
 const FALL_Y_AXIS=new THREE.Vector3(0,1,0);
@@ -567,8 +594,10 @@ function beginFall(reason='Lost balance'){
  FALL.active=true;FALL.reason=reason;
  FALL.age=0;FALL.quiet=0;FALL.accumulator=0;
  FALL.direction.copy(chooseFallDirection());
- STAND_BUTTON.hidden=true;STAND_BUTTON.disabled=true;
- keys.clear();resetStick();
+ updateButtonHints();
+ clearActivePointers();
+ JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+ crouched=false;
  player.updateMatrixWorld(true);
  for(const child of [...FALL.group.children])FALL.group.remove(child);
  FALL.nodes=[];FALL.links=[];FALL.limits=[];FALL.meshes=[];
@@ -613,7 +642,8 @@ function beginFall(reason='Lost balance'){
  }
  player.visible=false;
  FALL.group.visible=true;
- runButton.disabled=true;interactButton.disabled=true;
+ bHeld=false;runButton.setAttribute('aria-pressed','false');
+ interactButton.disabled=true;updateButtonHints();
  // A downward start helps the hips and knees buckle; no upward launch.
  for(const n of FALL.nodes){
   n.prev.y+=['pelvis','lowerSpine','chest','neck','head'].includes(n.id)?.020:.008;
@@ -797,9 +827,7 @@ function updateFall(dt){
   FALL.accumulator-=1/60;steps++;
  }
  renderFallenBody();
- if(FALL.age>1.45){
-  STAND_BUTTON.hidden=false;STAND_BUTTON.disabled=false;
- }
+ if(FALL.age>1.45)updateButtonHints();
 }
 function standUp(){
  if(!FALL.active||FALL.age<1.35)return;
@@ -816,22 +844,23 @@ function standUp(){
  }
  if(!spot)spot={x:0,z:5};
  FALL.active=false;FALL.group.visible=false;
+ JUMP.active=false;JUMP.height=0;JUMP.velocity=0;
+ crouched=false;
  // Restore the *same* rib meshes to the standing torso and their rest pose.
  const ribcage=player.userData.rig.ribcage;
  player.userData.rig.torso.add(ribcage);
  ribcage.position.set(...TORSO_POINTS.chest);
  ribcage.quaternion.identity();ribcage.scale.set(1,1,1);
- runButton.disabled=false;interactButton.disabled=false;
+ interactButton.disabled=false;updateButtonHints();
  player.visible=true;player.position.set(spot.x,0,spot.z);
  setIdlePose(player);
  Object.assign(LOCOMOTION,{vx:0,vz:0,cycle:0,moveBlend:0,runBlend:0,strain:0,strainSeconds:0,cooldown:2.5});
  prepareFeet(player);
- running=false;runButton.setAttribute('aria-pressed','false');
- runButton.textContent='Run';runButton.setAttribute('aria-label','Enable running');
- STAND_BUTTON.hidden=true;keys.clear();resetStick();
+ bHeld=false;runButton.setAttribute('aria-pressed','false');
+ updateButtonHints();keys.clear();resetStick();
  document.getElementById('message').textContent='Back on your feet. Watch your step!';
 }
-STAND_BUTTON.addEventListener('click',standUp);
+// B replaces the old standalone Stand Up button.
 // Optional QA control: ?debug=1 enables a touch-friendly fall test without
 // cluttering the student-facing game.
 const DEBUG_FALL=document.getElementById('debugFall');
@@ -839,8 +868,7 @@ if(new URLSearchParams(location.search).get('debug')==='1'){
  DEBUG_FALL.hidden=false;
  DEBUG_FALL.addEventListener('click',()=>beginFall('Test fall'));
 }
-for(const eventName of ['contextmenu','selectstart','dragstart'])
- STAND_BUTTON.addEventListener(eventName,e=>e.preventDefault());
+// The A/B/C cluster handles context-menu suppression and pointer cancellation.
 
 const marker=cylinder(.1,.5,.7,gold,3,3.4,-3);marker.rotation.z=Math.PI;
 const SAVE_KEY='adventure-academy-progression-v1';
@@ -870,8 +898,45 @@ balanceUpgrade.addEventListener('click',()=>{
  document.getElementById('message').textContent='Motor control improved — Balance Lv '+balanceLevel+'!';
 });
 renderProgress();
-const keys=new Set();addEventListener('keydown',e=>{if(challengeOpen){if(e.code==='Escape')closeChallenge();return}keys.add(e.code);if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.code==='KeyE'&&!e.repeat)interact();if(e.code==='KeyR'&&!e.repeat)standUp()});addEventListener('keyup',e=>keys.delete(e.code));
-document.addEventListener('contextmenu',e=>{if(e.target.closest('#touch,#interactButton,#runButton'))e.preventDefault()});
+const keys=new Set();
+const runButton=document.getElementById('runButton');
+const interactButton=document.getElementById('interactButton');
+const cancelButton=document.getElementById('cancelButton');
+let bHeld=false,bPointer=null,bDownAt=0;
+function updateButtonHints(){
+ B_HINT.textContent=FALL.active?'Stand Up':bHeld?'Running':'Run / Jump';
+ C_HINT.textContent=challengeOpen?'Cancel':crouched?'Stand':'Crouch';
+ cancelButton.setAttribute('aria-pressed',String(crouched));
+ runButton.setAttribute('aria-pressed',String(bHeld));
+}
+function stopBPointer(){
+ bPointer=null;bHeld=false;
+ runButton.classList.remove('is-active');
+ updateButtonHints();
+}
+function cancelAction(){
+ if(challengeOpen){closeChallenge();updateButtonHints();return;}
+ if(crouched){crouched=false;updateButtonHints();return;}
+ if(BALANCE.active)return;
+ // C is contextual: crouch when there is no open action to cancel.
+ if(!FALL.active&&!JUMP.active){crouched=true;updateButtonHints();}
+}
+addEventListener('keydown',e=>{
+ if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
+ if(challengeOpen){
+  if(e.code==='Escape'||e.code==='KeyC'){closeChallenge();updateButtonHints();}
+  return;
+ }
+ keys.add(e.code);
+ if(e.repeat)return;
+ if(e.code==='KeyE'||e.code==='KeyA')interact();
+ if(e.code==='KeyC'||e.code==='Escape')cancelAction();
+ if(e.code==='KeyR'||e.code==='KeyB'){
+  if(FALL.active)standUp();else startJump();
+ }
+ if(e.code==='Space')startJump();
+});
+addEventListener('keyup',e=>keys.delete(e.code));
 const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
 let stickX=0,stickY=0,stickPointer=null;
 function resetStick(){stickPointer=null;stickX=0;stickY=0;knob.style.transform='translate(0px,0px)'}
@@ -881,16 +946,46 @@ function moveStick(e){
  stickX=dx*scale/radius;stickY=dy*scale/radius;
  knob.style.transform='translate('+dx*scale+'px,'+dy*scale+'px)';
 }
-for(const type of ['contextmenu','selectstart','dragstart'])touch.addEventListener(type,e=>e.preventDefault());
+for(const type of ['contextmenu','selectstart','dragstart']){
+ for(const element of [touch,runButton,interactButton,cancelButton])
+  element.addEventListener(type,e=>e.preventDefault());
+}
 touch.addEventListener('pointerdown',e=>{e.preventDefault();if(stickPointer!==null)return;stickPointer=e.pointerId;touch.setPointerCapture(e.pointerId);moveStick(e)},{passive:false});
 touch.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer){e.preventDefault();moveStick(e)}},{passive:false});
-for(const type of ['pointerup','pointercancel','lostpointercapture'])touch.addEventListener(type,e=>{if(e.pointerId===stickPointer)resetStick()});
-const runButton=document.getElementById('runButton');let running=false;runButton.addEventListener('click',()=>{running=!running;runButton.setAttribute('aria-pressed',String(running));runButton.textContent=running?'Walk':'Run';runButton.setAttribute('aria-label',running?'Disable running':'Enable running')});for(const type of ['contextmenu','selectstart','dragstart'])runButton.addEventListener(type,e=>e.preventDefault());
-const interactButton=document.getElementById('interactButton');
-interactButton.addEventListener('contextmenu',e=>e.preventDefault());
-interactButton.addEventListener('pointerdown',e=>{e.preventDefault();if(e.pointerType==='mouse'&&e.button!==0)return;interact()},{passive:false});
-window.addEventListener('blur',()=>{keys.clear();resetStick()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden){keys.clear();resetStick()}});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])
+ touch.addEventListener(type,e=>{if(e.pointerId===stickPointer)resetStick()});
+// B: held => sprint; quick tap => jump; while fallen => stand up.
+// Pointer capture ensures a release outside the button stops the sprint.
+runButton.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ if(bPointer!==null)return;
+ if(FALL.active){standUp();updateButtonHints();return;}
+ if(BALANCE.active||challengeOpen)return;
+ if(crouched)crouched=false;
+ bPointer=e.pointerId;bDownAt=performance.now();bHeld=true;
+ try{runButton.setPointerCapture(e.pointerId)}catch(_){}
+ runButton.classList.add('is-active');updateButtonHints();
+},{passive:false});
+runButton.addEventListener('pointerup',e=>{
+ if(e.pointerId!==bPointer)return;
+ e.preventDefault();
+ const wasTap=performance.now()-bDownAt<205;
+ stopBPointer();
+ if(wasTap)startJump();
+},{passive:false});
+for(const type of ['pointercancel','lostpointercapture'])
+ runButton.addEventListener(type,e=>{if(e.pointerId===bPointer)stopBPointer()});
+runButton.addEventListener('click',e=>{
+ if(e.detail!==0)return; // keyboard accessibility; pointer already handled
+ if(FALL.active)standUp();else startJump();
+});
+interactButton.addEventListener('click',interact);
+cancelButton.addEventListener('click',cancelAction);
+function clearActivePointers(){keys.clear();resetStick();stopBPointer();}
+window.addEventListener('blur',clearActivePointers);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)clearActivePointers()});
+updateButtonHints();
 document.getElementById('landscapeButton').addEventListener('click',async()=>{
  try{
   if(!document.fullscreenElement&&document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();
@@ -908,7 +1003,7 @@ const bank=[
 ['Which is the largest ocean?',['Atlantic','Pacific','Indian'],1],
 ['Which of these animals is a mammal?',['Shark','Trout','Dolphin'],2]
 ];
-function closeChallenge(){challenge.hidden=true;challengeOpen=false;keys.clear()}
+function closeChallenge(){challenge.hidden=true;challengeOpen=false;keys.clear();updateButtonHints()}
 document.getElementById('exit').addEventListener('click',closeChallenge);
 function showQuestion(){
  feedback.textContent='';answers.replaceChildren();progress.textContent='Question '+(questionIndex+1)+' of 3';
@@ -923,9 +1018,9 @@ function showQuestion(){
  });answers.append(b)});
 }
 function interact(){
- if(challengeOpen||FALL.active)return;
+ if(challengeOpen||FALL.active||BALANCE.active)return;
  if(player.position.distanceTo(guardian.position)>2.8){msg.textContent='Move closer to the guardian to talk.';return}
- picked=[...bank].sort(()=>Math.random()-.5).slice(0,3);questionIndex=0;keys.clear();challengeOpen=true;challenge.hidden=false;showQuestion();
+ picked=[...bank].sort(()=>Math.random()-.5).slice(0,3);questionIndex=0;keys.clear();challengeOpen=true;challenge.hidden=false;updateButtonHints();showQuestion();
 }
 let lastReloadAttempt=0;
 function applyUpdateIfSafe(){
@@ -938,7 +1033,7 @@ function applyUpdateIfSafe(){
 const clock=new THREE.Clock();
 function animate(){
  requestAnimationFrame(animate);applyUpdateIfSafe();
- const dt=Math.min(clock.getDelta(),.04);
+ const dt=Math.max(.0001,Math.min(clock.getDelta(),.04));
  let right=stickX,forward=-stickY;
  if(keys.has('KeyW')||keys.has('ArrowUp'))forward+=1;
  if(keys.has('KeyS')||keys.has('ArrowDown'))forward-=1;
@@ -948,7 +1043,8 @@ function animate(){
  else if(BALANCE.active){updateBalanceRecovery(dt);}
  else{
   if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
-  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,running&&!challengeOpen);
+  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched);
+  stepJump(dt);
  }
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);
  camera.lookAt(player.position.x,1,player.position.z);
