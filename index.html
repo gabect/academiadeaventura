@@ -56,7 +56,7 @@ let cameraZoom=1,cameraReady=false;
 // Fixed north-up heading, elevated ~66.5 degrees above the ground.
 // Nintendo has not published exact camera parameters: these are visual matches.
 const cameraHeading=Math.PI;
-const CAMERA_PITCH_DIOrama=1.16,CAMERA_PITCH_ROLLING=.64;
+const CAMERA_PITCH_DIORAMA=1.16,CAMERA_PITCH_ROLLING=.64;
 let rollingHorizon=true,cameraPitch=CAMERA_PITCH_ROLLING;
 const horizonViewButton=document.getElementById('viewModeButton');
 const cameraHint=document.getElementById('cameraHint');
@@ -2314,7 +2314,7 @@ for(const obj of scene.children){
 function followPlayerCamera(dt){
  // Look stays strictly north-up; only an explicit view-toggle changes pitch.
  cameraPitch=THREE.MathUtils.damp(cameraPitch,
-  rollingHorizon?CAMERA_PITCH_ROLLING:CAMERA_PITCH_DIOrama,3.8,dt);
+  rollingHorizon?CAMERA_PITCH_ROLLING:CAMERA_PITCH_DIORAMA,3.8,dt);
  CURVED_HORIZON.focus.value.set(player.position.x,player.position.z);
  CURVED_HORIZON.amount.value=THREE.MathUtils.damp(
   CURVED_HORIZON.amount.value,rollingHorizon?.0135:0,4.0,dt);
