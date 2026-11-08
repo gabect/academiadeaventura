@@ -662,7 +662,8 @@ function poseCrawlCharacter(character,travel,dt,moving){
  for(let i=0;i<2;i++){
   const hand=CRAWL.hands[i];
   stepCrawlContact(character,hand,i,true,moving,CRAWL.step);
-  CRAWL_HAND_LOCAL.copy(rig.torso.worldToLocal(hand.position.clone()));
+  CRAWL_HAND_LOCAL.copy(hand.position);
+  rig.torso.worldToLocal(CRAWL_HAND_LOCAL);
   aimArmAt(rig.arms[i],CRAWL_HAND_LOCAL,i===0?-1:1,weight);
   rig.arms[i].wrist.rotation.x=THREE.MathUtils.lerp(
    rig.arms[i].wrist.rotation.x,-.10,weight);
@@ -1181,12 +1182,22 @@ const runButton=document.getElementById('runButton');
 const interactButton=document.getElementById('interactButton');
 const cancelButton=document.getElementById('cancelButton');
 let bHeld=false,bPointer=null,bDownAt=0;
+const C_HOLD_MS=520;
+let cPointer=null,cHoldTimer=null,cHoldTriggered=false;
+let cKeyHeld=false,cKeyTimer=null,cKeyTriggered=false;
 function updateButtonHints(){
- B_HINT.textContent=bHeld?'Running':'Run / Jump';
- C_HINT.textContent=challengeOpen?'Cancel':crouched?'Stand':'Crouch';
+ B_HINT.textContent=bHeld?'Running':crawling?'Rest':'Run / Jump';
+ C_HINT.textContent=challengeOpen?'Cancel':crawling?'Rise':crouched?'Stand':'Crouch';
  document.body.classList.toggle('dialog-open',challengeOpen);
- cancelButton.setAttribute('aria-pressed',String(crouched));
+ runButton.disabled=crawling;
+ cancelButton.setAttribute('aria-pressed',String(crouched||crawling));
  runButton.setAttribute('aria-pressed',String(bHeld));
+ cancelButton.setAttribute('aria-label',challengeOpen?'C: cancel dialog':
+  crawling?'C: tap or hold to return to tactical crouch':
+  crouched?'C: tap to stand, hold to crawl':
+  'C: tap to crouch, hold to crawl');
+ cancelButton.title=crawling?'Tap or hold C to rise into crouch':
+  'Tap C for crouch/stand · hold C for low crawl';
 }
 function stopBPointer(){
  bPointer=null;bHeld=false;
@@ -1195,10 +1206,28 @@ function stopBPointer(){
 }
 function cancelAction(){
  if(challengeOpen){closeChallenge();updateButtonHints();return;}
+ if(crawling){
+  crawling=false;crouched=true;
+  LOCOMOTION.kneelMode=null;LOCOMOTION.kneelTime=0;
+  updateButtonHints();
+  document.getElementById('message').textContent='Tactical crouch.';
+  return;
+ }
  if(crouched){crouched=false;updateButtonHints();return;}
  if(BALANCE.active)return;
- // C is contextual: crouch when there is no open action to cancel.
- if(!FALL.active&&!JUMP.active){crouched=true;updateButtonHints();}
+ if(!FALL.active&&!JUMP.active){
+  crouched=true;updateButtonHints();
+  document.getElementById('message').textContent=
+   'Tactical crouch — hold C to enter the low crawl.';
+ }
+}
+function clearCHoldTimer(){
+ if(cHoldTimer!==null)clearTimeout(cHoldTimer);
+ cHoldTimer=null;
+}
+function clearCKeyTimer(){
+ if(cKeyTimer!==null)clearTimeout(cKeyTimer);
+ cKeyTimer=null;
 }
 addEventListener('keydown',e=>{
  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();
@@ -1208,12 +1237,25 @@ addEventListener('keydown',e=>{
  }
  keys.add(e.code);
  if(e.repeat)return;
- if(e.code==='KeyE')interact(); // A is already WASD strafe-left.
- if(e.code==='KeyC'||e.code==='Escape')cancelAction();
- if(e.code==='KeyB')startJump();
- if(e.code==='Space')startJump();
+ if(e.code==='KeyE')interact(); // A is WASD strafe-left.
+ if(e.code==='Escape')cancelAction();
+ if(e.code==='KeyC'){
+  cKeyHeld=true;cKeyTriggered=false;clearCKeyTimer();
+  cKeyTimer=setTimeout(()=>{
+   cKeyTimer=null;
+   if(cKeyHeld){cKeyTriggered=true;toggleCrawl();}
+  },C_HOLD_MS);
+ }
+ if(e.code==='KeyB'||e.code==='Space')startJump();
 });
-addEventListener('keyup',e=>keys.delete(e.code));
+addEventListener('keyup',e=>{
+ keys.delete(e.code);
+ if(e.code==='KeyC'&&cKeyHeld){
+  cKeyHeld=false;clearCKeyTimer();
+  if(!cKeyTriggered)cancelAction();
+  cKeyTriggered=false;
+ }
+});
 const touch=document.getElementById('touch'),knob=document.getElementById('stickKnob');
 let stickX=0,stickY=0,stickPointer=null;
 function resetStick(){stickPointer=null;stickX=0;stickY=0;knob.style.transform='translate(0px,0px)'}
@@ -1237,7 +1279,7 @@ runButton.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'&&e.button!==0)return;
  e.preventDefault();
  if(bPointer!==null)return;
- if(BALANCE.active||challengeOpen)return;
+ if(BALANCE.active||challengeOpen||crawling)return;
  if(crouched)crouched=false;
  bPointer=e.pointerId;bDownAt=performance.now();bHeld=true;
  try{runButton.setPointerCapture(e.pointerId)}catch(_){}
@@ -1257,8 +1299,44 @@ runButton.addEventListener('click',e=>{
  startJump();
 });
 interactButton.addEventListener('click',interact);
-cancelButton.addEventListener('click',cancelAction);
-function clearActivePointers(){keys.clear();resetStick();stopBPointer();}
+// C supports both taps and intentional holds. The delayed action fires while
+// still pressed, not only after release, and avoids native long-tap menus.
+cancelButton.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ e.preventDefault();
+ if(cPointer!==null)return;
+ if(challengeOpen){cancelAction();return;}
+ cPointer=e.pointerId;cHoldTriggered=false;clearCHoldTimer();
+ try{cancelButton.setPointerCapture(e.pointerId)}catch(_){}
+ cHoldTimer=setTimeout(()=>{
+  cHoldTimer=null;
+  if(cPointer!==null){
+   cHoldTriggered=true;toggleCrawl();
+  }
+ },C_HOLD_MS);
+},{passive:false});
+cancelButton.addEventListener('pointerup',e=>{
+ if(e.pointerId!==cPointer)return;
+ e.preventDefault();
+ clearCHoldTimer();
+ cPointer=null;
+ if(!cHoldTriggered)cancelAction();
+ cHoldTriggered=false;
+},{passive:false});
+for(const type of ['pointercancel','lostpointercapture']){
+ cancelButton.addEventListener(type,e=>{
+  if(e.pointerId!==cPointer)return;
+  clearCHoldTimer();cPointer=null;cHoldTriggered=false;
+ });
+}
+cancelButton.addEventListener('click',e=>{
+ if(e.detail===0)cancelAction(); // keyboard / accessibility click only
+});
+function clearActivePointers(){
+ keys.clear();resetStick();stopBPointer();
+ clearCHoldTimer();cPointer=null;cHoldTriggered=false;
+ clearCKeyTimer();cKeyHeld=false;cKeyTriggered=false;
+}
 window.addEventListener('blur',clearActivePointers);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)clearActivePointers()});
 updateButtonHints();
@@ -1319,7 +1397,7 @@ function animate(){
  else if(BALANCE.active){updateBalanceRecovery(dt);}
  else{
   if(challengeOpen){LOCOMOTION.vx=0;LOCOMOTION.vz=0;}
-  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched);
+  stepLocomotion(dt,challengeOpen?0:right,challengeOpen?0:forward,(bHeld||keys.has('ShiftLeft')||keys.has('ShiftRight'))&&!challengeOpen&&!crouched&&!crawling);
   stepJump(dt);
  }
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);
