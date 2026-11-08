@@ -599,8 +599,12 @@ function poseGroundedCharacter(character,travel,dt){
    const stagger=(i===1?1:-1)*CROUCH.strideBias*crouch;
    const landing=footPosition(character,i,remainingTravel+stance*step+stagger);
    foot.position.lerpVectors(foot.from,landing,ease);
-   foot.position.y=THREE.MathUtils.lerp(foot.from.y,landing.y,ease)+
-    Math.sin(Math.PI*s)*lift;
+   // Extra swing clearance over a raised riser; it only affects the step
+    // that climbs to higher ground, not level travel or standing idle.
+    const stairLift=Math.max(0,Math.min(.20,
+      (landing.y-foot.from.y)*.62));
+    foot.position.y=THREE.MathUtils.lerp(foot.from.y,landing.y,ease)+
+     Math.sin(Math.PI*s)*(lift+stairLift);
   }
   // Inverse-transform the fixed world ankle into the moving character's
   // skeleton coordinate system. World-space anchors survive turns.
@@ -898,7 +902,24 @@ function clearPosition(x,z){
  if(x < -BOUND || x > BOUND || z < -BOUND || z > BOUND)return false;
  for(const o of obstacles){const dx=x-o.x,dz=z-o.z,limit=PLAYER_RADIUS+o.r;
   if(dx*dx+dz*dz<limit*limit)return false;}
+ // Railing footprint collisions apply to the entire horizontal player capsule.
+ for(const r of BALCONY_RAIL_COLLIDERS){
+  const nearX=THREE.MathUtils.clamp(x,r.minX,r.maxX);
+  const nearZ=THREE.MathUtils.clamp(z,r.minZ,r.maxZ);
+  const dx=x-nearX,dz=z-nearZ;
+  if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return false;
+ }
  return true;
+}
+function canTraverseStep(x,z){
+ const currentTop=groundTopAt(player.position.x,player.position.z);
+ const candidateTop=groundTopAt(x,z);
+ const delta=candidateTop-currentTop;
+ // Never climb the balcony's tall side or walk over an unguarded drop.
+ // Crawl remains level-ground only to keep the prone chest from clipping.
+ const ascent=crawling?.075:MAX_STEP_UP;
+ const descent=crawling?.075:MAX_STEP_DOWN;
+ return delta<=ascent+.0001&&delta>=-descent-.0001;
 }
 function moveWithCollisions(dx,dz){
  const initialX=player.position.x,initialZ=player.position.z;
@@ -906,8 +927,10 @@ function moveWithCollisions(dx,dz){
  const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.18));
  const sx=dx/steps,sz=dz/steps;
  for(let i=0;i<steps;i++){
-  if(clearPosition(player.position.x+sx,player.position.z))player.position.x+=sx;
-  if(clearPosition(player.position.x,player.position.z+sz))player.position.z+=sz;
+  if(clearPosition(player.position.x+sx,player.position.z)&&
+     canTraverseStep(player.position.x+sx,player.position.z))player.position.x+=sx;
+  if(clearPosition(player.position.x,player.position.z+sz)&&
+     canTraverseStep(player.position.x,player.position.z+sz))player.position.z+=sz;
  }
  return Math.hypot(player.position.x-initialX,player.position.z-initialZ);
 }
@@ -1565,7 +1588,7 @@ function animate(){
   stepJump(dt);
  }
  camera.position.set(player.position.x+13,player.position.y+15,player.position.z+17);
- camera.lookAt(player.position.x,1,player.position.z);
+ camera.lookAt(player.position.x,player.position.y+1,player.position.z);
  marker.rotation.y+=dt;renderer.render(scene,camera);
 }
 function resize(){const a=innerWidth/innerHeight;camera.left=-7*a;camera.right=7*a;camera.top=7;camera.bottom=-7;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
