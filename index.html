@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.24.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder against the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.24.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.25.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder fixed to the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.25.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.24.0';let pendingBuild=null;
+const BUILD='0.25.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -178,11 +178,13 @@ const WALL_TRAINING={
  minX:-4.75,maxX:-2.25,minZ:-12.35,maxZ:-10.50,topY:2.0
 };
 const LADDER={
- x:-3.50,bottomZ:-9.20,topZ:-10.43,
+ // A permanent vertical ladder: rails and rungs remain parallel to the wall.
+ // Small mounting brackets provide foot clearance without any lean.
+ x:-3.50,wallZ:WALL_TRAINING.maxZ,standoff:.16,
  bottomY:TERRAIN.floorTop,deckY:WALL_TRAINING.topY,
  railTopY:WALL_TRAINING.topY+1.20,
  width:.70,rungSpacing:.27,climbSpeed:.79,
- bottomExitZ:-8.65,topExitZ:-11.14
+ bottomExitZ:-9.08,topExitZ:-11.14
 };
 const BALCONY_RAIL_COLLIDERS=[];
 const BALCONY_WOOD=mat('#795338'),BALCONY_PLANK=mat('#947051'),
@@ -324,23 +326,27 @@ function buildTrainingWall(){
 }
 buildTrainingWall();
 function ladderZAtHeight(y){
- const top=Math.min(y,LADDER.deckY);
- return LADDER.bottomZ+(LADDER.topZ-LADDER.bottomZ)*
-  (top-LADDER.bottomY)/(LADDER.deckY-LADDER.bottomY);
+ // Shared constant wall offset for render geometry, IK and collisions.
+ return LADDER.wallZ+LADDER.standoff;
 }
-function buildLeaningLadder(){
+function buildWallMountedLadder(){
  const group=new THREE.Group();
  group.userData.ignoreCameraRay=true;
  scene.add(group);
  const left=LADDER.x-LADDER.width*.5,right=LADDER.x+LADDER.width*.5;
  const baseY=LADDER.bottomY+.06,topY=LADDER.railTopY;
+ const z=ladderZAtHeight(baseY);
  const side=mat('#825735'),rungMat=mat('#b88a4d');
- for(const x of [left,right])
-  rod(group,[x,baseY,ladderZAtHeight(baseY)],
-   [x,topY,ladderZAtHeight(topY)],.052,side);
+ const mountMat=mat('#4a5554');
+ for(const x of [left,right]){
+  // Back-mounted metal anchors meet the actual masonry plane.
+  for(const y of [LADDER.bottomY+.40,LADDER.bottomY+1.12,
+                  LADDER.bottomY+1.84])
+   rod(group,[x,y,LADDER.wallZ+.008],[x,y,z],.034,mountMat);
+  rod(group,[x,baseY,z],[x,topY,z],.052,side);
+ }
  for(let y=LADDER.bottomY+.22;y<LADDER.railTopY-.11;y+=LADDER.rungSpacing)
-  rod(group,[left,y,ladderZAtHeight(y)],
-   [right,y,ladderZAtHeight(y)],.044,rungMat);
+  rod(group,[left,y,z],[right,y,z],.044,rungMat);
 }
 for(let x of [-12,12])for(let z of [-12,12]){cylinder(1.65,1.8,6,wall,x,3,z);cylinder(2.2,0,2.5,roof,x,7.2,z);for(let k=0;k<4;k++){const a=k*Math.PI/2;box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1)}}
 for(let z=-10;z<=10;z+=2.1){box(2,2,1.5,wall,-13,1,z);box(2,2,1.5,wall,13,1,z)}for(let x=-11;x<=11;x+=2.1){box(1.5,2,2,wall,x,1,-13);box(1.5,2,2,wall,x,1,13)}
@@ -367,7 +373,7 @@ function rod(parent,start,end,radius,material){
  mesh.quaternion.setFromUnitVectors(Y_AXIS,direction.normalize());
  return mesh;
 }
-buildLeaningLadder();
+buildWallMountedLadder();
 // Neutral 12–13-year-old reference rig, adjustable for a future 10–15-year-old
 // avatar creator. Sex does not change the joint topology or movement physics.
 const YOUTH_REFERENCE={ageBand:'10-15',referenceAge:13,headRadius:.19,
@@ -585,16 +591,17 @@ const LADDER_TMP=new THREE.Vector3();
 const LADDER_LOCAL=new THREE.Vector3();
 function ladderRootAt(progress,out){
  const height=(LADDER.deckY-LADDER.bottomY)*progress;
- return out.set(LADDER.x,height,Math.max(
-  ladderZAtHeight(LADDER.bottomY+height+.62)+.39,
-  WALL_TRAINING.maxZ+.455));
+ // The player travels straight up, staying outside both rail and wall.
+ return out.set(LADDER.x,height,ladderZAtHeight(LADDER.bottomY)+.46);
 }
 function ladderEntry(){
  if(LADDER_STATE.active)return null;
  const x=player.position.x,z=player.position.z;
  const level=groundTopAt(x,z);
  if(level<TERRAIN.floorTop+.12&&
-    Math.hypot(x-LADDER.x,z-LADDER.bottomExitZ)<1.15)return 'bottom';
+    Math.abs(x-LADDER.x)<.68&&
+    z>ladderZAtHeight(LADDER.bottomY)+.42&&
+    z<LADDER.bottomExitZ+.25)return 'bottom';
  if(level>LADDER.deckY-.12&&
     Math.hypot(x-LADDER.x,z-LADDER.topExitZ)<1.10)return 'top';
  return null;
@@ -745,7 +752,7 @@ function stepLadder(dt,verticalInput){
  ladderRootAt(climb.progress,player.position);
  player.rotation.y=Math.PI;
  poseLadder(dt,1,Math.abs(delta)>.00001);
- if(climb.direction>0&&climb.progress>=.91)startLadderExit(true);
+ if(climb.direction>0&&climb.progress>=.995)startLadderExit(true);
  if(climb.direction<0&&climb.progress<=.005)startLadderExit(false);
 }
 // Low military crawl is deliberate: opposite arm/leg pairs alternate their
@@ -1295,19 +1302,14 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
   if(bottom<deckTop&&top>deckTop-.22&&
      circleTouchesBox(px,pz,r,BALCONY.xMin,BALCONY.xMax,
       BALCONY.zMin,BALCONY.zMax))return false;
-  // The ladder is made of two inclined rails and discrete cross-rungs.
-  // Check only the segment of each rail within the avatar's vertical span.
+  // Stationary vertical rails and solid cross-rungs: no walk-through.
   const lo=Math.max(bottom,LADDER.bottomY+.06);
   const hi=Math.min(top,LADDER.railTopY);
   if(lo<=hi){
-   const verticalForZ=LADDER.bottomY+
-    (pz-LADDER.bottomZ)*(LADDER.deckY-LADDER.bottomY)/
-    (LADDER.topZ-LADDER.bottomZ);
-   const nearY=THREE.MathUtils.clamp(verticalForZ,lo,hi);
-   const nearZ=ladderZAtHeight(nearY);
+   const ladderZ=ladderZAtHeight(lo);
    for(const side of [-1,1]){
     const dx=px-(LADDER.x+side*LADDER.width*.5);
-    const dz=pz-nearZ;
+    const dz=pz-ladderZ;
     if(dx*dx+dz*dz<(r+.052)*(r+.052))return false;
    }
    for(let y=LADDER.bottomY+.22;y<LADDER.railTopY-.11;
@@ -1315,7 +1317,7 @@ function bodyVolumeFits(x,z,posture=currentPosture(),floor=groundTopAt(x,z),
     if(y+.044<bottom||y-.044>top)continue;
     const dx=px-THREE.MathUtils.clamp(px,
       LADDER.x-LADDER.width*.5,LADDER.x+LADDER.width*.5);
-    const dz=pz-ladderZAtHeight(y);
+    const dz=pz-ladderZ;
     if(dx*dx+dz*dz<(r+.044)*(r+.044))return false;
    }
   }
@@ -1807,11 +1809,11 @@ function updateLadderPrompt(){
  ladderPromptVisible=nearby;
  interactButton.querySelector('small').textContent=nearby?'Climb':'Action';
  interactButton.setAttribute('aria-label',nearby?
-  'A: Climb the leaning wooden ladder':'A: Interact and talk');
+  'A: Climb the fixed wall ladder':'A: Interact and talk');
  if(nearby)document.getElementById('message').textContent=
-  'Press A / Action to climb the leaning ladder.';
+  'Press A / Action to climb the wall-mounted ladder.';
  else if(document.getElementById('message').textContent.startsWith(
-  'Press A / Action to climb the leaning ladder'))
+  'Press A / Action to climb the wall-mounted ladder'))
   document.getElementById('message').textContent=
    'Explore the stone steps or climb the north wall ladder.';
 }
