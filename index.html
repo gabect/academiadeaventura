@@ -604,28 +604,105 @@ function buildWallMountedLadder(){
  for(let y=LADDER.bottomY+.22;y<LADDER.rungTopY;y+=LADDER.rungSpacing)
   rod(group,[left,y,z],[right,y,z],.044,rungMat);
 }
-// Enlarged outer perimeter: the central training wall, deck, castle and
-// staircase remain where they were. Only the outer arena is expanded.
-const OUTER_WALL=17.5;
-for(const x of [-OUTER_WALL,OUTER_WALL])
- for(const z of [-OUTER_WALL,OUTER_WALL]){
-  cylinder(1.65,1.8,6,wall,x,3,z);
-  cylinder(2.2,0,2.5,roof,x,7.2,z);
-  for(let k=0;k<4;k++){
-   const a=k*Math.PI/2;
-   box(1.1,.7,1.1,wall,x+Math.cos(a)*1.1,6.2,z+Math.sin(a)*1.1);
+// Open field: NO perimeter walls, fortifications, or corner towers.
+// Artificial ramps use the same analytical planes for physics and visuals.
+const rampWoodMat=mat('#946e45'),rampStoneMat=mat('#adb3af');
+const rampTrim=mat('#cfbf9c');
+function buildRampSlice(ramp,start,end,startY,endY,material){
+ const floor=TERRAIN.floorTop-.10;
+ const sideX=-ramp.dz,sideZ=ramp.dx,half=ramp.width*.5;
+ const point=(t,side,y)=>[
+  ramp.x+ramp.dx*t+sideX*side*half,y,
+  ramp.z+ramp.dz*t+sideZ*side*half
+ ];
+ const positions=[
+  ...point(start,-1,startY),...point(start,1,startY),
+  ...point(end,-1,endY),...point(end,1,endY),
+  ...point(start,-1,floor),...point(start,1,floor),
+  ...point(end,-1,floor),...point(end,1,floor)
+ ];
+ const triangles=[0,2,1,1,2,3,4,5,6,5,7,6,
+  0,4,2,2,4,6,1,3,5,3,7,5,
+  0,1,4,1,5,4,2,6,3,3,6,7];
+ const geometry=new THREE.BufferGeometry();
+ geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+ geometry.setIndex(triangles);geometry.computeVertexNormals();
+ const mesh=new THREE.Mesh(geometry,material);
+ mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);
+}
+function buildFieldRamps(){
+ for(const ramp of FIELD_RAMPS){
+  const material=ramp.kind==='wood'?rampWoodMat:rampStoneMat;
+  const base=TERRAIN.floorTop,top=base+ramp.rise;
+  buildRampSlice(ramp,0,ramp.length,base+.007,top+.007,material);
+  buildRampSlice(ramp,ramp.length,ramp.length+ramp.landing,
+   top+.007,top+.007,material);
+  // Small lines across the surface distinguish boards from a staircase.
+  for(let along=.35;along<ramp.length;along+=.49){
+   const strip=box(ramp.width-.12,.014,.045,rampTrim,
+    ramp.x+ramp.dx*along,
+    base+ramp.rise*along/ramp.length+.023,
+    ramp.z+ramp.dz*along);
+   strip.rotation.y=Math.atan2(ramp.dx,-ramp.dz);
   }
  }
-for(let z=-15.9;z<=15.9;z+=2.1){
- box(2,2,1.5,wall,-OUTER_WALL,1,z);
- box(2,2,1.5,wall,OUTER_WALL,1,z);
 }
-for(let x=-15.9;x<=15.9;x+=2.1){
- box(1.5,2,2,wall,x,1,-OUTER_WALL);
- box(1.5,2,2,wall,x,1,OUTER_WALL);
+buildFieldRamps();
+// A usable lookout tower with SIX actual stone risers and an open deck.
+const FIELD_TOWER={
+ minX:20.9,maxX:25.3,minZ:-2.2,maxZ:2.2,
+ topY:TERRAIN.floorTop+6*STEP_HEIGHT,
+ stepStartX:17.3,stepWidth:.60,stairMinZ:-1.25,stairMaxZ:1.25
+};
+function buildFieldTower(){
+ const t=FIELD_TOWER,base=TERRAIN.floorTop;
+ const width=t.maxX-t.minX,depth=t.maxZ-t.minZ,height=t.topY-base;
+ box(width,height,depth,wall,(t.minX+t.maxX)*.5,base+height*.5,0);
+ box(width+.09,.13,depth+.09,STAIR_TRIM,(t.minX+t.maxX)*.5,
+  t.topY-.045,0);
+ addWalkable('field-tower-deck',t.minX,t.maxX,t.minZ,t.maxZ,
+  t.topY,'tower');
+ for(let i=0;i<6;i++){
+  const x0=t.stepStartX+i*t.stepWidth,x1=x0+t.stepWidth;
+  const rise=(i+1)*STEP_HEIGHT,top=base+rise;
+  box(t.stepWidth,rise,t.stairMaxZ-t.stairMinZ,STAIR_STONE,
+   (x0+x1)*.5,base+rise*.5,0);
+  box(t.stepWidth-.04,.015,t.stairMaxZ-t.stairMinZ-.09,STAIR_TRIM,
+   (x0+x1)*.5,top+.005,0);
+  addWalkable('field-tower-stair-'+(i+1),x0,x1,
+   t.stairMinZ,t.stairMaxZ,top,'stairs');
+ }
+ const railTop=t.topY+.78;
+ for(const z of [t.minZ,t.maxZ]){
+  for(const x of [t.minX+.08,t.maxX-.08])
+   box(.14,.84,.14,wood,x,t.topY+.42,z);
+  box(width,.12,.12,wood,(t.minX+t.maxX)*.5,railTop,z);
+  addRailCollider(t.minX,t.maxX,z-.06,z+.06);
+ }
+ box(.12,.12,depth,wood,t.maxX,railTop,0);
+ addRailCollider(t.maxX-.06,t.maxX+.06,t.minZ,t.maxZ);
+ for(const [z0,z1] of [[t.minZ,t.stairMinZ-.08],
+                       [t.stairMaxZ+.08,t.maxZ]]){
+  box(.12,.12,z1-z0,wood,t.minX,railTop,(z0+z1)*.5);
+  addRailCollider(t.minX-.06,t.minX+.06,z0,z1);
+ }
+ for(const z of [t.stairMinZ-.13,t.stairMaxZ+.13])
+  addRailCollider(t.stepStartX,t.minX,z-.05,z+.05);
 }
-function tree(x,z){cylinder(.22,.32,2.5,wood,x,1.25,z);const leaves=mat('#4b8864');cylinder(0,1.65,3,leaves,x,3.3,z,scene,7);cylinder(0,1.2,2.2,leaves,x,4.6,z,scene,7)}
-[[-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15]].forEach(p=>tree(...p));
+buildFieldTower();
+// The same coordinates drive vegetation and its collision proxies.
+const FIELD_TREE_POSITIONS=[
+ [-9,-8],[9,-8],[-9,8],[-12,9],[13,-7],[-14,-5],[3,-15],
+ [-24,-4],[-25,5],[-16,23],[9,24],[-8,24],[26,5],[20,15]
+];
+function tree(x,z){
+ const lift=naturalSurfaceY(x,z)-TERRAIN.floorTop;
+ cylinder(.22,.32,2.5,wood,x,lift+1.25,z);
+ const leaves=mat('#4b8864');
+ cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
+ cylinder(0,1.2,2.2,leaves,x,lift+4.6,z,scene,7);
+}
+FIELD_TREE_POSITIONS.forEach(p=>tree(...p));
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
