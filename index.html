@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.23.1 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder against the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.23.1</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.24.0 · Apprentice Trial</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · arrows: camera · Ctrl+Z: undo camera · E: interact</p></div><div id="message">Explore the stone steps and the ladder against the north wall.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">v0.24.0</span><div id="zoomControls" aria-label="Camera zoom"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last camera adjustment" title="Undo camera (Ctrl+Z)" disabled>↶</button></div><span id="cameraHint">Drag to look</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.23.1';let pendingBuild=null;
+const BUILD='0.24.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -1240,6 +1240,68 @@ const obstacles=[
   ...[-12,12].flatMap(x=>[-12,12].map(z=>({x,z,r:1.82})))
 ];
 const BOUND=11.55; // Inner face of the surrounding courtyard walls.
+const BODY_CLEARANCE={
+ stand:{radius:.40,height:2.13,points:[0]},
+ crouch:{radius:.38,height:1.54,points:[0]},
+ crawl:{radius:.30,height:.48,points:[-.51,0,.51]}
+};
+function currentPosture(){return crawling?'crawl':crouched?'crouch':'stand';}
+function circleTouchesBox(x,z,r,minX,maxX,minZ,maxZ){
+ const dx=x-THREE.MathUtils.clamp(x,minX,maxX);
+ const dz=z-THREE.MathUtils.clamp(z,minZ,maxZ);
+ return dx*dx+dz*dz<(r+.015)*(r+.015);
+}
+function bodyVolumeFits(x,z,posture=currentPosture()){
+ const body=BODY_CLEARANCE[posture];
+ const floor=groundTopAt(x,z);
+ const bottom=floor+.025,top=floor+body.height;
+ const yaw=player.rotation.y,fx=Math.sin(yaw),fz=Math.cos(yaw);
+ for(const forward of body.points){
+  const px=x+fx*forward,pz=z+fz*forward,r=body.radius;
+  // The stone wall is one solid mass, not merely a walkable top surface.
+  if(bottom<WALL_TRAINING.topY-.005&&top>TERRAIN.floorTop&&
+     circleTouchesBox(px,pz,r,WALL_TRAINING.minX,WALL_TRAINING.maxX,
+      WALL_TRAINING.minZ,WALL_TRAINING.maxZ))return false;
+  // The underside of the timber deck is solid: tall stances cannot walk
+  // through it, while genuinely low profiles can fit underneath.
+  const deckTop=TERRAIN.floorTop+BALCONY.steps*STEP_HEIGHT;
+  if(bottom<deckTop&&top>deckTop-.22&&
+     circleTouchesBox(px,pz,r,BALCONY.xMin,BALCONY.xMax,
+      BALCONY.zMin,BALCONY.zMax))return false;
+  // The ladder is made of two inclined rails and discrete cross-rungs.
+  // Check only the segment of each rail within the avatar's vertical span.
+  const lo=Math.max(bottom,LADDER.bottomY+.06);
+  const hi=Math.min(top,LADDER.railTopY);
+  if(lo<=hi){
+   const verticalForZ=LADDER.bottomY+
+    (pz-LADDER.bottomZ)*(LADDER.deckY-LADDER.bottomY)/
+    (LADDER.topZ-LADDER.bottomZ);
+   const nearY=THREE.MathUtils.clamp(verticalForZ,lo,hi);
+   const nearZ=ladderZAtHeight(nearY);
+   for(const side of [-1,1]){
+    const dx=px-(LADDER.x+side*LADDER.width*.5);
+    const dz=pz-nearZ;
+    if(dx*dx+dz*dz<(r+.052)*(r+.052))return false;
+   }
+   for(let y=LADDER.bottomY+.22;y<LADDER.railTopY-.11;
+       y+=LADDER.rungSpacing){
+    if(y+.044<bottom||y-.044>top)continue;
+    const dx=px-THREE.MathUtils.clamp(px,
+      LADDER.x-LADDER.width*.5,LADDER.x+LADDER.width*.5);
+    const dz=pz-ladderZAtHeight(y);
+    if(dx*dx+dz*dz<(r+.044)*(r+.044))return false;
+   }
+  }
+ }
+ return true;
+}
+function canChangePosture(posture){
+ if(bodyVolumeFits(player.position.x,player.position.z,posture))return true;
+ document.getElementById('message').textContent=
+  'Not enough clearance to '+(posture==='stand'?'stand':
+    posture==='crouch'?'crouch':'crawl')+' here.';
+ return false;
+}
 function clearPosition(x,z){
  if(x < -BOUND || x > BOUND || z < -BOUND || z > BOUND)return false;
  for(const o of obstacles){const dx=x-o.x,dz=z-o.z,limit=PLAYER_RADIUS+o.r;
@@ -1251,7 +1313,7 @@ function clearPosition(x,z){
   const dx=x-nearX,dz=z-nearZ;
   if(dx*dx+dz*dz<PLAYER_RADIUS*PLAYER_RADIUS)return false;
  }
- return true;
+ return bodyVolumeFits(x,z);
 }
 function canTraverseStep(x,z){
  const currentTop=groundTopAt(player.position.x,player.position.z);
