@@ -40,7 +40,7 @@ moss tint on steep exposed stone. Physics and underlying collision are unchanged
 - Exact source comparison of 11 core terrain/collision/movement/camera/climbing/water
   functions with the v0.44.2 baseline.
 - Observed generated content: 48,846 blades, 23 rock outcrops, 56 ferns, 10 roots,
-  55 environment batches. Generation in the CPU test was approximately 4.1 seconds
+  55 environment batches. Generation in the CPU test was approximately 4.1–4.8 seconds
   after optimization (initial pass 7.6 seconds). These are host measurements, not
   a mobile-device benchmark. Full scene contains additional pre-existing geometry.
 
@@ -70,3 +70,9 @@ continuous terrain texture still limit resemblance to the much richer reference.
 
 Rollback: restore index.html and version.json from the recovery branch and publish
 through normal GitHub Pages deployment; the new module can remain unused.
+
+## v0.45.1 refinement
+
+Moved quality/metrics controls clear of short-screen action buttons and below
+modal overlays; keyboard input in the selector no longer reaches movement/camera
+handlers. Versioned the module import for publication cache invalidation.
