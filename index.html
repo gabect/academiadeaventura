@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.43.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.43.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.44.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.44.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.43.0';let pendingBuild=null;
+const BUILD='0.44.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -2082,6 +2082,60 @@ ecoBatch(ECO_IVY,new THREE.IcosahedronGeometry(.42,0),
  'ivy-clover-groundcover',(o,s)=>o.scale.set(
  s.size*1.2,s.size*.26,s.size),
  s=>new THREE.Color(s.tint>.5?'#4e9345':'#6cae50'));
+// Non-destructive HD foliage sprite test. Activate with ?hdtest=1.
+// Requires actual transparent PNGs under assets/mountain_hd/sprites/.
+// Normal gameplay never requests these assets; missing files fail safely.
+if(new URLSearchParams(location.search).get('hdtest')==='1'){
+ const trialNames=['grass_tuft_dense','fern_small',
+  'broadleaf_cluster','grass_hanging_edge','rock_mossy'];
+ const trialGroup=new THREE.Group();trialGroup.name='HD-sprite-cliff-trial';
+ trialGroup.userData.ignoreCameraRay=true;
+ scene.add(trialGroup);
+ const trialLoader=new THREE.TextureLoader();
+ const trialTextures=Promise.all(trialNames.map(name=>
+  new Promise(resolve=>trialLoader.load(
+   'assets/mountain_hd/sprites/'+name+'.png',
+   texture=>{
+    texture.colorSpace=THREE.SRGBColorSpace;
+    resolve(texture);
+   },undefined,()=>resolve(null)))));
+ trialTextures.then(textures=>{
+  if(textures.every(v=>!v)){
+   console.warn('HD mountain trial: sprites not uploaded yet');
+   return;
+  }
+  let seed=0x47f2d1;
+  const random=()=>{
+   seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+   return seed/4294967296;
+  };
+  const materials=textures.map(t=>t?
+   new THREE.MeshBasicMaterial({
+    map:t,transparent:true,alphaTest:.30,
+    side:THREE.DoubleSide,depthWrite:true}):null);
+  const quads=trialNames.map(()=>new THREE.PlaneGeometry(1,1));
+  for(let i=0;i<280;i++){
+   const x=-65+random()*19,
+    z=THREE.MathUtils.lerp(
+      mountainCliffUpperZ(x)-.3,
+      mountainCliffLipZ(x)+1.5,random());
+   if(waterAt(x,z)||mountainRouteBuffer(x,z,.5))continue;
+   const y=naturalSurfaceY(x,z);
+   if(!Number.isFinite(y))continue;
+   const kind=Math.floor(random()*5),material=materials[kind];
+   if(!material)continue;
+   const width=kind===3?1.05:.48+random()*.45;
+   const height=kind===3?.62:.36+random()*.45;
+   const plane=new THREE.Mesh(quads[kind],material);
+   plane.scale.set(width,height,1);
+   plane.position.set(x,y+.11,z+.08);
+   plane.rotation.y=(random()-.5)*.35;
+   plane.userData.ignoreCameraRay=true;
+   trialGroup.add(plane);
+  }
+  console.info('HD mountain trial loaded',trialGroup.children.length);
+ });
+}
 // Shared meshes for all sizes of trees, optimized for mobile GPUs.
 function drawMountainTreePart(sites,geometry,material,name,position,scale,tint=true){
  const batch=new THREE.InstancedMesh(geometry,material,sites.length),
