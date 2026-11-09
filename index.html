@@ -53,8 +53,10 @@ const ZOOM_MIN=.65,ZOOM_MAX=2.25;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
-let cameraHeading=Math.PI,cameraPitch=.43;
-const CAMERA_MIN_PITCH=.10,CAMERA_MAX_PITCH=1.12;
+let cameraHeading=Math.PI,cameraPitch=.36;
+const CAMERA_MIN_PITCH=.10,CAMERA_MAX_PITCH=1.10;
+const FOLLOW_FACING_SPEED=8.4;
+let lastCameraManualAt=-100000;
 const MOUSE_SENSITIVITY=.00285,ARROW_YAW_SPEED=1.85,
  ARROW_PITCH_SPEED=1.30;
 let rollingHorizon=true;
@@ -81,6 +83,7 @@ horizonViewButton.addEventListener('click',()=>setHorizonView(!rollingHorizon));
 document.addEventListener('pointerlockchange',updateCameraHint);
 setHorizonView(true);
 function rotateThirdPersonCamera(deltaX,deltaY){
+ lastCameraManualAt=performance.now();
  // Mouse right means look right. The old north-up heading was PI,
  // so yaw decreases to look east when dragging right.
  cameraHeading-=deltaX*MOUSE_SENSITIVITY;
@@ -2874,8 +2877,13 @@ function stepLocomotion(dt,right,forward,runEnabled){
   // right goes toward the right edge of the third-person screen.
   dx=forward*Math.sin(cameraHeading)-right*Math.cos(cameraHeading);
   dz=forward*Math.cos(cameraHeading)+right*Math.sin(cameraHeading);
+  // Align the avatar's FRONT with the chase view. A/D genuinely
+  // strafe sideways rather than rotating the avatar out of the view.
   const previousFacing=player.rotation.y;
-  player.rotation.y=Math.atan2(dx,dz);
+  const deltaYaw=Math.atan2(Math.sin(cameraHeading-previousFacing),
+   Math.cos(cameraHeading-previousFacing));
+  player.rotation.y=previousFacing+THREE.MathUtils.clamp(
+   deltaYaw,-dt*FOLLOW_FACING_SPEED,dt*FOLLOW_FACING_SPEED);
   if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
       groundTopAt(player.position.x,player.position.z),true))
    player.rotation.y=previousFacing;
@@ -2994,22 +3002,27 @@ function thirdPersonCameraClearance(target,desired){
  return desired.lerp(target,1-lastClear);
 }
 function followPlayerCamera(dt){
- // Full orbit camera. Its heading sets WASD and joystick direction,
- // while its pitch only determines the over-the-shoulder viewpoint.
+ // A ladder faces a fixed wall: gradually follow its direction from
+ // behind unless the player has manually orbited within the last 900ms.
+ if(LADDER_STATE.active&&performance.now()-lastCameraManualAt>900){
+  const delta=Math.atan2(Math.sin(player.rotation.y-cameraHeading),
+   Math.cos(player.rotation.y-cameraHeading));
+  cameraHeading+=THREE.MathUtils.clamp(delta,-dt*2.2,dt*2.2);
+ }
  CURVED_HORIZON.focus.value.set(player.position.x,player.position.z);
  CURVED_HORIZON.direction.value.set(Math.sin(cameraHeading),
   Math.cos(cameraHeading));
  CURVED_HORIZON.amount.value=THREE.MathUtils.damp(
   CURVED_HORIZON.amount.value,rollingHorizon?.0135:0,4,dt);
  const ground=groundTopAt(player.position.x,player.position.z);
- const head=LADDER_STATE.active?1.04:crawling?.52:crouched?.94:1.23;
+ const head=LADDER_STATE.active?1.13:crawling?.58:crouched?.98:1.44;
  const centerY=LADDER_STATE.active?player.position.y+head:
   WATER_STATE.mode==='swim'?
    (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
  cameraTarget.set(player.position.x,centerY,player.position.z);
  // A closer following distance and wider FOV keep the character large
  // and recognizable on PC, with the horizon above shoulder height.
- const distance=7.8/cameraZoom;
+ const distance=6.3/cameraZoom;
  const horizontal=distance*Math.cos(cameraPitch);
  cameraDesired.set(
   cameraTarget.x-Math.sin(cameraHeading)*horizontal,
@@ -4056,6 +4069,7 @@ function animate(){
   const tilt=(keys.has('ArrowDown')?1:0)-
    (keys.has('ArrowUp')?1:0);
   if(yaw||tilt){
+   lastCameraManualAt=performance.now();
    cameraHeading-=yaw*ARROW_YAW_SPEED*dt;
    cameraPitch=THREE.MathUtils.clamp(
     cameraPitch+tilt*ARROW_PITCH_SPEED*dt,
