@@ -45,32 +45,49 @@ const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 setInterval(checkUpdate,30000);setTimeout(checkUpdate,3000);
 const scene=new THREE.Scene();scene.background=new THREE.Color('#b6d9e9');scene.fog=new THREE.Fog('#b6d9e9',62,168);
-const camera=new THREE.PerspectiveCamera(34,16/9,.08,270);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
-// Animal Crossing's rolling-log world: fixed north-up heading and lower
-// horizon-facing pitch. The previous Link's Awakening diorama pitch remains
-// available for instant A/B comparison, without rotating during movement.
-const ZOOM_MIN=.70,ZOOM_MAX=2.6;
+const camera=new THREE.PerspectiveCamera(55,16/9,.08,270);const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+// PC-style third-person chase camera with mouse-look + arrow-key control.
+// The earlier fixed world is preserved in the historical v0.37.0 archive.
+// AC horizon deformation remains optional and never alters input or physics.
+const ZOOM_MIN=.65,ZOOM_MAX=2.25;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
-// Fixed north-up heading, elevated ~66.5 degrees above the ground.
-// Nintendo has not published exact camera parameters: these are visual matches.
-const cameraHeading=Math.PI;
-const CAMERA_PITCH_DIORAMA=1.16,CAMERA_PITCH_ROLLING=.64;
-let rollingHorizon=true,cameraPitch=CAMERA_PITCH_ROLLING;
+let cameraHeading=Math.PI,cameraPitch=.43;
+const CAMERA_MIN_PITCH=.10,CAMERA_MAX_PITCH=1.12;
+const MOUSE_SENSITIVITY=.00285,ARROW_YAW_SPEED=1.85,
+ ARROW_PITCH_SPEED=1.30;
+let rollingHorizon=true;
 const horizonViewButton=document.getElementById('viewModeButton');
 const cameraHint=document.getElementById('cameraHint');
+const isPointerLocked=()=>document.pointerLockElement===renderer.domElement;
+function updateCameraHint(){
+ cameraHint.textContent=isPointerLocked()?
+  'Mouse activo · Esc libera':
+  '3ª persona · Clic: mouse · Flechas: cámara';
+}
 function setHorizonView(enabled){
  rollingHorizon=!!enabled;
- horizonViewButton.textContent=rollingHorizon?'AC':'3D';
+ horizonViewButton.textContent=rollingHorizon?'AC':'3P';
  horizonViewButton.title=rollingHorizon?
-  'Horizonte curvo. Toca para comparar con la cámara anterior':
-  'Cámara cenital anterior. Toca para volver al horizonte curvo';
+  'Curvatura AC activa. Toca para terreno sin curvatura':
+  'Cámara 3ª persona. Toca para activar el horizonte curvo';
  horizonViewButton.setAttribute('aria-pressed',String(rollingHorizon));
- cameraHint.textContent=rollingHorizon?'Horizonte curvo':'Vista anterior';
+ updateCameraHint();
 }
 horizonViewButton.addEventListener('click',()=>setHorizonView(!rollingHorizon));
+document.addEventListener('pointerlockchange',updateCameraHint);
 setHorizonView(true);
+function rotateThirdPersonCamera(deltaX,deltaY){
+ // Mouse right means look right. The old north-up heading was PI,
+ // so yaw decreases to look east when dragging right.
+ cameraHeading-=deltaX*MOUSE_SENSITIVITY;
+ cameraPitch=THREE.MathUtils.clamp(
+  cameraPitch-deltaY*MOUSE_SENSITIVITY,
+  CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
+ if(Math.abs(cameraHeading)>Math.PI*2)cameraHeading=
+  Math.atan2(Math.sin(cameraHeading),Math.cos(cameraHeading));
+}
 const cameraHistory=[];
 const cameraUndoButton=document.getElementById('cameraUndo');
 function recordCameraChange(){
@@ -120,12 +137,30 @@ renderer.domElement.addEventListener('wheel',e=>{
  lastZoomWheelAt=now;
  setCameraZoom(cameraZoom*(e.deltaY<0?1.12:1/1.12));
 },{passive:false});
-// A single finger/mouse drag cannot rotate the camera.
-// Two fingers can still pinch zoom without affecting its fixed orientation.
+// Desktop: click the 3D view to capture the mouse for FPS-style
+// pointer movement; ESC releases it. Right-button drag also works
+// without pointer lock. Touch: one finger orbits, two fingers pinch.
 const cameraPointers=new Map();
 let pinchDistance=0,pinchRecorded=false;
+let mouseDragId=null;
+renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 renderer.domElement.addEventListener('pointerdown',e=>{
- if(e.pointerType==='mouse'&&e.button!==0)return;
+ if(e.pointerType==='mouse'){
+  if(e.button===0){
+   if(!isPointerLocked()&&renderer.domElement.requestPointerLock){
+    try{
+     const request=renderer.domElement.requestPointerLock();
+     if(request?.catch)request.catch(()=>{});
+    }catch(_){}
+   }
+   return;
+  }
+  if(e.button!==2||isPointerLocked())return;
+  e.preventDefault();mouseDragId=e.pointerId;
+  try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
+  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  return;
+ }
  e.preventDefault();
  cameraPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
  try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
@@ -135,23 +170,32 @@ renderer.domElement.addEventListener('pointerdown',e=>{
   pinchRecorded=false;
  }
 },{passive:false});
+document.addEventListener('mousemove',e=>{
+ if(isPointerLocked())rotateThirdPersonCamera(e.movementX,e.movementY);
+});
 renderer.domElement.addEventListener('pointermove',e=>{
- const p=cameraPointers.get(e.pointerId);if(!p)return;
+ const p=cameraPointers.get(e.pointerId);
+ if(!p||isPointerLocked())return;
  e.preventDefault();
+ const dx=e.clientX-p.x,dy=e.clientY-p.y;
  p.x=e.clientX;p.y=e.clientY;
  if(cameraPointers.size===2){
   const [a,b]=[...cameraPointers.values()];
-  const dist=Math.hypot(a.x-b.x,a.y-b.y);
-  if(!pinchRecorded&&Math.abs(dist-pinchDistance)>3){
+  const distance=Math.hypot(a.x-b.x,a.y-b.y);
+  if(!pinchRecorded&&Math.abs(distance-pinchDistance)>3){
    recordCameraChange();pinchRecorded=true;
   }
-  if(pinchDistance>0&&dist>0)setCameraZoom(cameraZoom*dist/pinchDistance);
-  pinchDistance=dist;
+  if(pinchDistance>0&&distance>0)
+   setCameraZoom(cameraZoom*distance/pinchDistance);
+  pinchDistance=distance;
+ }else if(cameraPointers.size===1){
+  rotateThirdPersonCamera(dx,dy);
  }
 },{passive:false});
 for(const type of ['pointerup','pointercancel','lostpointercapture']){
  renderer.domElement.addEventListener(type,e=>{
   cameraPointers.delete(e.pointerId);
+  if(mouseDragId===e.pointerId)mouseDragId=null;
   if(cameraPointers.size<2){pinchDistance=0;pinchRecorded=false;}
  });
 }
