@@ -707,12 +707,24 @@ for(let i=0;i<groundPositions.count;i++){
   terrainShade.lerp(rockShade,exposed*.96);
   // Geological micro-relief is sculpted directly INTO the actual terrain
   // mesh (not a freestanding surface), only on impassable steep walls.
-  // Underlying collision height remains analytically exact. Amplitude <=
-  // 0.065 world units, invisible for walking passages and shallow water.
+  // Underlying collision height remains analytical. Visual irregularity
+  // stays below .15 units and is confined to unwalkable steep rock.
   if(!water&&actualSteepness>2.0&&exposed>.80){
-   const relief=.055*Math.sin(x*1.27+hill*.43)*
-    Math.cos(x*.49+hill*.93);
+   // Sculpt small broken facets into the SAME terrain mesh. The offset
+   // vanishes at the crest/foot and never touches the walkable routes.
+   const relief=.105*Math.sin(x*.93+hill*.46)*
+    Math.cos(x*.44+hill*1.13)+
+    .038*Math.sin(x*2.08+hill*.91);
    groundPositions.setZ(i,actualHeight+relief*exposed);
+   const foot=mountainCliffLipZ(x),
+    crest=mountainCliffUpperZ(x),
+    faceT=THREE.MathUtils.clamp((foot-z)/(foot-crest),0,1),
+    frontMask=Math.sin(Math.PI*faceT)**2;
+   if(frontMask>.02){
+    const rockFaceOffset=frontMask*.115*
+     Math.sin(x*1.08+hill*.73)*Math.cos(x*.54-hill*.35);
+    groundPositions.setY(i,-(z+rockFaceOffset));
+   }
   }
  }
 
