@@ -2519,8 +2519,8 @@ function stepJump(dt){
  if(JUMP.height<=0){JUMP.height=0;JUMP.velocity=0;JUMP.active=false;}
  player.position.y+=JUMP.height;
 }
-function footPosition(root,index,forward=0){
- const lateral=index===0?-.24:.24,yaw=root.rotation.y;
+function footPosition(root,index,forward=0,sideStep=0){
+ const lateral=(index===0?-.24:.24)+sideStep,yaw=root.rotation.y;
  const x=root.position.x+Math.cos(yaw)*lateral+Math.sin(yaw)*forward;
  const z=root.position.z-Math.sin(yaw)*lateral+Math.cos(yaw)*forward;
  return new THREE.Vector3(x,ankleGroundY(x,z,root.position.x,root.position.z),z);
@@ -2632,7 +2632,14 @@ function poseGroundedCharacter(character,travel,dt){
    const remainingTravel=(1-t)*step*2;
    // A shorter step retains a slight right-front/left-rear split in motion.
    const stagger=(i===1?1:-1)*CROUCH.strideBias*crouch;
-   const landing=footPosition(character,i,remainingTravel+stance*step+stagger);
+   // A/D strafe and S backpedals: plant the swing foot in its real
+   // lateral/forward travel direction, not always in front of the toes.
+   const stride=remainingTravel+stance*step+stagger;
+   const travelForward=(sin*gait.vx+cos*gait.vz)/Math.max(speed,.01);
+   const travelSide=(-cos*gait.vx+sin*gait.vz)/Math.max(speed,.01);
+   const landing=footPosition(character,i,
+    stride*travelForward,
+    THREE.MathUtils.clamp(stride*travelSide,-.36,.36));
    foot.position.lerpVectors(foot.from,landing,ease);
    // Extra swing clearance over a raised riser; it only affects the step
     // that climbs to higher ground, not level travel or standing idle.
