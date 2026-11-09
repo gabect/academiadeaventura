@@ -83,7 +83,7 @@ function rotateThirdPersonCamera(deltaX,deltaY){
  // so yaw decreases to look east when dragging right.
  cameraHeading-=deltaX*MOUSE_SENSITIVITY;
  cameraPitch=THREE.MathUtils.clamp(
-  cameraPitch-deltaY*MOUSE_SENSITIVITY,
+  cameraPitch+deltaY*MOUSE_SENSITIVITY,
   CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
  if(Math.abs(cameraHeading)>Math.PI*2)cameraHeading=
   Math.atan2(Math.sin(cameraHeading),Math.cos(cameraHeading));
@@ -110,7 +110,6 @@ const cameraLookAt=new THREE.Vector3();
 const cameraDesired=new THREE.Vector3();
 const cameraDelta=new THREE.Vector3();
 const cameraRay=new THREE.Raycaster();
-const cameraOccluders=[];
 function setCameraZoom(next){
  cameraZoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
  zoomInButton.disabled=cameraZoom>=ZOOM_MAX-.001;
@@ -2967,15 +2966,6 @@ for(const def of NPC_MARKERS){
  scene.add(npc);AMBIENT_NPCS.push(npc);
 }
 prepareFeet(player);
-// Cache architecture only for camera obstruction rays; never collide with
-// the animated skeleton, guardian or flat ground.
-for(const obj of scene.children){
- if(obj===player||obj===guardian||obj===groundMesh||obj===pavement||
-    obj.userData.ignoreCameraRay)continue;
- obj.traverse(node=>{
-  if(node.isMesh&&node.geometry!==tileGeometry)cameraOccluders.push(node);
- });
-}
 function thirdPersonCameraClearance(target,desired){
  // Third-person chase view must not disappear behind a solid ridge,
  // the lookout tower or the closed cabin. Sample physical topography,
@@ -3752,6 +3742,7 @@ function clearCKeyTimer(){
 addEventListener('keydown',e=>{
  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space',
       'CapsLock','AltLeft'].includes(e.code)||
+   (e.altKey&&['KeyW','KeyA','KeyS','KeyD'].includes(e.code))||
    ((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'))e.preventDefault();
  if((e.ctrlKey||e.metaKey)&&e.code==='KeyZ'){
   if(!e.repeat)undoCameraChange();
