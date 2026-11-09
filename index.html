@@ -33,12 +33,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.41.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.41.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p>Demo 0.42.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.42.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.41.0';let pendingBuild=null;
+const BUILD='0.42.0';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -704,7 +704,15 @@ for(let i=0;i<groundPositions.count;i++){
    Math.sin(x*.29+z*.16)*Math.cos(z*.41-x*.11));
   terrainShade.lerp(forestGrass,
    (1-exposed)*woodlandNoise*.16);
-  terrainShade.lerp(rockShade,exposed*.96);
+  // Vegetation-rich cliff: broad emerald mats interrupted by embedded
+  // bedrock islands, not a continuous grey rock wall.
+  const blanket=.5+.5*Math.sin(x*.38+hill*.24+Math.sin(z*.35))*
+   Math.cos(z*.53-x*.17);
+  const stonePocket=smoothWater((blanket-.61)/.25);
+  const stoneFraction=exposed*(.10+.82*stonePocket);
+  terrainShade.lerp(forestGrass,exposed*(1-stonePocket)*.25);
+  terrainShade.lerp(freshGrass,exposed*(1-stonePocket)*.65);
+  terrainShade.lerp(rockShade,stoneFraction*.94);
   // Geological micro-relief is sculpted directly INTO the actual terrain
   // mesh (not a freestanding surface), only on impassable steep walls.
   // Underlying collision height remains analytical. Visual irregularity
@@ -813,10 +821,11 @@ terrainMaterial.onBeforeCompile=shader=>{
    'vec3 rockColor=mix(sideRock,frontRock,rockWeights.z/(rockWeights.x+rockWeights.z+.001));',
    'vec3 fineRock=texture2D(academyRockSurface,rockFrontUV*3.73+vec2(.23,.61)).rgb;',
    'float rockDetail=(.44+1.25*rockColor.r)*(.92+.20*fineRock.g);',
-   'diffuseColor.rgb*=mix(1.0,rockDetail,rockFaceMask*.94);'
+   'float vegetal=smoothstep(.025,.18,diffuseColor.g-diffuseColor.r);',
+   'diffuseColor.rgb*=mix(1.0,rockDetail,rockFaceMask*(1.0-vegetal)*.94);'
   ].join('\n'));
 };
-terrainMaterial.customProgramCacheKey=()=>'academy-terrain-rock-v1';
+terrainMaterial.customProgramCacheKey=()=>'academy-terrain-lush-cliff-v3';
 
 const groundMesh=new THREE.Mesh(terrainGeometry,terrainMaterial);
 groundMesh.rotation.x=-Math.PI/2;
@@ -1831,6 +1840,207 @@ const mountainRocks=cliffBatch(
  new THREE.DodecahedronGeometry(1,0),mat('#9a9c91'),
  MOUNTAIN_STONE_SITES,v=>[v.sx,v.sy,v.sz]);
 mountainRocks.name='native-mountain-pebbles-and-rocks';
+// DENSE ECOLOGICAL MOUNTAIN FACE — 3D grass, stone, twisted roots,
+// fern crowns and ivy. Decorative only; keep the authentic terrain,
+// traversable passes, ladder, waterfall and camera physics unchanged.
+const ECO_UP=new THREE.Vector3(0,1,0);
+const ECO_TMP=new THREE.Object3D();
+const ECO_NORMAL=new THREE.Vector3();
+function ecoFaceNormal(x,z){
+ const d=.14;
+ const dx=(naturalSurfaceY(x+d,z)-naturalSurfaceY(x-d,z))/(2*d);
+ const dz=(naturalSurfaceY(x,z+d)-naturalSurfaceY(x,z-d))/(2*d);
+ return new THREE.Vector3(-dx,1,-dz).normalize();
+}
+function ecoRockIsland(x,y,z){
+ const v=.5+.5*Math.sin(x*.38+y*.24+Math.sin(z*.35))*
+  Math.cos(z*.53-x*.17);
+ return smoothWater((v-.61)/.25);
+}
+function ecoSite(x,z,clearance=.3){
+ if(Math.abs(x)>75||z<-61||waterAt(x,z))return null;
+ if(mountainRouteBuffer(x,z,clearance))return null;
+ const y=naturalSurfaceY(x,z);
+ if(!Number.isFinite(y)||y<.4||y>18.2)return null;
+ return {x,y,z};
+}
+function ecoGrassGeometry(){
+ const p=[];
+ for(let j=0;j<7;j++){
+  const a=j*2.39996323,c=Math.cos(a),d=Math.sin(a);
+  const height=.32+.11*Math.sin(j*4.1);
+  const spread=.17+.038*(j%3),width=.032+(j%2)*.011;
+  const v0=[-d*width,0,c*width],v1=[d*width,0,-c*width];
+  const knee=[c*spread*.45,height*.61,d*spread*.45];
+  const tip=[c*spread,height,d*spread];
+  p.push(...v0,...v1,...knee,...v1,...tip,...knee);
+ }
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
+ g.computeVertexNormals();return g;
+}
+function ecoBatch(sites,geometry,material,name,transform,colorFn){
+ if(!sites.length)return;
+ const mesh=new THREE.InstancedMesh(geometry,material,sites.length);
+ const turn=new THREE.Quaternion(),tilt=new THREE.Quaternion();
+ for(let i=0;i<sites.length;i++){
+  const site=sites[i],n=ecoFaceNormal(site.x,site.z);
+  tilt.setFromUnitVectors(ECO_UP,n);
+  turn.setFromAxisAngle(ECO_UP,site.angle||0);
+  ECO_TMP.position.set(site.x+n.x*(site.offset||.025),
+   site.y+n.y*(site.offset||.025),
+   site.z+n.z*(site.offset||.025));
+  ECO_TMP.quaternion.copy(tilt).multiply(turn);
+  transform(ECO_TMP,site);
+  ECO_TMP.updateMatrix();mesh.setMatrixAt(i,ECO_TMP.matrix);
+  if(colorFn)mesh.setColorAt(i,colorFn(site));
+ }
+ mesh.instanceMatrix.needsUpdate=true;
+ if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+ mesh.frustumCulled=false;mesh.receiveShadow=true;mesh.name=name;
+ scene.add(mesh);return mesh;
+}
+// Dense, reproducible surface sampling: place tufts on the actual
+// mountain instead of hanging billboards across the cliff.
+const ECO_GRASS=[],ECO_ROCKS=[],ECO_FERNS=[],ECO_IVY=[];
+for(let ix=0;ix<460;ix++){
+ const x=-75+ix*(150/460)+(cliffRand()-.5)*.19;
+ if(cliffRouteClear(x,.9))continue;
+ const foot=mountainCliffLipZ(x),crest=mountainCliffUpperZ(x);
+ for(let iz=0;iz<32;iz++){
+  const z=THREE.MathUtils.lerp(crest-1.0,foot+1.8,
+   (iz+.18+cliffRand()*.64)/32);
+  const site=ecoSite(x,z,.18);
+  if(!site)continue;
+  const stone=ecoRockIsland(site.x,site.y,site.z);
+  if(cliffRand()<.05+stone*.45)continue;
+  ECO_GRASS.push({...site,offset:.047,
+   size:.72+cliffRand()*1.22,angle:cliffRand()*Math.PI*2,
+   tint:cliffRand()});
+ }
+}
+const ecoGrassColors=['#8dc755','#a4d36b','#75b94e','#b9d978',
+ '#6ca84c','#98c461'];
+ecoBatch(ECO_GRASS,ecoGrassGeometry(),
+ new THREE.MeshStandardMaterial({color:'#ffffff',
+  side:THREE.DoubleSide,roughness:1}),
+ 'dense-plush-cliff-grass',(o,s)=>o.scale.setScalar(s.size),
+ s=>new THREE.Color(ecoGrassColors[Math.min(5,Math.floor(s.tint*6))]));
+// A second soft low layer fills gaps between tall blades.
+const ecoUnderstory=[];
+for(let i=0;i<ECO_GRASS.length;i+=2){
+ const s=ECO_GRASS[i];
+ ecoUnderstory.push({...s,size:s.size*.55,offset:.037,
+  angle:s.angle+1.15});
+}
+ecoBatch(ecoUnderstory,ecoGrassGeometry(),
+ new THREE.MeshStandardMaterial({color:'#ffffff',
+  side:THREE.DoubleSide,roughness:1}),
+ 'short-green-cliff-understory',(o,s)=>o.scale.setScalar(s.size),
+ s=>new THREE.Color(ecoGrassColors[Math.min(5,Math.floor(s.tint*6))]));
+// Rock cores protrude through the grass in irregular, embedded patches.
+for(let i=0;i<410;i++){
+ const x=-74+cliffRand()*148;
+ if(cliffRouteClear(x,1.7))continue;
+ const y=TERRAIN.floorTop+1.1+cliffRand()*7.2;
+ const z=rockFaceZAtHeight(x,y);
+ const site=ecoSite(x,z,.60);
+ if(!site||cliffRand()<.40)continue;
+ ECO_ROCKS.push({...site,size:.38+cliffRand()*.89,
+  angle:cliffRand()*Math.PI*2,offset:.06});
+}
+ecoBatch(ECO_ROCKS,new THREE.DodecahedronGeometry(1,1),
+ new THREE.MeshStandardMaterial({color:'#a4a9a0',roughness:1}),
+ 'projecting-mossy-bedrock',(o,s)=>{
+  o.scale.set(s.size*1.32,s.size*.40,s.size*.92);
+ });
+// Fern fronds have natural leaf silhouettes, broader than grass.
+function ecoFernGeometry(){
+ const verts=[];
+ for(let f=0;f<6;f++){
+  const a=f*Math.PI/3,cs=Math.cos(a),sn=Math.sin(a);
+  for(let k=0;k<5;k++){
+   const t=k/5,next=(k+1)/5;
+   const x=cs*(.18+.57*t),z=sn*(.18+.57*t);
+   const nx=cs*(.18+.57*next),nz=sn*(.18+.57*next);
+   const h=.13+.45*Math.sin(t*Math.PI*.84);
+   const h2=.13+.45*Math.sin(next*Math.PI*.84);
+   const w=.11*(1-t),w2=.11*(1-next);
+   for(const p of [
+    [x-sn*w,h,z+cs*w],[x+sn*w,h,z-cs*w],
+    [nx-sn*w2,h2,nz+cs*w2],
+    [x+sn*w,h,z-cs*w],[nx+sn*w2,h2,nz-cs*w2],
+    [nx-sn*w2,h2,nz+cs*w2]
+   ])verts.push(...p);
+  }
+ }
+ const g=new THREE.BufferGeometry();
+ g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+ g.computeVertexNormals();return g;
+}
+for(let i=0;i<1000;i++){
+ const x=-73+cliffRand()*146;
+ if(cliffRouteClear(x,2.1))continue;
+ const t=.12+cliffRand()*.83;
+ const z=THREE.MathUtils.lerp(mountainCliffUpperZ(x),
+  mountainCliffLipZ(x)+2.1,t);
+ const s=ecoSite(x,z,.7);
+ if(s&&cliffRand()>.48)
+  ECO_FERNS.push({...s,size:.45+cliffRand()*.60,
+   offset:.08,angle:cliffRand()*Math.PI*2});
+}
+ecoBatch(ECO_FERNS,ecoFernGeometry(),
+ new THREE.MeshStandardMaterial({color:'#579349',side:THREE.DoubleSide,
+  roughness:1}),
+ 'fern-fronds-among-cliff-rocks',(o,s)=>o.scale.setScalar(s.size));
+// Twisting branching roots follow the HEIGHTFIELD rather than standing
+// on a separate invisible wall. Broad roots terminate into the grass.
+const ecoRootMat=new THREE.MeshStandardMaterial({
+ color:'#75583c',roughness:1});
+const ECO_ROOT_X=[-72,-62,-53,-43,-34,-3,5,18,26,46,56,67,73];
+for(let i=0;i<ECO_ROOT_X.length;i++){
+ const startX=ECO_ROOT_X[i];
+ if(cliffRouteClear(startX,1.5))continue;
+ const top=9.2-cliffRand()*1.0,bottom=1.0+cliffRand()*1.4;
+ const sway=cliffRand()*6.28,lean=cliffRand()>.5?1:-1;
+ function makeRoot(branch){
+  const path=[];
+  for(let k=0;k<=22;k++){
+   const t=k/22;
+   const by=THREE.MathUtils.lerp(top-(branch?1.8:0),
+    bottom+(branch?1.7:0),t);
+   const x=startX+Math.sin(sway+t*5.7)*(.4+t*.9)+
+    lean*t*2.2+(branch?Math.sin(t*3.6)*1.0:.0);
+   const z=rockFaceZAtHeight(x,TERRAIN.floorTop+by);
+   const n=ecoFaceNormal(x,z),lift=.11+.05*Math.sin(t*Math.PI);
+   path.push(new THREE.Vector3(x+n.x*lift,
+    TERRAIN.floorTop+by+n.y*lift,z+n.z*lift));
+  }
+  const curve=new THREE.CatmullRomCurve3(path);
+  const root=new THREE.Mesh(new THREE.TubeGeometry(curve,52,
+   branch?.073:.13,6,false),ecoRootMat);
+  root.name='twisted-root-embedded-in-cliff';
+  root.receiveShadow=true;scene.add(root);
+ }
+ makeRoot(false);
+ if(i%2===0)makeRoot(true);
+}
+// Creeping broad-leaf foliage softens roots and stone boundaries.
+for(let i=0;i<1000;i++){
+ const x=-74+cliffRand()*148;
+ if(cliffRouteClear(x,1.5))continue;
+ const z=THREE.MathUtils.lerp(mountainCliffUpperZ(x)-1,
+  mountainCliffLipZ(x)+2,cliffRand());
+ const s=ecoSite(x,z,.55);
+ if(s&&cliffRand()>.34)ECO_IVY.push({...s,
+  size:.20+cliffRand()*.36,offset:.07,
+  angle:cliffRand()*Math.PI*2,tint:cliffRand()});
+}
+ecoBatch(ECO_IVY,new THREE.IcosahedronGeometry(.42,0),
+ new THREE.MeshStandardMaterial({color:'#ffffff',roughness:1}),
+ 'ivy-clover-groundcover',(o,s)=>o.scale.set(
+ s.size*1.2,s.size*.26,s.size),
+ s=>new THREE.Color(s.tint>.5?'#4e9345':'#6cae50'));
 // Shared meshes for all sizes of trees, optimized for mobile GPUs.
 function drawMountainTreePart(sites,geometry,material,name,position,scale,tint=true){
  const batch=new THREE.InstancedMesh(geometry,material,sites.length),
