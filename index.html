@@ -1438,16 +1438,19 @@ for(let x=-75,slot=0;x<75;x+=1.7,slot++){
  for(let j=0;j<3;j++){
   const gx=px+(cliffRand()-.5)*1.0;
   const gz=mountainCliffLipZ(gx)+.88+cliffRand()*1.4;
+  if(waterAt(gx,gz))continue; // No grass growing underwater.
   plantTuft(gx,naturalSurfaceY(gx,gz)+.02,gz,
    .76+cliffRand()*.72);
  }
  if(slot%3===0){
   const bz=lip+1.05+cliffRand()*1.1;
+  if(!waterAt(px,bz)){
   cliffBoulders.push({x:px,y:naturalSurfaceY(px,bz)+.19,z:bz,
    sx:.43+cliffRand()*.31,sy:.30+cliffRand()*.16,
    sz:.46+cliffRand()*.27,rot:cliffRand()*3});
   CLIFF_BASE_BOULDERS.push({x:px,z:bz,r:.31});
   CLIFF_DECOR_STATS.boulders++;
+  }
  }
  if(slot%2===1){
   const tz=lip-1.2-cliffRand()*.6;
