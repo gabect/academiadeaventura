@@ -821,7 +821,7 @@ terrainMaterial.onBeforeCompile=shader=>{
    'vec3 rockColor=mix(sideRock,frontRock,rockWeights.z/(rockWeights.x+rockWeights.z+.001));',
    'vec3 fineRock=texture2D(academyRockSurface,rockFrontUV*3.73+vec2(.23,.61)).rgb;',
    'float rockDetail=(.44+1.25*rockColor.r)*(.92+.20*fineRock.g);',
-   'float greenCover=smoothstep(.27,.41,diffuseColor.g-diffuseColor.r);',
+   'float greenCover=smoothstep(.035,.16,diffuseColor.g-diffuseColor.r);',
    'diffuseColor.rgb*=mix(1.0,rockDetail,rockFaceMask*(1.0-greenCover)*.86);'
   ].join('\n'));
 };
