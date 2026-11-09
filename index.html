@@ -2976,50 +2976,64 @@ for(const obj of scene.children){
   if(node.isMesh&&node.geometry!==tileGeometry)cameraOccluders.push(node);
  });
 }
+function thirdPersonCameraClearance(target,desired){
+ // Third-person chase view must not disappear behind a solid ridge,
+ // the lookout tower or the closed cabin. Sample physical topography,
+ // not decorative grass/trees, so the view stays stable in foliage.
+ const candidate=new THREE.Vector3();
+ let lastClear=1;
+ for(let j=1;j<=28;j++){
+  const t=j/28;
+  candidate.copy(target).lerp(desired,t);
+  const floor=groundTopAt(candidate.x,candidate.z);
+  const inCabin=candidate.x>CABIN.minX-.1&&
+   candidate.x<CABIN.maxX+.1&&
+   candidate.z>CABIN.minZ-.1&&candidate.z<CABIN.maxZ+.1&&
+   candidate.y<CABIN.floorY+3.25;
+  const inTower=candidate.x>FIELD_TOWER.minX-.1&&
+   candidate.x<FIELD_TOWER.maxX+.1&&
+   candidate.z>FIELD_TOWER.minZ-.1&&
+   candidate.z<FIELD_TOWER.maxZ+.1&&
+   candidate.y<FIELD_TOWER.topY+.9;
+  if(t>.15&&(candidate.y<floor+.31||inCabin||inTower)){
+   lastClear=Math.max(.18,(j-1.6)/28);break;
+  }
+ }
+ return desired.lerp(target,1-lastClear);
+}
 function followPlayerCamera(dt){
- // Look stays strictly north-up; only an explicit view-toggle changes pitch.
- cameraPitch=THREE.MathUtils.damp(cameraPitch,
-  rollingHorizon?CAMERA_PITCH_ROLLING:CAMERA_PITCH_DIORAMA,3.8,dt);
+ // Full orbit camera. Its heading sets WASD and joystick direction,
+ // while its pitch only determines the over-the-shoulder viewpoint.
  CURVED_HORIZON.focus.value.set(player.position.x,player.position.z);
+ CURVED_HORIZON.direction.value.set(Math.sin(cameraHeading),
+  Math.cos(cameraHeading));
  CURVED_HORIZON.amount.value=THREE.MathUtils.damp(
-  CURVED_HORIZON.amount.value,rollingHorizon?.0135:0,4.0,dt);
+  CURVED_HORIZON.amount.value,rollingHorizon?.0135:0,4,dt);
  const ground=groundTopAt(player.position.x,player.position.z);
- const height=LADDER_STATE.active?1.00:crawling?.40:crouched?.83:1.05;
- // Gentle look-ahead in the walking direction reveals the upcoming terrain.
- // Unlike an orbit camera, this shifts only the center of the fixed view.
- const leadX=LADDER_STATE.active?0:
-  THREE.MathUtils.clamp(LOCOMOTION.vx*.17,-.60,.60);
- const leadZ=LADDER_STATE.active?0:
-  THREE.MathUtils.clamp(LOCOMOTION.vz*.17,-.60,.60);
- const farLook=rollingHorizon?-3.2:0;
- cameraTarget.set(player.position.x+leadX,
-  LADDER_STATE.active?player.position.y+height:
-   WATER_STATE.mode==='swim'?(WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.55:ground+height,
-  player.position.z+leadZ+farLook);
- // More distant camera and narrower FOV achieve the miniature diorama view.
- // No abrupt zoom when climbing: keep the same base distance in all states.
- const distance=18.0/cameraZoom;
+ const head=LADDER_STATE.active?1.04:crawling?.52:crouched?.94:1.23;
+ const centerY=LADDER_STATE.active?player.position.y+head:
+  WATER_STATE.mode==='swim'?
+   (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
+ cameraTarget.set(player.position.x,centerY,player.position.z);
+ // A closer following distance and wider FOV keep the character large
+ // and recognizable on PC, with the horizon above shoulder height.
+ const distance=7.8/cameraZoom;
  const horizontal=distance*Math.cos(cameraPitch);
  cameraDesired.set(
   cameraTarget.x-Math.sin(cameraHeading)*horizontal,
   cameraTarget.y+Math.sin(cameraPitch)*distance,
   cameraTarget.z-Math.cos(cameraHeading)*horizontal
  );
- // Maintain fixed scale and direction even beside buildings.
- // The old chase-camera ray collision shortened the distance suddenly
- // near walls, creating large unwanted character-size changes.
- // Geometry and its physical collision remain unchanged.
+ thirdPersonCameraClearance(cameraTarget,cameraDesired);
  if(!cameraReady){
   camera.position.copy(cameraDesired);
   cameraLookAt.copy(cameraTarget);cameraReady=true;
  }else{
-  camera.position.lerp(cameraDesired,1-Math.exp(-4.0*dt));
-  cameraLookAt.lerp(cameraTarget,1-Math.exp(-6*dt));
+  camera.position.lerp(cameraDesired,1-Math.exp(-8.5*dt));
+  cameraLookAt.lerp(cameraTarget,1-Math.exp(-10*dt));
  }
  camera.lookAt(cameraLookAt);
  skyDome.position.copy(camera.position);
- // In this much larger world, follow the avatar with the light's local
- // shadow region. The visual camera heading/pitch remain unchanged.
  sun.position.set(player.position.x-16,ground+30,player.position.z+17);
  sun.target.position.set(player.position.x,ground,player.position.z);
  sun.target.updateMatrixWorld();
@@ -3918,13 +3932,17 @@ function applyUpdateIfSafe(){
 // Every mesh shares the same forward-only quadratic displacement so hills,
 // tree trunks, houses, NPCs, water and shadows follow one visual horizon.
 // Distance is measured from the avatar, not from the camera's swinging offset.
+// The curved horizon now follows camera FORWARD, not fixed north, so
+// orbiting behind the character never reveals a one-directional bend.
 const CURVED_HORIZON={
  focus:{value:new THREE.Vector2(0,5)},
+ direction:{value:new THREE.Vector2(0,-1)},
  amount:{value:0.0135},
  near:{value:4.5}
 };
 const CURVE_VERTEX_UNIFORMS=String.raw`
 uniform vec2 acCurveFocus;
+uniform vec2 acCurveDirection;
 uniform float acCurveAmount;
 uniform float acCurveNear;
 `;
@@ -3939,7 +3957,9 @@ vec4 acLocal=vec4(transformed,1.0);
 vec4 acWorld=modelMatrix*acLocal;
 // North/up-screen is negative world Z. Keep the player and immediately
 // adjacent ladder/feet unchanged, bending only the distant landscape.
-float acForward=max(0.0,acCurveFocus.y-acWorld.z-acCurveNear);
+float acForward=max(0.0,dot(
+ vec2(acWorld.x-acCurveFocus.x,acWorld.z-acCurveFocus.y),
+ acCurveDirection)-acCurveNear);
 acWorld.y-=acCurveAmount*acForward*acForward;
 vec4 mvPosition=viewMatrix*acWorld;
 gl_Position=projectionMatrix*mvPosition;
@@ -3952,6 +3972,7 @@ function bendBuiltInMaterial(material){
  material.onBeforeCompile=(shader,webgl)=>{
   prior(shader,webgl);
   shader.uniforms.acCurveFocus=CURVED_HORIZON.focus;
+  shader.uniforms.acCurveDirection=CURVED_HORIZON.direction;
   shader.uniforms.acCurveAmount=CURVED_HORIZON.amount;
   shader.uniforms.acCurveNear=CURVED_HORIZON.near;
   shader.vertexShader=shader.vertexShader.replace(
@@ -3960,7 +3981,7 @@ function bendBuiltInMaterial(material){
   shader.vertexShader=shader.vertexShader.replace(
    '#include <project_vertex>',CURVE_PROJECT_VERTEX);
  };
- material.customProgramCacheKey=()=>'academy-rolling-log-v1';
+ material.customProgramCacheKey=()=>'academy-orbit-rolling-log-v2';
  material.needsUpdate=true;
 }
 // Directional shadow caster positions receive the same deformation.
