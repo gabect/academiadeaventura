@@ -1692,7 +1692,7 @@ const mountainRocks=cliffBatch(
  MOUNTAIN_STONE_SITES,v=>[v.sx,v.sy,v.sz]);
 mountainRocks.name='native-mountain-pebbles-and-rocks';
 // Shared meshes for all sizes of trees, optimized for mobile GPUs.
-function drawMountainTreePart(sites,geometry,material,name,position,scale){
+function drawMountainTreePart(sites,geometry,material,name,position,scale,tint=true){
  const batch=new THREE.InstancedMesh(geometry,material,sites.length),
   instance=new THREE.Object3D();
  for(let i=0;i<sites.length;i++){
@@ -1701,7 +1701,7 @@ function drawMountainTreePart(sites,geometry,material,name,position,scale){
   instance.rotation.set(0,s.color*Math.PI*2,0);
   instance.scale.set(k[0],k[1],k[2]);
   instance.updateMatrix();batch.setMatrixAt(i,instance.matrix);
-  if(batch.setColorAt){
+  if(tint&&batch.setColorAt){
    batch.setColorAt(i,new THREE.Color().setHSL(
     s.evergreen?.35+.025*s.color:.27+.025*s.color,
     .20+.18*s.color,.31+.11*s.color));
@@ -1716,22 +1716,22 @@ drawMountainTreePart(MOUNTAIN_TREES,
  new THREE.CylinderGeometry(.12,.22,2.2,6),
  mat('#78644a'),'mountain-varied-trunks',
  s=>[s.x,s.y+s.scale*1.1,s.z],
- s=>[s.scale,s.scale,s.scale]);
+ s=>[s.scale,s.scale,s.scale],false);
 const mountainPines=MOUNTAIN_TREES.filter(s=>s.evergreen);
 const mountainBroadleaf=MOUNTAIN_TREES.filter(s=>!s.evergreen);
 drawMountainTreePart(mountainPines,
  new THREE.ConeGeometry(1.03,2.7,7),
- mat('#779777'),'mountain-tall-pines-lower',
+ mat('#f4f6ee'),'mountain-tall-pines-lower',
  s=>[s.x,s.y+s.scale*2.75,s.z],
  s=>[s.scale,s.scale,s.scale]);
 drawMountainTreePart(mountainPines,
  new THREE.ConeGeometry(.74,2.2,7),
- mat('#86a980'),'mountain-tall-pines-upper',
+ mat('#f4f6ee'),'mountain-tall-pines-upper',
  s=>[s.x,s.y+s.scale*3.83,s.z],
  s=>[s.scale,s.scale,s.scale]);
 drawMountainTreePart(mountainBroadleaf,
  new THREE.DodecahedronGeometry(1,0),
- mat('#88aa7b'),'mountain-round-canopies',
+ mat('#f4f6ee'),'mountain-round-canopies',
  s=>[s.x,s.y+s.scale*2.95,s.z],
  s=>[s.scale*1.32,s.scale*.96,s.scale*1.26]);
 
@@ -1751,7 +1751,8 @@ for(const x of [-72,-64,-55,-47,-36,-31,-4,3,23,44,53,64]){
  if(cliffRouteClear(x,2.4))continue;
  for(const kind of ['foot','crest']){
   if(kind==='crest'&&Math.round(Math.abs(x))%3===1)continue;
-  const z=mountainCliffLipZ(x)+(kind==='foot'?3.4:-3.0);
+  const z=kind==='foot'?mountainCliffLipZ(x)+3.4:
+   mountainCliffUpperZ(x)-1.8;
   if(waterAt(x,z)||naturalGradeAt(x,z)>.4)continue;
   tree(x,z);CLIFF_EDGE_TREE_SITES.push({x,z,r:.46});
   CLIFF_DECOR_STATS.trees++;
