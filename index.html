@@ -511,7 +511,7 @@ if(TERRAIN_Z_SAMPLES.length!==terrainResolution+1)
  throw new Error('Invalid adaptive terrain Z grid');
 function adaptiveZAt(rawPlaneY){
  const t=THREE.MathUtils.clamp(
-  (TERRAIN_HALF_SIZE+rawPlaneY)/(TERRAIN_HALF_SIZE*2),0,1);
+  (TERRAIN_HALF_SIZE-rawPlaneY)/(TERRAIN_HALF_SIZE*2),0,1);
  const index=t*terrainResolution,k=Math.min(terrainResolution-1,
   Math.floor(index));
  return THREE.MathUtils.lerp(TERRAIN_Z_SAMPLES[k],
