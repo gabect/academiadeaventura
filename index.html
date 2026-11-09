@@ -653,7 +653,7 @@ for(let i=0;i<groundPositions.count;i++){
  const water=waterAt(x,z),depth=water?water.depth:0;
  const hill=naturalHillHeightAt(x,z);
  const actualHeight=water?water.floorY-TERRAIN.floorTop:hill;
- let grassCoverage=water?.08:1;
+ let grassCoverage=water ? .08 : 1;
  groundPositions.setZ(i,actualHeight);
  terrainShade.copy(dryGrass).lerp(wetBed,
   THREE.MathUtils.clamp(depth/2.8,0,1));
