@@ -523,6 +523,13 @@ const dryGrass=new THREE.Color('#80aa71');
 const lightMeadow=new THREE.Color('#99b87e');
 const wetBed=new THREE.Color('#60796c');
 const terrainShade=new THREE.Color();
+// Reuse shared Color objects instead of allocating hundreds of thousands
+// during generation on Android/Chromebooks.
+const valleyGrass=new THREE.Color('#70966e');
+const rockBase=new THREE.Color('#87908a');
+const shadowRock=new THREE.Color('#6c7571');
+const softMoss=new THREE.Color('#697d67');
+const rockShade=new THREE.Color();
 for(let i=0;i<groundPositions.count;i++){
  const x=groundPositions.getX(i),z=adaptiveZAt(groundPositions.getY(i));
  groundPositions.setY(i,-z);
@@ -533,10 +540,6 @@ for(let i=0;i<groundPositions.count;i++){
  terrainShade.copy(dryGrass).lerp(wetBed,
   THREE.MathUtils.clamp(depth/2.8,0,1));
  if(hill>.3){
-  const valleyGrass=new THREE.Color('#70966e');
-  const weatheredRock=new THREE.Color('#87908a');
-  const shadowRock=new THREE.Color('#6c7571');
-  const softMoss=new THREE.Color('#697d67');
   const dx=(mountainBaseHeightAt(x+.13,z)-
    mountainBaseHeightAt(x-.13,z))/.26;
   const dz=(mountainBaseHeightAt(x,z+.13)-
@@ -560,14 +563,23 @@ for(let i=0;i<groundPositions.count;i++){
    hill*.31)*.50+.50;
   const fine=Math.sin(x*.83+hill*1.7+z*.39)*
    Math.cos(x*.27-hill*.93);
-  weatheredRock.lerp(shadowRock,
+  rockShade.copy(rockBase).lerp(shadowRock,
    THREE.MathUtils.clamp(.10+.27*broad+.09*fine,0,.43));
-  weatheredRock.lerp(softMoss,
+  rockShade.lerp(softMoss,
    Math.max(0,Math.sin(x*.39+hill*.72)*
     Math.cos(z*.44-x*.13))*.14);
   terrainShade.lerp(valleyGrass,THREE.MathUtils.clamp(
    hill/7,.10,.88));
-  terrainShade.lerp(weatheredRock,exposed*.96);
+  terrainShade.lerp(rockShade,exposed*.96);
+  // Geological micro-relief is sculpted directly INTO the actual terrain
+  // mesh (not a freestanding surface), only on impassable steep walls.
+  // Underlying collision height remains analytically exact. Amplitude <=
+  // 0.065 world units, invisible for walking passages and shallow water.
+  if(!water&&actualSteepness>2.0&&exposed>.80){
+   const relief=.055*Math.sin(x*1.27+hill*.43)*
+    Math.cos(x*.49+hill*.93);
+   groundPositions.setZ(i,actualHeight+relief*exposed);
+  }
  }
 
  // Subtle low-frequency color variation avoids a featureless giant field.
