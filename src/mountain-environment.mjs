@@ -175,13 +175,32 @@ export function buildMountainEnvironment(THREE, options) {
  // cutoff removes the generated atlas's faint matte between fine leaves.
  const foliageTexture=new THREE.TextureLoader().load(
   new URL('../assets/mountain_hd/foliage-atlas-v2.png',import.meta.url).href,
-  ()=>{foliageState='ready';},undefined,
+  texture=>{
+   // The source atlas contains a faint alpha matte. Discard that matte
+   // without throwing away most of the fine fern and grass silhouettes.
+   if(options.studio&&typeof document!=='undefined'&&texture.image){
+    try{
+     const canvas=document.createElement('canvas');
+     canvas.width=texture.image.width;canvas.height=texture.image.height;
+     const ctx=canvas.getContext('2d',{willReadFrequently:true});
+     ctx.drawImage(texture.image,0,0);
+     const frame=ctx.getImageData(0,0,canvas.width,canvas.height);
+     for(let i=3;i<frame.data.length;i+=4){
+      const a=frame.data[i];
+      frame.data[i]=a<44?0:a>215?255:Math.round((a-44)/171*255);
+     }
+     ctx.putImageData(frame,0,0);
+     texture.image=canvas;texture.needsUpdate=true;
+    }catch(error){console.warn('Atlas cleanup skipped:',error);}
+   }
+   foliageState='ready';
+  },undefined,
   ()=>{foliageState='failed';console.warn('Mountain foliage atlas unavailable; using geometric plants.');});
  foliageTexture.colorSpace=THREE.SRGBColorSpace;
  foliageTexture.anisotropy=4;
  const foliageMat=new THREE.MeshStandardMaterial({
-  map:foliageTexture,alphaTest:.78,side:THREE.DoubleSide,
-  roughness:.95,color:'#b4c69d',transparent:false,depthWrite:true
+  map:foliageTexture,alphaTest:options.studio?.39:.78,side:THREE.DoubleSide,
+  roughness:.95,color:options.studio?'#ffffff':'#b4c69d',transparent:false,depthWrite:true
  });
  foliageMat.onBeforeCompile=shader=>{
   shader.uniforms.mountainWindTime=windTime;
@@ -229,7 +248,7 @@ export function buildMountainEnvironment(THREE, options) {
   for(let i=0;i<chunk.blades.length;i+=55){
    const b=chunk.blades[i];if(b.n.y<.60||excluded(b.p))continue;
    sites.push({p:b.p.clone(),n:b.n.clone().lerp(up,.72).normalize(),
-    angle:b.angle,size:.32+random()*.25});
+    angle:b.angle,size:(.32+random()*.25)*(options.studio?1.35:1)});
   }
   foliageBatch(sites,grassCard,'painted-meadow-clumps');
  }

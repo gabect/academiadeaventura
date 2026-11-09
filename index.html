@@ -37,9 +37,12 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.46.0';
+import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.47.0';
+import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.47.0';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.46.0';let pendingBuild=null;
+const BUILD='0.47.0';
+// First reversible art study. Default scene remains unchanged.
+const MOUNTAIN_STUDIO=new URLSearchParams(location.search).get('mountain')==='studio';let pendingBuild=null;
 // Ragdoll code is retained for possible future gameplay, but inactive.
 // No player input, collision or recovery path can transition to a fall.
 const ENABLE_RAGDOLL=false;
@@ -807,7 +810,9 @@ function createRockSurfaceTexture(){
  texture.needsUpdate=true;
  return texture;
 }
-const rockSurfaceTexture=createRockSurfaceTexture();
+const studioTextures=MOUNTAIN_STUDIO?createMountainStudioTextures(THREE,{
+ size:matchMedia('(pointer: coarse)').matches?256:384}):null;
+const rockSurfaceTexture=studioTextures?.rock||createRockSurfaceTexture();
 // Repeatable 2D grass microtexture, deliberately baked once at startup.
 // Grass blades and moss fibers appear in the material even at a distance
 // where individual 3D clusters are too small to resolve.
@@ -833,7 +838,7 @@ function createCliffFiberTexture(){
  tex.generateMipmaps=true;tex.colorSpace=THREE.SRGBColorSpace;
  tex.needsUpdate=true;return tex;
 }
-const cliffFiberTexture=createCliffFiberTexture();
+const cliffFiberTexture=studioTextures?.grass||createCliffFiberTexture();
 terrainMaterial.onBeforeCompile=shader=>{
  shader.uniforms.academyRockSurface={value:rockSurfaceTexture};
  shader.uniforms.academyGrassSurface={value:cliffFiberTexture};
@@ -860,7 +865,7 @@ terrainMaterial.onBeforeCompile=shader=>{
    'vec3 sideRock=texture2D(academyRockSurface,rockSideUV).rgb;',
    'vec3 topRock=texture2D(academyRockSurface,vAcademyRockWorld.xz*.081).rgb;',
    'vec3 rockColor=sideRock*weights.x+topRock*weights.y+frontRock*weights.z;',
-   'float rockDetail=(.48+1.14*rockColor.r);',
+   MOUNTAIN_STUDIO?'vec3 rockDetail=rockColor*vec3(1.43,1.43,1.37);':'vec3 rockDetail=vec3(.48+1.14*rockColor.r);',
    'vec3 grassTop=texture2D(academyGrassSurface,vAcademyRockWorld.xz*.83).rgb;',
    'vec3 grassFront=texture2D(academyGrassSurface,vAcademyRockWorld.xy*.89).rgb;',
    'vec3 grassSide=texture2D(academyGrassSurface,vAcademyRockWorld.zy*.89).rgb;',
@@ -870,10 +875,10 @@ terrainMaterial.onBeforeCompile=shader=>{
    'float cover=clamp(vAcademyCover,0.0,1.0);',
    'float damp=smoothstep(.30,.72,fiber.g)*(1.0-weights.y);',
    'vec3 mossTone=mix(vec3(1.0),vec3(.77,.91,.60),damp*(1.0-cover)*.45);',
-   'diffuseColor.rgb*=mix(vec3(rockDetail)*mossTone,grassDetail,cover);'
+   'diffuseColor.rgb*=mix(rockDetail*mossTone,grassDetail,cover);'
   ].join('\n'));
 };
-terrainMaterial.customProgramCacheKey=()=>'academy-mountain-layered-triplanar-v5';
+terrainMaterial.customProgramCacheKey=()=>MOUNTAIN_STUDIO?'academy-mountain-studio-triplanar-v1':'academy-mountain-layered-triplanar-v5';
 
 const groundMesh=new THREE.Mesh(terrainGeometry,terrainMaterial);
 groundMesh.rotation.x=-Math.PI/2;
@@ -1891,7 +1896,7 @@ mountainRocks.name='native-mountain-pebbles-and-rocks';
 // The new ecology samples the final rendered mesh, including erosion offsets.
 const mountainEnvironment=buildMountainEnvironment(THREE,{
  scene,ground:groundMesh,footZ:mountainCliffLipZ,crestZ:mountainCliffUpperZ,
- waterAt,routeAt:mountainRouteBuffer,rockTexture:rockSurfaceTexture
+ waterAt,routeAt:mountainRouteBuffer,rockTexture:rockSurfaceTexture,studio:MOUNTAIN_STUDIO
 });
 const qualityControl=document.createElement('select');
 qualityControl.id='vegetationQuality';qualityControl.setAttribute('aria-label','Vegetation quality');
