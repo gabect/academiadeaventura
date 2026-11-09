@@ -4,7 +4,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 
 **Play:** https://gabect.github.io/academiadeaventura/
 
-**Mapa principal:** Valle de la Cascada v0.35.0 — [jugar](https://gabect.github.io/academiadeaventura/?v=0.35.0) · [paredes originales v0.34.0](https://gabect.github.io/academiadeaventura/archive/valle-cascada-v0.34.0/index.html) · [v0.33.0](https://gabect.github.io/academiadeaventura/archive/valle-cascada-v0.33.0/index.html) · [campo de pruebas v0.31.1](https://gabect.github.io/academiadeaventura/archive/campo-v0.31.1/index.html) · [detalles de la nueva vegetación](docs/ACANTILADOS-NATURALES-v0.35.0.md)
+**Mapa principal:** Valle de la Cascada v0.36.0 — [jugar](https://gabect.github.io/academiadeaventura/?v=0.36.0) · [cortina/cuadrícula antigua v0.35.0](https://gabect.github.io/academiadeaventura/archive/valle-cascada-v0.35.0/index.html) · [paredes originales v0.34.0](https://gabect.github.io/academiadeaventura/archive/valle-cascada-v0.34.0/index.html) · [campo histórico v0.31.1](https://gabect.github.io/academiadeaventura/archive/campo-v0.31.1/index.html) · [documentación de esta corrección](docs/ACANTILADO-INTEGRADO-v0.36.0.md)
 
 ## Controls
 - **Keyboard:** WASD moves (A remains left movement), Space is **A/Action** (interact, start ladder ascent/descent), F is **B** (tap to jump, hold to run or swim faster), and Caps Lock is **C** (tap to crouch/stand or exit ladder; hold ~0.52s to crawl). W/S changes climbing direction on the ladder. Camera orientation remains fixed; Ctrl+Z/Cmd+Z undoes zoom. Existing keyboard E, B, C and Shift action shortcuts have been removed.
@@ -15,7 +15,15 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Stability:** there are **no falls** in normal or QA mode. The avatar makes a brief protective balance/catch-step motion after sustained overextension or hard impacts, then automatically recovers its upright stance. Collision boundaries, planted-feet motion and jumping remain active. The legacy ragdoll source is retained but disabled.
 - **Agility (formerly Balance):** spend XP with **+ Agility** at top left. Agility levels 1–4 reduce protective recovery duration, reduce the visual wobble, reduce its frequency, and shorten recovery cooldown. Existing Balance XP/level data is reused without resetting progress. The guardian trial grants 25 XP once and 10 XP per repeat.
 
-## Current version: 0.35.0 — November 8, 2026
+## Current version: 0.36.0 — November 8, 2026
+- **Eliminada la pared superpuesta:** se retiraron la cortina vertical de piedra `buildLayeredCliffFaces()` —responsable del patrón de cuadrícula visto por el usuario— y la banda artificial `buildLayeredCliffRims()`. Ahora la montaña se ve como el terreno continuo real, no como un frente separado.
+- **Geología integrada al relieve:** el terreno físico usa vértices con muestreo adaptativo alrededor de la pared abrupta; su propia superficie recibe color de roca orgánico, musgo suave y un relieve geométrico mínimo donde la ladera es no transitable. Los colores dependen de las coordenadas del mundo, no de columnas/filas ni tonos que se repiten a modo de tablero.
+- **Vegetación realmente apoyada:** los salientes naturales con hierba y pinos se recalculan en la superficie analítica del acantilado y de la cumbre. No quedan colgados de la pared falsa retirada. Árboles, piedras del pie, rutas de 30°/35°/45° y todas las colisiones permanecen.
+- **Conservadas las mecánicas:** cámara AC/3D con horizonte curvo, tres alturas, dos ríos y cascada, lago orgánico, natación/corrientes, torre con escalera vertical, casita con rampa, plataforma de madera, NPC y controles aprobados.
+- **Verificación:** diez pruebas numéricas del relieve, del muestreo y del anclaje de las repisas, más sintaxis y auditoría de fuente, pasaron. No se ha hecho todavía la inspección visual de GPU en Android.
+- **Archivo histórico:** copia intacta de [v0.35.0](archive/valle-cascada-v0.35.0/index.html) para comparación directa con la antigua apariencia de cortina y cuadrícula. [Documento técnico](docs/ACANTILADO-INTEGRADO-v0.36.0.md).
+
+## Previous version: 0.35.0 — November 8, 2026
 - **Acantilados más naturales:** hierba alta junto a la base, sobre pequeñas repisas de roca y en el borde verde superior; pequeñas manchas de musgo sobre las bandas pétreas, piedras irregulares y árboles dispersos en el pie/coronación. Algunos pinos enanos se apoyan físicamente sobre salientes, en vez de flotar pegados a la pared.
 - **Implementación ligera y reproducible:** 390 matas de hierba de cinco hojas, 47 salientes pétreos, 20 piedras grandes en el pie, 18 árboles adicionales y 5 pinos pequeños colgados de repisas. Las matas y piedras usan pocas geometrías instanciadas, sin sombras individuales innecesarias. La cámara curvada, los materiales existentes y el relieve siguen siendo los mismos.
 - **Lectura de las rutas:** no se añade decoración a los pasos de 30°, 35° y la apertura de 45° en la cumbre, ni a las proximidades de la cascada. Sigue predominando la roca en el plano vertical, con vegetación acumulada en zonas donde puede crecer.
@@ -300,6 +308,7 @@ Educational browser-based 3D RPG prototype designed for Chromebooks and touchscr
 - **Testing needed:** verify live-device animation, body stability, proximity to corners/trunks, performance on Chromebooks and realistic foot-placement triggers. Performance and complete avoidance of penetration are not yet guaranteed.
 
 ## Version history
+- **0.36.0 (2026-11-08):** remove freestanding cliff curtain/checkerboard and fake stone rim, render true cliff heightfield with adaptive Z sampling, organically shaded terrain-native rock, subtle native relief, and root ledges/pines onto actual mountain surface; preserve gameplay and archive 0.35.0.
 - **0.35.0 (2026-11-08):** naturalize layered mountain walls with clumped tall grass, moss, irregular stone ledges with anchored shrubs, dwarf pines and tree clusters at the base and green summit edges. Keep 30/35/45-degree routes clear and add real tree/boulder collisions.
 - **0.34.0 (2026-11-08):** three clear elevation tiers with layered stone cliffs, green plateaus, deliberate 30°/35° entry passes, 45° western summit route, rock wall openings and world signs; retained Animal Crossing-style curved horizon, water, tower/house, input and archived v0.33.0.
 - **0.33.0 (2026-11-08):** Animal Crossing-style rolling-log vertex shader, lower north-up horizon camera with stylized sky, on-screen AC/3D comparison switch, mountain foot/crest coloring and western summit silhouette, while preserving all v0.32 water/climbing/physics and both historic scenes.
