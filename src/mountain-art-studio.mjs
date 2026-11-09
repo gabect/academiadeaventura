@@ -12,23 +12,41 @@ export function createMountainStudioTextures(THREE,{size=384}={}){
   return ((h^(h>>>16))>>>0)/4294967295;
  };
  // Exact period on both axes, including all octaves.
+ const cachedGrids=new Map();
+ const gridFor=(period,seed)=>{
+  const key=period+':'+seed;
+  let grid=cachedGrids.get(key);
+  if(grid)return grid;
+  grid=new Float32Array(period*period);
+  for(let j=0;j<period;j++)for(let i=0;i<period;i++)
+   grid[j*period+i]=hash(i,j,seed);
+  cachedGrids.set(key,grid);
+  return grid;
+ };
  const noise=(u,v,period,seed)=>{
-  let x=u*period,y=v*period;
-  const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;
-  const tx=fx*fx*(3-2*fx),ty=fy*fy*(3-2*fy);
-  const h=(dx,dy)=>hash(((ix+dx)%period+period)%period,((iy+dy)%period+period)%period,seed);
-  const a=h(0,0)+(h(1,0)-h(0,0))*tx;
-  const b=h(0,1)+(h(1,1)-h(0,1))*tx;
-  return a+(b-a)*ty;
+  const grid=gridFor(period,seed);
+  const x=u*period,y=v*period,ix=Math.floor(x),iy=Math.floor(y);
+  const fx=x-ix,fy=y-iy,tx=fx*fx*(3-2*fx),ty=fy*fy*(3-2*fy);
+  const x0=((ix%period)+period)%period,x1=(x0+1)%period;
+  const y0=((iy%period)+period)%period,y1=(y0+1)%period;
+  const i0=y0*period,i1=y1*period;
+  const v0=grid[i0+x0]*(1-tx)+grid[i0+x1]*tx;
+  const v1=grid[i1+x0]*(1-tx)+grid[i1+x1]*tx;
+  return v0*(1-ty)+v1*ty;
  };
  const cells=8;
+ const centerX=new Float32Array(cells*cells),centerY=new Float32Array(cells*cells);
+ for(let j=0;j<cells;j++)for(let i=0;i<cells;i++){
+  centerX[j*cells+i]=.23+.54*hash(i,j,41);
+  centerY[j*cells+i]=.23+.54*hash(i,j,67);
+ }
  function fracture(u,v){
   const x=u*cells,y=v*cells,ix=Math.floor(x),iy=Math.floor(y);
   let near=1e9,next=1e9;
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
    const cx=ix+dx,cy=iy+dy;
-   const px=cx+.23+.54*hash((cx+cells)%cells,(cy+cells)%cells,41);
-   const py=cy+.23+.54*hash((cx+cells)%cells,(cy+cells)%cells,67);
+   const j=((cy%cells)+cells)%cells,i=((cx%cells)+cells)%cells;
+   const px=cx+centerX[j*cells+i],py=cy+centerY[j*cells+i];
    const d=(x-px)**2+(y-py)**2;
    if(d<near){next=near;near=d;}else if(d<next)next=d;
   }
