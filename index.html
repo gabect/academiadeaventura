@@ -1349,6 +1349,35 @@ function rockShelf(x,y,z,nx=0,nz=1,smallTree=false){
   CLIFF_DECOR_STATS.ledgeTrees++;
  }
 }
+// Attach ledge geometry to the REAL mountain heightfield, not to
+// the former painted curtain. At a given altitude, solve the cliff face's
+// true horizontal coordinate so the stone is embedded in that rock.
+function rockFaceZAtHeight(x,y){
+ const lip=mountainCliffLipZ(x);
+ let north=lip-.85,south=lip+.85;
+ for(let i=0;i<22;i++){
+  const mid=(north+south)*.5;
+  if(mountainBaseHeightAt(x,mid)>y-TERRAIN.floorTop)north=mid;
+  else south=mid;
+ }
+ return (north+south)*.5;
+}
+function summitFacePointAtHeight(theta,y){
+ const wobble=1+.025*Math.sin(theta*5);
+ const nx=Math.cos(theta),nz=Math.sin(theta);
+ const point=r=>({
+  x:SUMMIT_MESA.x+nx*SUMMIT_MESA.rx*r*wobble,
+  z:SUMMIT_MESA.z+nz*SUMMIT_MESA.rz*r*wobble
+ });
+ let inside=.79,outside=1.10;
+ for(let i=0;i<22;i++){
+  const radial=(inside+outside)*.5,site=point(radial);
+  if(mountainBaseHeightAt(site.x,site.z)>y-TERRAIN.floorTop)
+   inside=radial;
+  else outside=radial;
+ }
+ return point((inside+outside)*.5);
+}
 // Mountain foot, vertical wall ledges and the green top edge.
 for(let x=-75,slot=0;x<75;x+=1.7,slot++){
  const px=x+(cliffRand()-.5)*.65;
@@ -1356,7 +1385,8 @@ for(let x=-75,slot=0;x<75;x+=1.7,slot++){
  const lip=mountainCliffLipZ(px);
  if(slot%2===0){
   const level=2.25+cliffRand()*5.65;
-  rockShelf(px,TERRAIN.floorTop+level,lip+.15,
+  const wallY=TERRAIN.floorTop+level;
+  rockShelf(px,wallY,rockFaceZAtHeight(px,wallY),
    0,1,slot%17===0);
  }
  for(let j=0;j<3;j++){
@@ -1390,8 +1420,11 @@ for(let i=0;i<90;i++){
  const wobble=1+.025*Math.sin(angle*5);
  const outerX=SUMMIT_MESA.x+nx*SUMMIT_MESA.rx*.96*wobble;
  const outerZ=SUMMIT_MESA.z+nz*SUMMIT_MESA.rz*.96*wobble;
- if(i%5===0)rockShelf(outerX,TERRAIN.floorTop+12.3+
-   cliffRand()*3.8,outerZ,nx,nz,i%20===0);
+ if(i%5===0){
+  const wallY=TERRAIN.floorTop+12.3+cliffRand()*3.8;
+  const rooted=summitFacePointAtHeight(angle,wallY);
+  rockShelf(rooted.x,wallY,rooted.z,nx,nz,i%20===0);
+ }
  if(i%2===0){
   const x=SUMMIT_MESA.x+nx*SUMMIT_MESA.rx*.81*wobble;
   const z=SUMMIT_MESA.z+nz*SUMMIT_MESA.rz*.81*wobble;
