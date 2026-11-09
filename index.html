@@ -239,9 +239,75 @@ function passageWeight(value,center,halfWidth,feather){
  if(offset<=halfWidth)return 1;
  return 1-smoothWater((offset-halfWidth)/feather);
 }
+// Organic cliff silhouette: lower footprint, upper crest and cracks do
+// NOT run parallel. This is one solid elevation field, not front-facing
+// scenery. Broad smooth x-lobes produce bays, buttresses and promontories.
+function cliffLobe(x,center,radius){
+ const d=Math.abs(x-center);
+ return d<radius?smoothWater(1-d/radius):0;
+}
+function cliffProtectedWeight(x){
+ // Original playable lanes, waterfall mouth and central test apparatus
+ // keep their exact coordinates and their original grades.
+ return Math.max(
+  passageWeight(x,PRIMARY_PASS.x,PRIMARY_PASS.halfWidth+1.8,2.1),
+  passageWeight(x,EASTERN_PASS.x,EASTERN_PASS.halfWidth+1.8,2.1),
+  passageWeight(x,34,7.2,2.3),
+  passageWeight(x,0,6.0,2.1)
+ );
+}
+function cliffOrganicOffset(x){
+ const broad=1.05*Math.sin(x*.115+.7)+
+  .62*Math.sin(x*.245-1.4)+.23*Math.sin(x*.51);
+ const peninsulas=5.2*cliffLobe(x,-65,9)+
+  3.5*cliffLobe(x,-31,8)+
+  3.7*cliffLobe(x,49,9)+
+  4.4*cliffLobe(x,70,7);
+ const gulfs=-5.3*cliffLobe(x,-47,11)-
+  4.0*cliffLobe(x,26,8)-4.9*cliffLobe(x,60,8);
+ return (broad+peninsulas+gulfs)*(1-cliffProtectedWeight(x));
+}
 function mountainCliffLipZ(x){
- // Small notches break the perfectly straight line without hiding it.
- return WORLD.faceZ + .24*Math.sin(x*.17)+.16*Math.sin(x*.41);
+ // South-facing FOOT line: positive Z points toward the low field.
+ return WORLD.faceZ+.24*Math.sin(x*.17)+
+  .16*Math.sin(x*.41)+cliffOrganicOffset(x);
+}
+function mountainCliffUpperZ(x){
+ // The crest has its own outline, not a copy of the bottom silhouette.
+ const separate=.5+.5*Math.sin(x*.077+1.72)+
+  .16*Math.sin(x*.29-.5);
+ const run=THREE.MathUtils.clamp(1.9+
+  1.8*separate+.35*Math.sin(x*.33+1.15),.75,3.7);
+ const protectedSpace=cliffProtectedWeight(x);
+ return mountainCliffLipZ(x)-
+  THREE.MathUtils.lerp(run,.46,protectedSpace);
+}
+function cliffCrackHeightAt(x,t){
+ // Tight erosion fissures meander down the rock; their depth vanishes
+ // toward the TOP and FOOT to avoid making disconnected terrain seams.
+ let depth=0;
+ const fissures=[[-73,.86,.7],[-58,1.30,.9],[-39,.88,.75],
+  [-6,1.05,.80],[23,.83,.7],[46,1.12,1.0],[68,1.25,1.1]];
+ for(const [center,width,maxDepth] of fissures){
+  const twist=center+.40*Math.sin(t*5.9+center*.21);
+  const d=Math.abs(x-twist)/width;
+  if(d<1)depth=Math.max(depth,
+   maxDepth*(1-smoothWater(d))*Math.sin(Math.PI*t)**2);
+ }
+ return depth*(1-cliffProtectedWeight(x));
+}
+function cliffWallElevationAt(x,z){
+ const foot=mountainCliffLipZ(x);
+ const crest=mountainCliffUpperZ(x);
+ const t=THREE.MathUtils.clamp((foot-z)/(foot-crest),0,1);
+ const split=.26+.46*(.5+.5*Math.sin(x*.087+1.8));
+ const knee=.43+.14*Math.sin(x*.14-1.4);
+ // Independent lower and upper wall angles: steep foot/leaning crest,
+ // leaning foot/steep crest, or two rocky shelves of different angles.
+ const proportion=t<split?knee*t/split:
+  knee+(1-knee)*(t-split)/(1-split);
+ return MOUNTAIN_LEVELS.valley*proportion-
+  cliffCrackHeightAt(x,t);
 }
 function summitMesaHeightAt(x,z){
  const mesa=SUMMIT_MESA;
@@ -264,8 +330,7 @@ function summitMesaHeightAt(x,z){
 }
 function mountainBaseHeightAt(x,z){
  const cliffZ=mountainCliffLipZ(x);
- const wallRise=MOUNTAIN_LEVELS.valley*
-  smoothWater((cliffZ-z)/.46);
+ const wallRise=cliffWallElevationAt(x,z);
  const westLane=passageWeight(x,PRIMARY_PASS.x,
   PRIMARY_PASS.halfWidth,PRIMARY_PASS.feather);
  const eastLane=passageWeight(x,EASTERN_PASS.x,
@@ -495,11 +560,12 @@ const terrainResolution=320;
 const terrainGeometry=new THREE.PlaneGeometry(
  TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
  terrainResolution,terrainResolution);
-// Adaptive Z mesh spacing: high density around the physically steep cliff
-// at z=-16, without multiplying all vertices over the 166-unit world.
+// Independent organic foot and crest wander across Z≈-25..-6.
+// Keep high mesh density ACROSS that whole region so curved walls and
+// fissures are geometric, never stretched curtain-looking polygons.
 const TERRAIN_Z_BANDS=[
- [-83,-65,16],[-65,-55,15],[-55,-35,30],
- [-35,-21,30],[-21,-14,65],[-14,-8,15],[-8,83,149]
+ [-83,-65,14],[-65,-45,19],[-45,-29,18],
+ [-29,-24,20],[-24,-5,156],[-5,83,93]
 ];
 const TERRAIN_Z_SAMPLES=[];
 for(const [start,end,segments] of TERRAIN_Z_BANDS){
@@ -1366,7 +1432,7 @@ function rockShelf(x,y,z,nx=0,nz=1,smallTree=false){
 // true horizontal coordinate so the stone is embedded in that rock.
 function rockFaceZAtHeight(x,y){
  const lip=mountainCliffLipZ(x);
- let north=lip-.85,south=lip+.85;
+ let north=mountainCliffUpperZ(x)-.5,south=lip+.65;
  for(let i=0;i<22;i++){
   const mid=(north+south)*.5;
   if(mountainBaseHeightAt(x,mid)>y-TERRAIN.floorTop)north=mid;
