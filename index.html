@@ -695,6 +695,7 @@ function buildLayeredCliffFaces(){
  const vertices=[],colors=[];
  const stone=(band,offset)=>cliffWallColors[
   (band+offset+cliffWallColors.length)%cliffWallColors.length];
+ const cliffMoss=new THREE.Color('#617d66');
  function triangle(points,shade){
   for(const p of points){
    vertices.push(p[0],p[1],p[2]);
@@ -704,8 +705,12 @@ function buildLayeredCliffFaces(){
  function wallSegment(ax,az,bx,bz,lower,upper,seed){
   const levels=6,step=(upper-lower)/levels;
   for(let j=0;j<levels;j++){
-   const bottom=lower+j*step,top=bottom+step,
-    stoneShade=stone(j,Math.abs(seed)%4);
+   const bottom=lower+j*step,top=bottom+step;
+   const stoneShade=stone(j,Math.abs(seed)%4).clone();
+   // Moss and minerals vary naturally within layers; keep rock visible.
+   const patch=Math.max(0,Math.sin(seed*.71+j*2.93)*
+    Math.cos(seed*.27-j*.84));
+   stoneShade.lerp(cliffMoss,patch*(j>=3?.26:.12));
    const nudge=.027*Math.sin(j*2.6+seed*1.17);
    const a=[ax,bottom,az+nudge],b=[bx,bottom,bz+nudge],
     c=[ax,top,az+nudge],d=[bx,top,bz+nudge];
@@ -1365,6 +1370,160 @@ scatterField(90,new THREE.DodecahedronGeometry(.34,0),
  new THREE.MeshStandardMaterial({color:'#98988f',roughness:1}),'rock');
 scatterField(50,new THREE.ConeGeometry(.14,.34,5),
  new THREE.MeshStandardMaterial({color:'#d6bd78',roughness:1}),'flower');
+// NATURAL CLIFF SCENERY — all decorative, except the explicitly collidable
+// boulders and rooted trees. The actual climbing physics is unchanged.
+const CLIFF_EDGE_TREE_SITES=[],CLIFF_BASE_BOULDERS=[];
+const CLIFF_DECOR_STATS={grass:0,shelves:0,boulders:0,trees:0,ledgeTrees:0};
+let cliffSeed=0xC11FF507;
+function cliffRand(){
+ cliffSeed=(Math.imul(cliffSeed,1664525)+1013904223)>>>0;
+ return cliffSeed/4294967296;
+}
+function cliffRouteClear(x,margin=0){
+ return Math.abs(x-PRIMARY_PASS.x)<PRIMARY_PASS.halfWidth+
+   PRIMARY_PASS.feather+margin||
+  Math.abs(x-EASTERN_PASS.x)<EASTERN_PASS.halfWidth+
+   EASTERN_PASS.feather+margin||
+  Math.abs(x-34)<5+margin;
+}
+// Wide blades, instead of sharp tiny cones, read as wild tall grass.
+function createTallGrass(){
+ const vertices=[];
+ for(let i=0;i<5;i++){
+  const a=i*Math.PI*2/5,c=Math.cos(a),s=Math.sin(a);
+  const w=.10,h=.74+.28*Math.sin(i*2.31+.6);
+  const root=[c*.11,0,s*.11];
+  const sideA=[root[0]-s*w,0,root[2]+c*w];
+  const sideB=[root[0]+s*w,0,root[2]-c*w];
+  const knee=[c*.25,h*.64,s*.25];
+  const tip=[c*.40,h,s*.40];
+  for(const p of [sideA,sideB,knee,sideA,knee,tip])vertices.push(...p);
+ }
+ const geo=new THREE.BufferGeometry();
+ geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+ geo.computeVertexNormals();return geo;
+}
+const cliffTufts=[],cliffLedges=[],cliffBoulders=[],cliffPines=[];
+function plantTuft(x,y,z,size){
+ cliffTufts.push({x,y,z,size,color:cliffRand()});
+ CLIFF_DECOR_STATS.grass++;
+}
+function rockShelf(x,y,z,nx=0,nz=1,smallTree=false){
+ const width=.7+cliffRand()*.6;
+ const site={x:x+nx*.27,y:y-.05,z:z+nz*.27,
+  sx:width,sy:.15+.06*cliffRand(),sz:.42+.11*cliffRand(),
+  rot:cliffRand()*2};
+ cliffLedges.push(site);CLIFF_DECOR_STATS.shelves++;
+ // These roots sit ON the stone shelf, not pasted to open cliff air.
+ for(let j=0;j<3;j++)
+  plantTuft(site.x+(cliffRand()-.5)*width*.8,
+   site.y+site.sy*.87,site.z+(cliffRand()-.5)*.32,
+   .37+.36*cliffRand());
+ if(smallTree){
+  cliffPines.push({x:site.x,y:site.y+site.sy*.83,z:site.z,
+   scale:.40+.22*cliffRand()});
+  CLIFF_DECOR_STATS.ledgeTrees++;
+ }
+}
+// Mountain foot, vertical wall ledges and the green top edge.
+for(let x=-75,slot=0;x<75;x+=1.7,slot++){
+ const px=x+(cliffRand()-.5)*.65;
+ if(cliffRouteClear(px,2.1))continue;
+ const lip=mountainCliffLipZ(px);
+ if(slot%2===0){
+  const level=2.25+cliffRand()*5.65;
+  rockShelf(px,TERRAIN.floorTop+level,lip+.15,
+   0,1,slot%17===0);
+ }
+ for(let j=0;j<3;j++){
+  const gx=px+(cliffRand()-.5)*1.0;
+  const gz=mountainCliffLipZ(gx)+.88+cliffRand()*1.4;
+  plantTuft(gx,naturalSurfaceY(gx,gz)+.02,gz,
+   .76+cliffRand()*.72);
+ }
+ if(slot%3===0){
+  const bz=lip+1.05+cliffRand()*1.1;
+  cliffBoulders.push({x:px,y:naturalSurfaceY(px,bz)+.19,z:bz,
+   sx:.43+cliffRand()*.31,sy:.30+cliffRand()*.16,
+   sz:.46+cliffRand()*.27,rot:cliffRand()*3});
+  CLIFF_BASE_BOULDERS.push({x:px,z:bz,r:.31});
+  CLIFF_DECOR_STATS.boulders++;
+ }
+ if(slot%2===1){
+  const tz=lip-1.2-cliffRand()*.6;
+  plantTuft(px,naturalSurfaceY(px,tz)+.02,tz,
+   .65+cliffRand()*.7);
+ }
+}
+// The west summit has its own rocky GREEN upper rim; preserve its 45°
+// trail mouth on the east-facing side.
+for(let i=0;i<90;i++){
+ const angle=i*Math.PI*2/90,nx=Math.cos(angle),nz=Math.sin(angle);
+ if(nx>.43&&Math.abs(nz)<.35)continue;
+ const wobble=1+.025*Math.sin(angle*5);
+ const outerX=SUMMIT_MESA.x+nx*SUMMIT_MESA.rx*.96*wobble;
+ const outerZ=SUMMIT_MESA.z+nz*SUMMIT_MESA.rz*.96*wobble;
+ if(i%5===0)rockShelf(outerX,TERRAIN.floorTop+12.3+
+   cliffRand()*3.8,outerZ,nx,nz,i%20===0);
+ if(i%2===0){
+  const x=SUMMIT_MESA.x+nx*SUMMIT_MESA.rx*.81*wobble;
+  const z=SUMMIT_MESA.z+nz*SUMMIT_MESA.rz*.81*wobble;
+  plantTuft(x,naturalSurfaceY(x,z)+.02,z,.7+cliffRand()*.56);
+ }
+}
+function cliffBatch(geometry,material,sites,dim){
+ const mesh=new THREE.InstancedMesh(geometry,material,sites.length);
+ const transform=new THREE.Object3D();
+ for(let i=0;i<sites.length;i++){
+  const v=sites[i];
+  transform.position.set(v.x,v.y,v.z);
+  transform.rotation.set(0,v.rot??cliffRand()*6.283,0);
+  const s=dim(v);transform.scale.set(s[0],s[1],s[2]);
+  transform.updateMatrix();mesh.setMatrixAt(i,transform.matrix);
+  if(v.color!==undefined)
+   mesh.setColorAt(i,new THREE.Color().setHSL(
+    .245+.035*v.color,.30+.12*v.color,.37+.10*v.color));
+ }
+ mesh.instanceMatrix.needsUpdate=true;
+ if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+ mesh.frustumCulled=false;mesh.receiveShadow=true;scene.add(mesh);
+ return mesh;
+}
+const cliffGrass=cliffBatch(createTallGrass(),
+ new THREE.MeshStandardMaterial({color:'#ffffff',
+  side:THREE.DoubleSide,roughness:1}),
+ cliffTufts,v=>[v.size,v.size,v.size]);
+cliffGrass.name='cliff-rooted-tall-grass';
+const cliffRockGeometry=new THREE.DodecahedronGeometry(1,0);
+const stoneShelves=cliffBatch(cliffRockGeometry,mat('#a1a499'),
+ cliffLedges,v=>[v.sx,v.sy,v.sz]);
+stoneShelves.name='stone-ledges-with-rooted-grass';
+const basalRocks=cliffBatch(cliffRockGeometry,mat('#91978d'),
+ cliffBoulders,v=>[v.sx,v.sy,v.sz]);
+basalRocks.name='mountain-foot-boulders';
+// Dwarf cliffside pines sit on projecting STONE rather than floating.
+const cliffTrunk=mat('#776348'),cliffNeedles=mat('#53785f');
+for(const v of cliffPines){
+ const group=new THREE.Group();
+ group.position.set(v.x,v.y,v.z);group.scale.setScalar(v.scale);
+ cylinder(.11,.16,1.65,cliffTrunk,0,.825,0,group,6);
+ cylinder(0,.65,1.5,cliffNeedles,0,1.63,0,group,6);
+ cylinder(0,.45,1.0,cliffNeedles,0,2.22,0,group,6);
+ scene.add(group);
+}
+// Larger trees cluster at the foot or just BEHIND the plateau edge.
+// Their physical footprints use the same tree collision code as before.
+for(const x of [-72,-64,-55,-47,-36,-31,-4,3,23,44,53,64]){
+ if(cliffRouteClear(x,2.4))continue;
+ for(const kind of ['foot','crest']){
+  if(kind==='crest'&&Math.round(Math.abs(x))%3===1)continue;
+  const z=mountainCliffLipZ(x)+(kind==='foot'?3.4:-3.0);
+  if(waterAt(x,z)||naturalGradeAt(x,z)>.4)continue;
+  tree(x,z);CLIFF_EDGE_TREE_SITES.push({x,z,r:.46});
+  CLIFF_DECOR_STATS.trees++;
+ }
+}
+
 // Banderas de la academia creadas únicamente con geometría 3D.
 for(const [x,z,m] of [[-6,-11.8,red],[6,-11.8,blue]]){cylinder(.07,.08,3,wood,x,4,z);box(1.3,1.2,.1,m,x+.65,4.8,z)}
 for(const [x,z] of [[-7,0],[7,0]]){cylinder(.11,.14,2.4,wood,x,1.2,z);box(.5,.6,.5,gold,x,2.65,z)}
@@ -2590,6 +2749,8 @@ function followPlayerCamera(dt){
 const PLAYER_RADIUS=.43;
 const obstacles=[
   ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.48})),
+  ...CLIFF_EDGE_TREE_SITES.map(v=>({x:v.x,z:v.z,r:v.r})),
+  ...CLIFF_BASE_BOULDERS.map(v=>({x:v.x,z:v.z,r:v.r})),
   ...AMBIENT_NPCS.map(npc=>({x:npc.position.x,z:npc.position.z,r:.60})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.32})),
   {x:guardian.position.x,z:guardian.position.z,r:.76},
@@ -2888,6 +3049,8 @@ function ragdollEdges(){
 function fallObstacleList(){
  return [
   ...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z,r:.34,height:2.6})),
+  ...CLIFF_EDGE_TREE_SITES.map(v=>({x:v.x,z:v.z,r:.34,height:2.6})),
+  ...CLIFF_BASE_BOULDERS.map(v=>({x:v.x,z:v.z,r:v.r,height:.7})),
   ...[[-7,0],[7,0]].map(([x,z])=>({x,z,r:.16,height:3})),
   {x:guardian.position.x,z:guardian.position.z,r:.65,height:2.7},
   // No outdoor corner towers.
