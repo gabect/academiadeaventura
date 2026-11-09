@@ -2968,6 +2968,20 @@ function stepLocomotion(dt,right,forward,runEnabled){
       groundTopAt(player.position.x,player.position.z),true))
    player.rotation.y=previousFacing;
  }
+ // Rotate toward camera-forward in place when mouse-look moves while
+ // stationary. This keeps the third-person view behind the avatar.
+ if(len<=.03){
+  const previousFacing=player.rotation.y;
+  const yawError=Math.atan2(Math.sin(cameraHeading-previousFacing),
+   Math.cos(cameraHeading-previousFacing));
+  if(Math.abs(yawError)>.0005){
+   player.rotation.y=previousFacing+THREE.MathUtils.clamp(yawError,
+    -dt*FOLLOW_FACING_SPEED,dt*FOLLOW_FACING_SPEED);
+   if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
+    groundTopAt(player.position.x,player.position.z),true))
+    player.rotation.y=previousFacing;
+  }
+ }
  const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
  if(len>.03&&wasStopped&&gait.moveBlend<.03){
   // Begin midway through the first grounded step, not at full rearward reach.
