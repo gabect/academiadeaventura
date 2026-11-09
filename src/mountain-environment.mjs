@@ -9,6 +9,8 @@ export function buildMountainEnvironment(THREE, options) {
  ground.updateMatrixWorld(true);
  const pos=ground.geometry.attributes.position, idx=ground.geometry.index;
  const triangles=[], bins=new Map(), chunks=new Map(), groups=[];
+ const windTime={value:0};
+ let foliageState='loading';
  const worldVertex=i=>new THREE.Vector3().fromBufferAttribute(pos,i).applyMatrix4(ground.matrixWorld);
  // Index the final rendered triangles, including sculpting, rather than the
  // analytical collision surface. This also preserves the exact mesh diagonal.
@@ -136,7 +138,8 @@ export function buildMountainEnvironment(THREE, options) {
   }g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.computeVertexNormals();return g;
  }
  const rockGeo=rockGeometry();
- const rockMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1});
+ const rockMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:1,
+  map:options.rockTexture||null,bumpMap:options.rockTexture||null,bumpScale:.065});
  const bedrock=batch(rocks,rockGeo,rockMat,'moss-bedrock',(o,s)=>o.scale.setScalar(s.size));
  if(bedrock)bedrock.castShadow=true;
  // Curved broad leaves and pinnate ferns, opaque geometry with clean edges.
@@ -165,8 +168,83 @@ export function buildMountainEnvironment(THREE, options) {
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));g.setIndex(indices);g.computeVertexNormals();return g;
  }
  const leafMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.9,side:THREE.DoubleSide});
- batch(ferns,leafGeometry(true),leafMat,'pinnate-ferns',(o,s)=>o.scale.setScalar(s.size*1.6));
- batch(leaves,leafGeometry(false),leafMat,'broadleaf-rosettes',(o,s)=>o.scale.setScalar(s.size));
+ const fallbackFerns=batch(ferns,leafGeometry(true),leafMat,'pinnate-ferns',(o,s)=>o.scale.setScalar(s.size*1.6));
+ const fallbackLeaves=batch(leaves,leafGeometry(false),leafMat,'broadleaf-rosettes',(o,s)=>o.scale.setScalar(s.size));
+ // One local atlas, shared by all foliage cards. Alpha testing keeps depth
+ // writes and avoids transparent sorting through the mountain. The high
+ // cutoff removes the generated atlas's faint matte between fine leaves.
+ const foliageTexture=new THREE.TextureLoader().load(
+  new URL('../assets/mountain_hd/foliage-atlas-v2.png',import.meta.url).href,
+  ()=>{foliageState='ready';},undefined,
+  ()=>{foliageState='failed';console.warn('Mountain foliage atlas unavailable; using geometric plants.');});
+ foliageTexture.colorSpace=THREE.SRGBColorSpace;
+ foliageTexture.anisotropy=4;
+ const foliageMat=new THREE.MeshStandardMaterial({
+  map:foliageTexture,alphaTest:.78,side:THREE.DoubleSide,
+  roughness:.95,color:'#b4c69d',transparent:false,depthWrite:true
+ });
+ foliageMat.onBeforeCompile=shader=>{
+  shader.uniforms.mountainWindTime=windTime;
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nuniform float mountainWindTime;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+   vec3 plantOrigin=vec3(0.0);
+   #ifdef USE_INSTANCING
+    plantOrigin=instanceMatrix[3].xyz;
+   #endif
+   float flex=pow(clamp(abs(position.y),0.0,1.0),2.0);
+   transformed.x+=sin(mountainWindTime*1.4+plantOrigin.x*.73+plantOrigin.z*.41)*.035*flex;
+   transformed.z+=cos(mountainWindTime*1.1+plantOrigin.x*.53)*.018*flex;
+  `);
+ };
+ foliageMat.customProgramCacheKey=()=>'mountain-foliage-wind-v1';
+ function cardGeometry(col,row,hanging=false){
+  const vertices=[],uvs=[],indices=[];
+  // Two intersecting planes preserve volume from the orbit camera. UVs
+  // stay inside each tile; root positions account for the painted padding.
+  for(let k=0;k<2;k++){
+   const a=k*Math.PI/2,start=vertices.length/3;
+   for(const [x,y,u,v] of [[-.5,0,0,0],[.5,0,1,0],[-.5,1,0,1],[.5,1,1,1]]){
+    const localY=hanging?y-.94:y-.08;
+    vertices.push(Math.cos(a)*x,localY,Math.sin(a)*x);
+    uvs.push((col+.015+u*.97)/2,(1-row+.015+v*.97)/2);
+   }
+   indices.push(start,start+1,start+2,start+1,start+3,start+2);
+  }
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setIndex(indices);g.computeVertexNormals();return g;
+ }
+ let spriteCount=0;
+ function foliageBatch(sites,geometry,name){
+  const mesh=batch(sites,geometry,foliageMat,name,(o,s)=>o.scale.set(s.size,s.size,s.size));
+  if(!mesh)return;
+  const item=groups[groups.length-1];item.foliage=true;item.grass=true;
+  item.sphere.radius+=.08;mesh.visible=false;spriteCount+=sites.length;
+ }
+ const grassCard=cardGeometry(0,0),fernCard=cardGeometry(1,0),leafCard=cardGeometry(0,1);
+ // Spatial batches retain distance/quality culling. All anchors come from
+ // rendered triangle samples; routes and water are checked per card.
+ for(const chunk of chunks.values()){
+  const sites=[];
+  for(let i=0;i<chunk.blades.length;i+=55){
+   const b=chunk.blades[i];if(b.n.y<.60||excluded(b.p))continue;
+   sites.push({p:b.p.clone(),n:b.n.clone().lerp(up,.72).normalize(),
+    angle:b.angle,size:.32+random()*.25});
+  }
+  foliageBatch(sites,grassCard,'painted-meadow-clumps');
+ }
+ const plantSites=sites=>sites.map(s=>({...s,p:s.p.clone(),n:s.n.clone().lerp(up,.75).normalize(),size:s.size*1.8}));
+ foliageBatch(plantSites(ferns),fernCard,'painted-fern-islands');
+ foliageBatch(plantSites(leaves),leafCard,'painted-broadleaf-islands');
+ const hanging=[];
+ for(let x=-72;x<73;x+=1.15){
+  const s=surface(x,crestZ(x)+.22);if(!s||excluded(s.p)||routeAt(x,s.p.z,.8))continue;
+  hanging.push({...s,n:up.clone(),angle:random()*.5,size:.45+random()*.4});
+ }
+ foliageBatch(hanging,cardGeometry(1,1,true),'hanging-crest-grasses');
+ for(const mesh of [fallbackFerns,fallbackLeaves]){
+  const item=groups.find(g=>g.mesh===mesh);if(item)item.fallback=true;
+ }
  // Flowers are deliberately sparse, small and placed with the understory.
  const flowerGeo=new THREE.SphereGeometry(.04,6,4);flowerGeo.translate(0,.28,0);
  batch(flowers,flowerGeo,new THREE.MeshStandardMaterial({color:'#f1e8af',roughness:1}),'small-flowers',(o)=>o.scale.setScalar(1));
@@ -205,9 +283,10 @@ export function buildMountainEnvironment(THREE, options) {
  let quality='high';try{quality=localStorage.getItem('mountain-quality')||(matchMedia('(pointer:coarse)').matches?'low':'high');}catch{}
  if(!['low','medium','high'].includes(quality))quality='high';
  const frustum=new THREE.Frustum(),matrix=new THREE.Matrix4(),sphere=new THREE.Sphere();
- const stats={generationMs:performance.now()-started,blades:bladeCount,rocks:rocks.length,ferns:ferns.length,roots:rootCount,batches:groups.length,quality};
+ const stats={generationMs:performance.now()-started,blades:bladeCount,rocks:rocks.length,ferns:ferns.length,roots:rootCount,sprites:spriteCount,foliageState,batches:groups.length,quality};
  const frames=[];let previous=0,lastUpdate=0;
  const update=(camera,focus,curve,now)=>{
+  windTime.value=now*.001;stats.foliageState=foliageState;
   if(previous&&now-previous<1000){frames.push(now-previous);if(frames.length>240)frames.shift();}previous=now;
   if(now-lastUpdate<120)return;lastUpdate=now;
   camera.updateMatrixWorld();matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(matrix);
@@ -219,6 +298,8 @@ export function buildMountainEnvironment(THREE, options) {
    sphere.radius+=curve.amount.value*(2*forward*sphere.radius+sphere.radius*sphere.radius);
    const distance=camera.position.distanceTo(sphere.center);
    mesh.visible=frustum.intersectsSphere(sphere)&&(!item.grass||distance<range+sphere.radius);
+   if(item.foliage&&foliageState!=='ready')mesh.visible=false;
+   if(item.fallback&&foliageState==='ready')mesh.visible=false;
    if(item.grass)mesh.count=Math.max(0,Math.floor(item.full*ratio*(distance<14?1:distance<28?.55:.24)));
   }
   stats.quality=quality;

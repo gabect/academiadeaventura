@@ -9,7 +9,9 @@ const THREE=await import(pathToFileURL(process.env.THREE_MODULE).href);
 const noop=()=>{};
 function element(){return {style:{},classList:{toggle:noop},addEventListener:noop,setAttribute:noop,append:noop,prepend:noop,getContext:()=>({clearRect:noop,fillText:noop}),getBoundingClientRect:()=>({width:120,height:120,left:0,top:0})};}
 class Renderer{constructor(){this.domElement=element();this.shadowMap={};this.info={render:{calls:0,triangles:0}};}setPixelRatio(){}setSize(){}render(){}}
-const context={THREE:{...THREE,WebGLRenderer:Renderer},buildMountainEnvironment,document:{body:element(),getElementById:element,createElement:element,addEventListener:noop},performance,console,Math,URLSearchParams,location:{search:'',reload:noop},localStorage:{getItem:()=>null,setItem:noop},matchMedia:()=>({matches:false,addEventListener:noop}),devicePixelRatio:1,innerWidth:1363,innerHeight:936,addEventListener:noop,setTimeout:noop,setInterval:noop,requestAnimationFrame:noop,navigator:{},screen:{orientation:{}}};
+let loadedTexture;
+class TextureLoader{load(url,onLoad,onProgress,onError){loadedTexture={url,onLoad,onError};return new THREE.Texture();}}
+const context={THREE:{...THREE,WebGLRenderer:Renderer,TextureLoader},buildMountainEnvironment,document:{body:element(),getElementById:element,createElement:element,addEventListener:noop},performance,console,Math,URLSearchParams,location:{search:'',reload:noop},localStorage:{getItem:()=>null,setItem:noop},matchMedia:()=>({matches:false,addEventListener:noop}),devicePixelRatio:1,innerWidth:1363,innerHeight:936,addEventListener:noop,setTimeout:noop,setInterval:noop,requestAnimationFrame:noop,navigator:{},screen:{orientation:{}}};
 context.window=context;
 let code=fs.readFileSync('index.html','utf8').split('<script type="module">')[1].split('</script>')[0].replace(/^import .*;$/gm,'');
 code+='\nglobalThis.result={scene,mountainEnvironment,groundMesh,camera,player,CURVED_HORIZON,obstacles};';
@@ -35,4 +37,24 @@ for(const group of env.groups.filter(g=>g.grass).slice(0,20)){
 let testTime=performance.now()+1000;const qualityCounts=[];
 for(const q of ['low','medium','high']){env.setQuality(q);env.update(camera,player.position,curve,testTime+=1000);qualityCounts.push(env.groups.filter(g=>g.grass).reduce((sum,g)=>sum+g.mesh.count,0));for(const g of env.groups.filter(g=>g.grass))assert(g.mesh.count<=g.full);}
 assert(qualityCounts[0]<qualityCounts[1]&&qualityCounts[1]<qualityCounts[2],'Quality must reduce draw instances');
+assert(env.stats.sprites>100,'Painted vegetation should be populated');
+assert(fs.existsSync(new URL(loadedTexture.url)),'Atlas must resolve beside the module');
+const cards=env.groups.filter(g=>g.foliage),fallbacks=env.groups.filter(g=>g.fallback);
+assert(cards.every(g=>!g.mesh.visible),'Unloaded cards must stay hidden');
+loadedTexture.onLoad();env.update(camera,player.position,curve,testTime+=1000);
+assert.equal(env.stats.foliageState,'ready');
+assert(fallbacks.every(g=>!g.mesh.visible),'Successful atlas replaces fallback plants');
+assert(cards.some(g=>g.mesh.visible),'Loaded foliage should be visible in spawn frustum');
+for(const {mesh} of cards){
+ assert.equal(mesh.material.transparent,false);assert(mesh.material.alphaTest>=.7);
+ const uv=mesh.geometry.attributes.uv;for(const value of uv.array)assert(value>0&&value<1);
+ const shader={uniforms:{},vertexShader:THREE.ShaderLib.standard.vertexShader,fragmentShader:THREE.ShaderLib.standard.fragmentShader};
+ mesh.material.onBeforeCompile(shader);
+ assert(shader.vertexShader.includes('mountainWindTime'));
+ assert(shader.vertexShader.includes('acWorld.y-='),'Foliage must preserve curved horizon shader');
+ assert(shader.uniforms.mountainWindTime.value>0);
+}
+loadedTexture.onError();env.update(camera,player.position,curve,testTime+=1000);
+assert.equal(env.stats.foliageState,'failed');assert(cards.every(g=>!g.mesh.visible));
+assert(fallbacks.some(g=>g.mesh.visible),'Failed atlas must restore visible geometric plants');
 console.log(JSON.stringify({kind:'CPU only; no WebGL or measured GPU FPS',...env.stats,geometries,instances,verifiedContacts:contacts},null,2));
