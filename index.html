@@ -591,10 +591,12 @@ const wetBed=new THREE.Color('#60796c');
 const terrainShade=new THREE.Color();
 // Reuse shared Color objects instead of allocating hundreds of thousands
 // during generation on Android/Chromebooks.
-const valleyGrass=new THREE.Color('#70966e');
-const rockBase=new THREE.Color('#87908a');
+const valleyGrass=new THREE.Color('#739d6e');
+const freshGrass=new THREE.Color('#8caf7e');
+const forestGrass=new THREE.Color('#557f58');
+const rockBase=new THREE.Color('#8e948c');
 const shadowRock=new THREE.Color('#6c7571');
-const softMoss=new THREE.Color('#697d67');
+const softMoss=new THREE.Color('#69846b');
 const rockShade=new THREE.Color();
 for(let i=0;i<groundPositions.count;i++){
  const x=groundPositions.getX(i),z=adaptiveZAt(groundPositions.getY(i));
@@ -633,9 +635,27 @@ for(let i=0;i<groundPositions.count;i++){
    THREE.MathUtils.clamp(.10+.27*broad+.09*fine,0,.43));
   rockShade.lerp(softMoss,
    Math.max(0,Math.sin(x*.39+hill*.72)*
-    Math.cos(z*.44-x*.13))*.14);
+    Math.cos(z*.44-x*.13))*.22);
+  // Real erosion fissures darken only the stone INSIDE the actual
+  // cliff. No overlaid texture polygons or fake vertical fissure meshes.
+  const cliffT=THREE.MathUtils.clamp(
+   (mountainCliffLipZ(x)-z)/
+   (mountainCliffLipZ(x)-mountainCliffUpperZ(x)),0,1);
+  const fissure=cliffCrackHeightAt(x,cliffT);
+  if(fissure>.02)rockShade.lerp(shadowRock,
+   THREE.MathUtils.clamp(fissure*.48,0,.48));
   terrainShade.lerp(valleyGrass,THREE.MathUtils.clamp(
    hill/7,.10,.88));
+  // Patches of short meadow grass, darker shrubby growth and fresh green
+  // cover remain non-repetitive and are independent of wall segment IDs.
+  const meadowNoise=.5+.5*Math.sin(x*.18+Math.sin(z*.12)*1.5)*
+   Math.cos(z*.21+x*.074);
+  terrainShade.lerp(freshGrass,
+   (1-exposed)*(.15+.22*meadowNoise));
+  const woodlandNoise=Math.max(0,
+   Math.sin(x*.29+z*.16)*Math.cos(z*.41-x*.11));
+  terrainShade.lerp(forestGrass,
+   (1-exposed)*woodlandNoise*.16);
   terrainShade.lerp(rockShade,exposed*.96);
   // Geological micro-relief is sculpted directly INTO the actual terrain
   // mesh (not a freestanding surface), only on impassable steep walls.
