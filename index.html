@@ -4076,6 +4076,10 @@ function bendBuiltInMaterial(material){
  if(!material||material.isShaderMaterial||CURVED_MATERIALS.has(material))return;
  CURVED_MATERIALS.add(material);
  const prior=material.onBeforeCompile.bind(material);
+ // Keep the terrain's dedicated triplanar rock shader program distinct
+ // from plain materials. Previously every curved material shared one
+ // program key and could reuse a shader with the wrong attributes.
+ const materialProgramKey=material.customProgramCacheKey();
  material.onBeforeCompile=(shader,webgl)=>{
   prior(shader,webgl);
   shader.uniforms.acCurveFocus=CURVED_HORIZON.focus;
@@ -4088,7 +4092,7 @@ function bendBuiltInMaterial(material){
   shader.vertexShader=shader.vertexShader.replace(
    '#include <project_vertex>',CURVE_PROJECT_VERTEX);
  };
- material.customProgramCacheKey=()=>'academy-orbit-rolling-log-v2';
+ material.customProgramCacheKey=()=>'academy-orbit-rock-v3:'+materialProgramKey;
  material.needsUpdate=true;
 }
 // Directional shadow caster positions receive the same deformation.
