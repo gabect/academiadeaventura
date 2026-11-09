@@ -489,10 +489,34 @@ const FLOOR_DECAL_OFFSET=.002;
 // Three times the usable area of v0.30.0, with open grassy field and
 // continuous hill and underwater elevations. No arena perimeter walls.
 const TERRAIN_HALF_SIZE=WORLD.half;
+// More real vertices at the steep rock face, rather than a second mesh
+// pasted in front. Keep broad land/water reasonably sampled for mobile.
 const terrainResolution=320;
 const terrainGeometry=new THREE.PlaneGeometry(
  TERRAIN_HALF_SIZE*2,TERRAIN_HALF_SIZE*2,
  terrainResolution,terrainResolution);
+// Adaptive Z mesh spacing: high density around the physically steep cliff
+// at z=-16, without multiplying all vertices over the 166-unit world.
+const TERRAIN_Z_BANDS=[
+ [-83,-65,16],[-65,-55,15],[-55,-35,30],
+ [-35,-21,30],[-21,-14,65],[-14,-8,15],[-8,83,149]
+];
+const TERRAIN_Z_SAMPLES=[];
+for(const [start,end,segments] of TERRAIN_Z_BANDS){
+ for(let step=0;step<segments;step++)
+  TERRAIN_Z_SAMPLES.push(start+(end-start)*step/segments);
+}
+TERRAIN_Z_SAMPLES.push(83);
+if(TERRAIN_Z_SAMPLES.length!==terrainResolution+1)
+ throw new Error('Invalid adaptive terrain Z grid');
+function adaptiveZAt(rawPlaneY){
+ const t=THREE.MathUtils.clamp(
+  (TERRAIN_HALF_SIZE+rawPlaneY)/(TERRAIN_HALF_SIZE*2),0,1);
+ const index=t*terrainResolution,k=Math.min(terrainResolution-1,
+  Math.floor(index));
+ return THREE.MathUtils.lerp(TERRAIN_Z_SAMPLES[k],
+  TERRAIN_Z_SAMPLES[k+1],index-k);
+}
 const groundPositions=terrainGeometry.attributes.position;
 const groundColors=[];
 const dryGrass=new THREE.Color('#80aa71');
@@ -500,7 +524,8 @@ const lightMeadow=new THREE.Color('#99b87e');
 const wetBed=new THREE.Color('#60796c');
 const terrainShade=new THREE.Color();
 for(let i=0;i<groundPositions.count;i++){
- const x=groundPositions.getX(i),z=-groundPositions.getY(i);
+ const x=groundPositions.getX(i),z=adaptiveZAt(groundPositions.getY(i));
+ groundPositions.setY(i,-z);
  const water=waterAt(x,z),depth=water?water.depth:0;
  const hill=naturalHillHeightAt(x,z);
  const actualHeight=water?water.floorY-TERRAIN.floorTop:hill;
@@ -508,27 +533,41 @@ for(let i=0;i<groundPositions.count;i++){
  terrainShade.copy(dryGrass).lerp(wetBed,
   THREE.MathUtils.clamp(depth/2.8,0,1));
  if(hill>.3){
-  const summitGrass=new THREE.Color('#70966e');
-  const coldStone=new THREE.Color('#858b88');
-  const paleRock=new THREE.Color('#b5b2a2');
-  const profile=mountainFaceAngle(x);
-  // The broad upper valley and western summit are clearly GREEN.
-  // Only steep exposed faces and the impassable cordillera are stone.
-  const slopeZ=Math.abs(mountainBaseHeightAt(x,z-.20)-
-   mountainBaseHeightAt(x,z+.20))/.40;
-  const slopeX=Math.abs(mountainBaseHeightAt(x-.20,z)-
-   mountainBaseHeightAt(x+.20,z))/.40;
-  const rocky=Math.hypot(slopeX,slopeZ)>1.10||
-   (z<WORLD.crestZ&&hill>16);
-  terrainShade.lerp(rocky?coldStone:summitGrass,
-   THREE.MathUtils.clamp(hill/7,.1,.88));
-  // Exposed pale rock at the mountain FOOT is readable from a low camera;
-  // the plateau edge gets another thin bright contour. Physics unchanged.
-  if(z<WORLD.faceZ+1&&z>WORLD.faceZ-24){
-   const foot=Math.max(0,1-Math.abs(hill-1.45)/1.55);
-   const rim=Math.max(0,1-Math.abs(hill-9.70)/.8);
-   terrainShade.lerp(paleRock,Math.min(.53,foot*.43+rim*.24));
-  }
+  const valleyGrass=new THREE.Color('#70966e');
+  const weatheredRock=new THREE.Color('#87908a');
+  const shadowRock=new THREE.Color('#6c7571');
+  const softMoss=new THREE.Color('#697d67');
+  const dx=(mountainBaseHeightAt(x+.13,z)-
+   mountainBaseHeightAt(x-.13,z))/.26;
+  const dz=(mountainBaseHeightAt(x,z+.13)-
+   mountainBaseHeightAt(x,z-.13))/.26;
+  const actualSteepness=Math.hypot(dx,dz);
+  // Rock coverage follows the genuine land slope and therefore shares its
+  // silhouettes with the actual floor; no floating vertical cover mesh.
+  const slopeRock=smoothWater((actualSteepness-.64)/1.6);
+  const cliffDelta=Math.abs(z-mountainCliffLipZ(x));
+  const inCliffPass=passageWeight(x,PRIMARY_PASS.x,
+   PRIMARY_PASS.halfWidth,PRIMARY_PASS.feather)>.08||
+   passageWeight(x,EASTERN_PASS.x,
+   EASTERN_PASS.halfWidth,EASTERN_PASS.feather)>.08;
+  const steepFace=!inCliffPass?
+   1-smoothWater((cliffDelta-.04)/.90):0;
+  const exposed=Math.max(slopeRock,steepFace,
+   z<WORLD.crestZ?Math.min(1,(hill-15)/9):0);
+  // Continuous geological veining varies with world coordinates, never
+  // segment indices; no striped columns, checkerboard or repeating panels.
+  const broad=Math.sin(x*.22+Math.sin(z*.15)*1.7+
+   hill*.31)*.50+.50;
+  const fine=Math.sin(x*.83+hill*1.7+z*.39)*
+   Math.cos(x*.27-hill*.93);
+  weatheredRock.lerp(shadowRock,
+   THREE.MathUtils.clamp(.10+.27*broad+.09*fine,0,.43));
+  weatheredRock.lerp(softMoss,
+   Math.max(0,Math.sin(x*.39+hill*.72)*
+    Math.cos(z*.44-x*.13))*.14);
+  terrainShade.lerp(valleyGrass,THREE.MathUtils.clamp(
+   hill/7,.10,.88));
+  terrainShade.lerp(weatheredRock,exposed*.96);
  }
 
  // Subtle low-frequency color variation avoids a featureless giant field.
@@ -680,125 +719,10 @@ for(let i=0;i<22;i++){
  streamFoam.push(mark);
 }
 let streamTime=0;
-// Visible, actually stratified CLIF​​F walls, not merely a dark strip of
-// steep green ground. The north-facing plateau above stays lush and flat.
-// Same world coordinates as mountainBaseHeightAt; no collision shortcut.
-const cliffWallColors=[
- new THREE.Color('#7b807e'),
- new THREE.Color('#949592'),
- new THREE.Color('#6f7775'),
- new THREE.Color('#afb0a4'),
- new THREE.Color('#858986'),
- new THREE.Color('#b1ad9e')
-];
-function buildLayeredCliffFaces(){
- const vertices=[],colors=[];
- const stone=(band,offset)=>cliffWallColors[
-  (band+offset+cliffWallColors.length)%cliffWallColors.length];
- const cliffMoss=new THREE.Color('#617d66');
- function triangle(points,shade){
-  for(const p of points){
-   vertices.push(p[0],p[1],p[2]);
-   colors.push(shade.r,shade.g,shade.b);
-  }
- }
- function wallSegment(ax,az,bx,bz,lower,upper,seed){
-  const levels=6,step=(upper-lower)/levels;
-  for(let j=0;j<levels;j++){
-   const bottom=lower+j*step,top=bottom+step;
-   const stoneShade=stone(j,Math.abs(seed)%4).clone();
-   // Moss and minerals vary naturally within layers; keep rock visible.
-   const patch=Math.max(0,Math.sin(seed*.71+j*2.93)*
-    Math.cos(seed*.27-j*.84));
-   stoneShade.lerp(cliffMoss,patch*(j>=3?.26:.12));
-   const nudge=.027*Math.sin(j*2.6+seed*1.17);
-   const a=[ax,bottom,az+nudge],b=[bx,bottom,bz+nudge],
-    c=[ax,top,az+nudge],d=[bx,top,bz+nudge];
-   triangle([a,b,c],stoneShade);
-   triangle([b,d,c],stoneShade);
-  }
- }
- // Wide front wall from lowland to upper valley, with unmistakable gaps
- // for the 30° and 35° passes, and for the real waterfall at x≈34.
- for(let x=-78,segment=0;x<77;x+=.67,segment++){
-  const x2=Math.min(x+.67,77),mid=(x+x2)/2;
-  const hasPassage=
-   passageWeight(mid,PRIMARY_PASS.x,PRIMARY_PASS.halfWidth,
-    PRIMARY_PASS.feather)>.025||
-   passageWeight(mid,EASTERN_PASS.x,EASTERN_PASS.halfWidth,
-    EASTERN_PASS.feather)>.025;
-  if(hasPassage||Math.abs(mid-34)<4.3)continue;
-  const za=mountainCliffLipZ(x)+.005;
-  const zb=mountainCliffLipZ(x2)+.005;
-  wallSegment(x,za,x2,zb,TERRAIN.floorTop,
-   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley,segment);
- }
- // The summit is another obvious GREEN terrace with its OWN rock skirt,
- // interrupted only on the east where the 45° ascent corridor reaches it.
- const mesa=SUMMIT_MESA,segments=144;
- for(let k=0;k<segments;k++){
-  const a=k*2*Math.PI/segments,b=(k+1)*2*Math.PI/segments;
-  const mid=(a+b)/2;
-  if(Math.cos(mid)>0&&Math.abs(Math.sin(mid))<.29)continue;
-  const r=.95;
-  const point=theta=>{
-   const wobble=1+.025*Math.sin(theta*5);
-   return [mesa.x+Math.cos(theta)*mesa.rx*r*wobble,
-    mesa.z+Math.sin(theta)*mesa.rz*r*wobble];
-  };
-  const p=point(a),q=point(b);
-  wallSegment(p[0],p[1],q[0],q[1],
-   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley,
-   TERRAIN.floorTop+MOUNTAIN_LEVELS.summit,k);
- }
- const geo=new THREE.BufferGeometry();
- geo.setAttribute('position',
-  new THREE.Float32BufferAttribute(vertices,3));
- geo.setAttribute('color',
-  new THREE.Float32BufferAttribute(colors,3));
- geo.computeVertexNormals();
- const facade=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({
-  vertexColors:true,roughness:.99,metalness:0,
-  flatShading:true,side:THREE.DoubleSide
- }));
- facade.name='visible-layered-mountain-rock-walls';
- facade.castShadow=true;facade.receiveShadow=true;
- facade.frustumCulled=false;
- scene.add(facade);
-}
-buildLayeredCliffFaces();
-// Thin high-contrast limestone lips define where a cliff ENDS and the
-// next green walkable terrace BEGINS. They do not create artificial steps.
-const plateauEdgeMat=new THREE.MeshStandardMaterial({
- color:'#c0bba7',roughness:1,side:THREE.DoubleSide
-});
-function buildLayeredCliffRims(){
- const points=[];
- function ribbon(x1,z1,x2,z2,y,width){
-  const v=[[x1,y,z1],[x2,y,z2],[x1,y,z1-width],
-   [x2,y,z2],[x2,y,z2-width],[x1,y,z1-width]];
-  for(const p of v)points.push(...p);
- }
- for(let x=-78;x<77;x+=1.25){
-  const x2=Math.min(x+1.25,77),mid=(x+x2)/2;
-  if(passageWeight(mid,PRIMARY_PASS.x,PRIMARY_PASS.halfWidth,
-      PRIMARY_PASS.feather)>.03||
-     passageWeight(mid,EASTERN_PASS.x,EASTERN_PASS.halfWidth,
-      EASTERN_PASS.feather)>.03||
-     Math.abs(mid-34)<4.3)continue;
-  const z1=mountainCliffLipZ(x)-.55,z2=mountainCliffLipZ(x2)-.55;
-  ribbon(x,z1,x2,z2,
-   TERRAIN.floorTop+MOUNTAIN_LEVELS.valley+.043,.18);
- }
- const geometry=new THREE.BufferGeometry();
- geometry.setAttribute('position',
-  new THREE.Float32BufferAttribute(points,3));
- geometry.computeVertexNormals();
- const edge=new THREE.Mesh(geometry,plateauEdgeMat);
- edge.name='grass-to-cliff-edge-highlight';
- edge.frustumCulled=false;scene.add(edge);
-}
-buildLayeredCliffRims();
+// The mountain cliff IS the heightfield itself. No freestanding vertical
+// rock wallpaper, colored checkerboard grid or suspended limestone rim.
+// Terrain shape, vertex normals, stone shading and collisions share the
+// same mountainBaseHeightAt() function.
 const pavement=new THREE.Mesh(new THREE.PlaneGeometry(11,15),stone);
 pavement.rotation.x=-Math.PI/2;
 pavement.position.y=TERRAIN.floorTop+FLOOR_DECAL_OFFSET;
