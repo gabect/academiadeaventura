@@ -1529,6 +1529,128 @@ for(let i=0;i<90;i++){
   plantTuft(x,naturalSurfaceY(x,z)+.02,z,.7+cliffRand()*.56);
  }
 }
+// ORGANIC MOUNTAIN ECOLOGY --------------------------------------------------
+// Vary canopy silhouettes, vegetation heights and clump density instead of
+// repeating uniformly sized cones. All sites are deterministic, dry, rooted
+// on real terrain, and clear of the 30°/35°/45° approach corridors.
+const MOUNTAIN_SHRUB_SITES=[],MOUNTAIN_STONE_SITES=[],
+ MOUNTAIN_TREES=[];
+function distanceFromTrail(x,z,path){
+ let min=Infinity;
+ for(let i=0;i<path.length-1;i++){
+  const a=path[i],b=path[i+1],
+   dx=b[0]-a[0],dz=b[1]-a[1];
+  const t=THREE.MathUtils.clamp(
+   ((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz),0,1);
+  min=Math.min(min,Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t));
+ }
+ return min;
+}
+function mountainRouteBuffer(x,z,extra=0){
+ return distanceFromTrail(x,z,MOUNTAIN_PATH)<2.5+extra||
+  distanceFromTrail(x,z,EASTERN_MOUNTAIN_TRAIL)<2.5+extra||
+  distanceFromTrail(x,z,SUMMIT_ASCENT_TRAIL)<2.5+extra||
+  // Preserve physical passes beyond the path ribbon, their wayfinding
+  // signs and nearby safe dismounts.
+  (cliffRouteClear(x,2.1+extra)&&
+   z>mountainCliffUpperZ(x)-4&&
+   z<mountainCliffLipZ(x)+6);
+}
+function candidateMountainPlant(zone){
+ let x,z;
+ if(zone==='summit'){
+  x=-73+cliffRand()*25;
+  z=-53.5+cliffRand()*20.5;
+ }else{
+  x=-75+cliffRand()*149;
+  const margin=zone==='foot'?
+   mountainCliffLipZ(x):
+   mountainCliffUpperZ(x);
+  z=zone==='foot'?margin+1.0+cliffRand()*9.1:
+   margin-1.2-cliffRand()*8.0;
+ }
+ if(Math.abs(x)>76||z<-69||z>73)return null;
+ if(cliffRouteClear(x,2.5)&&zone!=='summit')return null;
+ if(mountainRouteBuffer(x,z,1.0)||waterAt(x,z))return null;
+ // Never populate the old training obstacles, the cabin porch or
+ // the rare summit rock crown with dense undergrowth.
+ if(Math.abs(x)<9&&Math.abs(z)<13)return null;
+ if(x>-20&&x<-5&&z>-49&&z<-31)return null;
+ if(zone==='summit'&&x>-66&&x<-56&&z>-47&&z<-39)return null;
+ const slope=naturalGradeAt(x,z);
+ if(slope>.42)return null;
+ const y=naturalSurfaceY(x,z);
+ if(!Number.isFinite(y))return null;
+ const patch=.50+.50*Math.sin(x*.22+z*.14)*
+  Math.cos(z*.36-x*.17);
+ if(cliffRand()>.30+.67*patch)return null;
+ return {x,y,z,zone,patch};
+}
+// More grass at the foot and plateau brow, including tall isolated
+// swaying-looking clumps; the rock FACE itself retains exposed stone.
+for(let i=0;i<3200;i++){
+ const zone=i%9===0?'summit':i%3===0?'crest':'foot';
+ const p=candidateMountainPlant(zone);
+ if(!p)continue;
+ const amount=1+(p.patch>.58?1:0)+(cliffRand()>.68?1:0);
+ for(let blade=0;blade<amount;blade++){
+  const x=p.x+(cliffRand()-.5)*.9;
+  const z=p.z+(cliffRand()-.5)*.9;
+  if(waterAt(x,z)||naturalGradeAt(x,z)>.45||
+   mountainRouteBuffer(x,z,.2))continue;
+  plantTuft(x,naturalSurfaceY(x,z)+.015,z,
+   .32+cliffRand()*1.56);
+ }
+}
+// Multi-lobed thickets, with three size ranges: seedlings, bush-sized
+// shrubs and large leafy masses. They are low and decorative.
+for(let i=0;i<1100;i++){
+ const zone=i%8===0?'summit':i%2===0?'crest':'foot';
+ const p=candidateMountainPlant(zone);
+ if(!p)continue;
+ const size=.23+cliffRand()*.77;
+ const sx=size*(.8+cliffRand()*.55);
+ const sy=size*(.45+cliffRand()*.31);
+ const sz=size*(.80+cliffRand()*.6);
+ MOUNTAIN_SHRUB_SITES.push({...p,sx,sy,sz,
+  color:cliffRand(),rot:cliffRand()*6.28});
+ // Second lobe makes bushes less like identical green spheres.
+ if(cliffRand()>.37)MOUNTAIN_SHRUB_SITES.push({
+  ...p,x:p.x+sx*.59,y:p.y+sy*.12,
+  z:p.z+sz*.43,sx:sx*.75,sy:sy*.80,sz:sz*.80,
+  color:cliffRand(),rot:cliffRand()*6.28});
+}
+// More field stones, from pebbles to uneven boulders, some embedded in
+// meadow soil, others at the foot of the wall and on upper plateaus.
+for(let i=0;i<640;i++){
+ const zone=i%11===0?'summit':i%3===0?'crest':'foot';
+ const p=candidateMountainPlant(zone);
+ if(!p)continue;
+ const size=.15+cliffRand()*1.13;
+ MOUNTAIN_STONE_SITES.push({...p,
+  y:p.y+size*.21,sx:size*(.82+cliffRand()*.35),
+  sy:size*(.38+cliffRand()*.32),
+  sz:size*(.78+cliffRand()*.38),
+  rot:cliffRand()*6.28});
+}
+// A smaller number of realistic-scale trees provides genuine depth
+// instead of hundreds of identical miniature pyramids.
+let attemptedTrees=0;
+for(let i=0;i<720&&MOUNTAIN_TREES.length<48;i++){
+ attemptedTrees++;
+ const zone=i%7===0?'summit':i%2===0?'foot':'crest';
+ const p=candidateMountainPlant(zone);
+ if(!p||naturalGradeAt(p.x,p.z)>.25)continue;
+ const scale=.48+cliffRand()*1.55;
+ const radius=.22+scale*.19;
+ const neighbors=[...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z})),
+  ...CLIFF_EDGE_TREE_SITES,...MOUNTAIN_TREES];
+ if(neighbors.some(other=>
+  Math.hypot(p.x-other.x,p.z-other.z)<2.2+scale*.8))continue;
+ MOUNTAIN_TREES.push({...p,scale,radius,
+  evergreen:cliffRand()>.36,color:cliffRand()});
+ CLIFF_EDGE_TREE_SITES.push({x:p.x,z:p.z,r:radius});
+}
 function cliffBatch(geometry,material,sites,dim){
  const mesh=new THREE.InstancedMesh(geometry,material,sites.length);
  const transform=new THREE.Object3D();
@@ -1559,6 +1681,60 @@ stoneShelves.name='stone-ledges-with-rooted-grass';
 const basalRocks=cliffBatch(cliffRockGeometry,mat('#91978d'),
  cliffBoulders,v=>[v.sx,v.sy,v.sz]);
 basalRocks.name='mountain-foot-boulders';
+// Only three additional draw calls for all scaled brush piles and rocks.
+const mountainShrubs=cliffBatch(
+ new THREE.DodecahedronGeometry(1,0),
+ new THREE.MeshStandardMaterial({color:'#f4f5e7',roughness:1}),
+ MOUNTAIN_SHRUB_SITES,v=>[v.sx,v.sy,v.sz]);
+mountainShrubs.name='mountain-shrubs-multiple-sizes';
+const mountainRocks=cliffBatch(
+ new THREE.DodecahedronGeometry(1,0),mat('#9a9c91'),
+ MOUNTAIN_STONE_SITES,v=>[v.sx,v.sy,v.sz]);
+mountainRocks.name='native-mountain-pebbles-and-rocks';
+// Shared meshes for all sizes of trees, optimized for mobile GPUs.
+function drawMountainTreePart(sites,geometry,material,name,position,scale){
+ const batch=new THREE.InstancedMesh(geometry,material,sites.length),
+  instance=new THREE.Object3D();
+ for(let i=0;i<sites.length;i++){
+  const s=sites[i],p=position(s),k=scale(s);
+  instance.position.set(p[0],p[1],p[2]);
+  instance.rotation.set(0,s.color*Math.PI*2,0);
+  instance.scale.set(k[0],k[1],k[2]);
+  instance.updateMatrix();batch.setMatrixAt(i,instance.matrix);
+  if(batch.setColorAt){
+   batch.setColorAt(i,new THREE.Color().setHSL(
+    s.evergreen?.35+.025*s.color:.27+.025*s.color,
+    .20+.18*s.color,.31+.11*s.color));
+  }
+ }
+ batch.instanceMatrix.needsUpdate=true;
+ if(batch.instanceColor)batch.instanceColor.needsUpdate=true;
+ batch.frustumCulled=false;batch.castShadow=true;batch.receiveShadow=true;
+ batch.name=name;scene.add(batch);
+}
+drawMountainTreePart(MOUNTAIN_TREES,
+ new THREE.CylinderGeometry(.12,.22,2.2,6),
+ mat('#78644a'),'mountain-varied-trunks',
+ s=>[s.x,s.y+s.scale*1.1,s.z],
+ s=>[s.scale,s.scale,s.scale]);
+const mountainPines=MOUNTAIN_TREES.filter(s=>s.evergreen);
+const mountainBroadleaf=MOUNTAIN_TREES.filter(s=>!s.evergreen);
+drawMountainTreePart(mountainPines,
+ new THREE.ConeGeometry(1.03,2.7,7),
+ mat('#779777'),'mountain-tall-pines-lower',
+ s=>[s.x,s.y+s.scale*2.75,s.z],
+ s=>[s.scale,s.scale,s.scale]);
+drawMountainTreePart(mountainPines,
+ new THREE.ConeGeometry(.74,2.2,7),
+ mat('#86a980'),'mountain-tall-pines-upper',
+ s=>[s.x,s.y+s.scale*3.83,s.z],
+ s=>[s.scale,s.scale,s.scale]);
+drawMountainTreePart(mountainBroadleaf,
+ new THREE.DodecahedronGeometry(1,0),
+ mat('#88aa7b'),'mountain-round-canopies',
+ s=>[s.x,s.y+s.scale*2.95,s.z],
+ s=>[s.scale*1.32,s.scale*.96,s.scale*1.26]);
+
 // Dwarf cliffside pines sit on projecting STONE rather than floating.
 const cliffTrunk=mat('#776348'),cliffNeedles=mat('#53785f');
 for(const v of cliffPines){
