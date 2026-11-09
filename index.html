@@ -2636,7 +2636,7 @@ function poseGroundedCharacter(character,travel,dt){
    // lateral/forward travel direction, not always in front of the toes.
    const stride=remainingTravel+stance*step+stagger;
    const travelForward=(sin*gait.vx+cos*gait.vz)/Math.max(speed,.01);
-   const travelSide=(-cos*gait.vx+sin*gait.vz)/Math.max(speed,.01);
+   const travelSide=(cos*gait.vx-sin*gait.vz)/Math.max(speed,.01);
    const landing=footPosition(character,i,
     stride*travelForward,
     THREE.MathUtils.clamp(stride*travelSide,-.36,.36));
