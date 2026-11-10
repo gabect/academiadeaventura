@@ -65,17 +65,21 @@ export function installStudioArt(THREE, options){
    select:i=>i%37===7,height:v=>.56+v.size*.53},
   // Vegetated ledges: dark stone remains genuinely 3D behind the cards.
   {key:'hanging_edge',file:'hanging_edge.webp',aspect:1.70,source:'ledge',
-   select:i=>i%2===0,height:v=>.75+v.sx*.57,hanging:true,cross:false},
+   select:i=>i%2===0,height:v=>.41+v.sx*.33,hanging:true,cross:false},
   {key:'cliff_crest',file:'hanging_edge.webp',aspect:1.83,source:'crest',
-   select:i=>i%2===0,height:v=>.80+v.size*.38,hanging:true,cross:false},
+   select:i=>i%2===0,height:v=>.65+v.size*.24,hanging:true,cross:false},
   {key:'wall_vines',file:'vine.webp',aspect:1.05,source:'wall',
-   select:i=>i%3===0,height:v=>1.00+v.size*.88,hanging:true,cross:false},
+   select:i=>i%2===0,height:v=>1.02+v.size*.88,hanging:true,cross:false},
   {key:'wall_roots',file:'root.webp',aspect:2.05,source:'wall',
    select:i=>i%11===3,height:v=>.80+v.size*.42,hanging:true,cross:false},
+  {key:'wall_ferns',file:'fern.webp',aspect:1.15,source:'wall',
+   select:i=>i%4===1,height:v=>.41+v.size*.48,cross:false},
+  {key:'ledge_flora',file:'broadleaf.webp',aspect:1.15,source:'ledge',
+   select:i=>i%3===1,height:v=>.38+v.sx*.34,cross:false},
   {key:'ledge_rocks',file:'rock_ledge.webp',aspect:1.65,source:'ledge',
-   select:i=>i%5===2,height:v=>.61+v.sx*.57,cross:false},
+   select:i=>i%5===2,height:v=>.49+v.sx*.38,cross:false},
   {key:'rock_outcrops',file:'rock_outcrop.webp',aspect:1.64,source:'ledge',
-   select:i=>i%7===5,height:v=>.69+v.sx*.52,cross:false}
+   select:i=>i%7===5,height:v=>.52+v.sx*.42,cross:false}
  ];
  for(const spec of groupSpecs){
   const origin=spec.source==='ledge'?ledgeSites:spec.source==='wall'?wallSites:

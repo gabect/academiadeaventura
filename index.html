@@ -1541,6 +1541,7 @@ const FIELD_TREE_POSITIONS=[
  [58,4],[64,12],[58,24],[64,35],[56,43],
  [53,-5],[62,-14],[55,-28],[53,-42]
 ];
+const studioFieldTreeCrowns=[];
 function tree(x,z){
  const lift=naturalSurfaceY(x,z)-TERRAIN.floorTop;
  cylinder(.22,.32,2.5,wood,x,lift+1.25,z);
@@ -1552,6 +1553,7 @@ function tree(x,z){
   foliage.scale.set(1.42,1.37,1.42);
   foliage.castShadow=true;foliage.receiveShadow=true;
   foliage.userData.ignoreCameraRay=true;scene.add(foliage);
+  studioFieldTreeCrowns.push(foliage);
  }else{
   const leaves=mat('#4b8864');
   cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
@@ -1997,6 +1999,31 @@ const stoneShelves=cliffBatch(cliffRockGeometry,studioRockMat||mat('#a1a499'),
  MOUNTAIN_STUDIO?cliffLedges.filter((v,i)=>i%3!==0):cliffLedges,
  v=>[v.sx*(MOUNTAIN_STUDIO?.81:1),v.sy,v.sz*(MOUNTAIN_STUDIO?.84:1)]);
 stoneShelves.name='stone-ledges-with-rooted-grass';
+// Sparse, partially embedded rocky facets add real surface depth without
+// creating a parallel façade or any new collision geometry.
+if(MOUNTAIN_STUDIO){
+ const faceFacets=[];
+ for(let x=-71;x<72;x+=2.0){
+  if(cliffRouteClear(x,3.4)||Math.abs(x-34)<7)continue;
+  for(let tier=0;tier<4;tier++){
+   if(cliffRand()>.70)continue;
+   const xx=x+(cliffRand()-.5)*.85;
+   const y=TERRAIN.floorTop+1.25+tier*2.12+(cliffRand()-.5)*.72;
+   const z=rockFaceZAtHeight(xx,y);
+   if(!Number.isFinite(z))continue;
+   const depth=.22+cliffRand()*.12;
+   faceFacets.push({x:xx,y,z:z-depth*.62,
+    sx:.33+cliffRand()*.43,sy:.24+cliffRand()*.44,
+    sz:depth,rot:cliffRand()*Math.PI*2});
+  }
+ }
+ const facets=cliffBatch(cliffRockGeometry,studioRockMat,
+  faceFacets,v=>[v.sx,v.sy,v.sz]);
+ facets.name='studio-integrated-cliff-facets';
+ facets.userData.ignoreCameraRay=true;
+ window.__studioCliffFacetCount=faceFacets.length;
+}
+
 const basalRocks=cliffBatch(cliffRockGeometry,studioRockMat||mat('#91978d'),
  MOUNTAIN_STUDIO?cliffBoulders.filter((v,i)=>i%2===0):cliffBoulders,
  v=>[v.sx*(MOUNTAIN_STUDIO?.56:1),v.sy*(MOUNTAIN_STUDIO?.68:1),v.sz*(MOUNTAIN_STUDIO?.56:1)]);
@@ -4459,6 +4486,16 @@ function animate(){
  updateSlopeStatus();
  updateRegionStatus();
  followPlayerCamera(dt);
+ // When the over-the-shoulder camera is inside a conifer crown, temporarily
+ // hide that decorative crown rather than covering the entire player view.
+ if(MOUNTAIN_STUDIO){
+  for(const crown of studioFieldTreeCrowns){
+   const dx=camera.position.x-crown.position.x;
+   const dz=camera.position.z-crown.position.z;
+   const dy=camera.position.y-(crown.position.y+1.3);
+   crown.visible=dx*dx+dz*dz+dy*dy>11.0;
+  }
+ }
  updateWaterVisual(dt);
  mountainEnvironment.update(camera,player.position,CURVED_HORIZON,performance.now());
  if(studioArt)studioArt.update(mountainEnvironment.getQuality());
