@@ -17,7 +17,7 @@ assert(art.includes('export function createStudioFoliageGeometry'));
 const paint=fs.readFileSync(new URL('../src/studio-tree-material.mjs',import.meta.url),'utf8');
 assert(html.includes('createStudioTreeMaterials(THREE)'));
 assert(paint.includes('CanvasTexture'));
-new Function(paint.replace(/\\bexport function /g,'function '));
+new Function(paint.replace(/\bexport function /g,'function '));
 assert(html.includes('STUDIO_CI'));
 assert(html.includes('buildStudioNaturalSites'));
 const check=x=>new Function(x);
