@@ -7,7 +7,7 @@ const browser=await chromium.launch({headless:true,args:[
 let fails=[];
 for(const [name,width,height,mode] of [
  ['studio-desktop',920,518,'studio'],['studio-mobile',640,360,'studio'],
- ['studio-cliff',920,518,'cliff'],['normal-desktop',800,450,'normal']
+ ['studio-cliff',920,518,'cliff'],['studio-meadow',920,518,'meadow'],['normal-desktop',800,450,'normal']
 ]){
  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,
   isMobile:name.includes('mobile'),hasTouch:name.includes('mobile')});
@@ -15,7 +15,7 @@ for(const [name,width,height,mode] of [
  page.on('pageerror',e=>errors.push('pageerror '+e.message));
  page.on('console',m=>{if(m.type()==='error')errors.push('console '+m.text());});
  try{
-  await page.goto('http://127.0.0.1:8765/?'+(mode!=='normal'?'mountain=studio&':'')+(mode==='cliff'?'scene=cliff&':'')+
+  await page.goto('http://127.0.0.1:8765/?'+(mode!=='normal'?'mountain=studio&':'')+(['cliff','meadow'].includes(mode)?'scene='+mode+'&':'')+
    'ci-smoke=1',{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>window.__studioCIReady===true,
     null,{timeout:120000,polling:500}).catch(()=>{});

@@ -22,7 +22,7 @@ export function installStudioArt(THREE, options){
    notify();
   });
  };
- load('tiles/rock.webp',tex=>{
+ load('tiles/rock_quilt.webp',tex=>{
   rockUniform.value=tex;status.rockReady=true;
   for(const mat of rockMaterials){
    if(!mat)continue;mat.map=tex;mat.needsUpdate=true;
@@ -30,8 +30,8 @@ export function installStudioArt(THREE, options){
   if(setEnvironmentRockTexture)setEnvironmentRockTexture(tex);
   status.terrainReady=!!grassUniform.value?.image;
  });
- load('tiles/rock_moss.webp',tex=>{if(mossUniform)mossUniform.value=tex;});
- load('tiles/grass.webp',tex=>{
+ load('tiles/rock_moss_quilt.webp',tex=>{if(mossUniform)mossUniform.value=tex;});
+ load('tiles/grass_quilt.webp',tex=>{
   grassUniform.value=tex;
   status.terrainReady=!!rockUniform.value?.image;
  });
@@ -51,10 +51,10 @@ export function installStudioArt(THREE, options){
   g.setIndex(indices);g.computeVertexNormals();return g;
  }
  const groupSpecs=[
-  {key:'grass_tuft',file:'grass_tuft.webp',aspect:1.30,select:i=>i%3!==0,height:v=>.20+v.size*.38},
-  {key:'grass_medium',file:'grass_medium.webp',aspect:1.20,select:i=>i%3===0,height:v=>.16+v.size*.34},
-  {key:'fern',file:'fern.webp',aspect:1.15,select:i=>i%10===0,height:v=>.26+v.size*.37},
-  {key:'broadleaf',file:'broadleaf.webp',aspect:1.16,select:i=>i%13===2,height:v=>.28+v.size*.42},
+  {key:'grass_tuft',file:'grass_tuft.webp',aspect:1.30,select:i=>i%5<2,height:v=>.20+v.size*.38},
+  {key:'grass_medium',file:'grass_medium.webp',aspect:1.20,select:i=>i%5===2,height:v=>.16+v.size*.34},
+  {key:'fern',file:'fern.webp',aspect:1.15,select:i=>i%12===0,height:v=>.26+v.size*.37},
+  {key:'broadleaf',file:'broadleaf.webp',aspect:1.16,select:i=>i%17===2,height:v=>.28+v.size*.42},
   {key:'flowers_white',file:'flowers_white.webp',aspect:1.03,select:i=>i%47===8,height:v=>.30+v.size*.27},
   {key:'flowers_purple',file:'flowers_purple.webp',aspect:1.04,select:i=>i%53===7,height:v=>.32+v.size*.37},
   {key:'hanging_edge',file:'hanging_edge.webp',aspect:1.62,

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 for(const p of [
  'tiles/rock.webp','tiles/rock_moss.webp','tiles/grass.webp',
+ 'tiles/rock_quilt.webp','tiles/rock_moss_quilt.webp','tiles/grass_quilt.webp',
  'sprites/grass_tuft.webp','sprites/grass_medium.webp',
  'sprites/fern.webp','sprites/broadleaf.webp',
  'sprites/flowers_white.webp','sprites/flowers_purple.webp',
