@@ -68,7 +68,7 @@ catch(error){
  notice.textContent='Adventure Academy '+BUILD+': WebGL no está disponible en este navegador. Activa la aceleración gráfica o abre el juego en otro navegador compatible.';
  notice.style.cssText='position:fixed;inset:30% 12% auto;padding:24px;background:#f3f6ee;color:#233b30;border-radius:12px;z-index:100;font:18px/1.5 sans-serif';document.body.append(notice);throw error;
 }
-renderer.setPixelRatio(STUDIO_CI?.65:Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=!STUDIO_CI;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+renderer.setPixelRatio(STUDIO_CI?.82:Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=!STUDIO_CI;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 // PC-style third-person chase camera with mouse-look + arrow-key control.
 // The earlier fixed world is preserved in the historical v0.37.0 archive.
 // AC horizon deformation remains optional and never alters input or physics.
@@ -3319,6 +3319,7 @@ if(STUDIO_CI){
  const sourceScene=new URLSearchParams(location.search).get('scene');
  if(sourceScene==='cliff')player.position.set(19,0,3);
  if(sourceScene==='meadow')player.position.set(0,0,-11);
+ if(sourceScene==='plants')player.position.set(-24,0,-8);
  player.rotation.y=Math.PI;
 }
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);

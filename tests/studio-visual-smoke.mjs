@@ -7,7 +7,7 @@ const browser=await chromium.launch({headless:true,args:[
 let fails=[];
 for(const [name,width,height,mode] of [
  ['studio-desktop',920,518,'studio'],['studio-mobile',640,360,'studio'],
- ['studio-cliff',920,518,'cliff'],['studio-meadow',920,518,'meadow'],['normal-desktop',800,450,'normal']
+ ['studio-cliff',920,518,'cliff'],['studio-meadow',920,518,'meadow'],['studio-plants',920,518,'plants'],['normal-desktop',800,450,'normal']
 ]){
  const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,
   isMobile:name.includes('mobile'),hasTouch:name.includes('mobile')});
@@ -15,7 +15,7 @@ for(const [name,width,height,mode] of [
  page.on('pageerror',e=>errors.push('pageerror '+e.message));
  page.on('console',m=>{if(m.type()==='error')errors.push('console '+m.text());});
  try{
-  await page.goto('http://127.0.0.1:8765/?'+(mode!=='normal'?'mountain=studio&':'')+(['cliff','meadow'].includes(mode)?'scene='+mode+'&':'')+
+  await page.goto('http://127.0.0.1:8765/?'+(mode!=='normal'?'mountain=studio&':'')+(['cliff','meadow','plants'].includes(mode)?'scene='+mode+'&':'')+
    'ci-smoke=1',{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>window.__studioCIReady===true,
     null,{timeout:120000,polling:500}).catch(()=>{});
@@ -27,13 +27,21 @@ for(const [name,width,height,mode] of [
   const result=await page.evaluate(()=>{
    const c=document.querySelector('canvas'),gl=c?.getContext('webgl2')||c?.getContext('webgl');
    return {label:document.getElementById('buildLabel')?.textContent,webgl:!!gl,
-    stopped:window.__studioCIReady===true,hd:window.__studioArtStatus||null,canvas:c?[c.width,c.height]:null};
+    stopped:window.__studioCIReady===true,hd:window.__studioArtStatus||null,nature:window.__studioNaturalSiteStats||null,canvas:c?[c.width,c.height]:null};
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.49.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.50.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
+  if(mode!=='normal'){
+   if(!(result.nature?.clustered>600))fails.push(name+':too few clustered ground plants');
+   if(!(result.nature?.wall>70))fails.push(name+':too few attached wall sites');
+   if(!(result.nature?.crest>45))fails.push(name+':too few cliff-crest sites');
+   if(!(result.hd?.spriteCounts?.grass_tuft>500))fails.push(name+':grass sprites missing');
+   if(!(result.hd?.spriteCounts?.wall_vines>20))fails.push(name+':wall sprites missing');
+   if(!(result.hd?.spriteCounts?.cliff_crest>20))fails.push(name+':cliff caps missing');
+  }
   if(result.stopped){
    try{await page.screenshot({path:'artifacts/'+name+'.png',
     animations:'allow',timeout:90000});console.log(name,'screenshot stored');}
