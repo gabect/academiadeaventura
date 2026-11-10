@@ -1,13 +1,19 @@
-// Source and real-file guardrails for the illustrated 0.53.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.54.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.53.0');
-assert(html.includes("const BUILD='0.53.0'"));
+assert.equal(version.version,'0.54.0');
+assert(html.includes("const BUILD='0.54.0'"));
 assert(html.includes('installStudioArt(THREE'));
+assert(html.includes('createStudioTreeMaterials(THREE)'));
+assert(html.includes('studioTreeMaterials?.trunk'));
+assert(html.includes('MOUNTAIN_STUDIO?studioTrunkMaterial:wood'));
+const painted=fs.readFileSync(new URL('../src/studio-tree-material.mjs',import.meta.url),'utf8');
+assert(painted.includes('studio-painted-forest-crowns-v1'));
+assert(painted.includes('studioTreeBark')&&painted.includes('studioTreeBroadleaf'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
 assert(html.includes('studioMeadowFallback'));
@@ -36,4 +42,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.53.0 invariants passed');
+console.log('Studio HD v0.54.0 invariants passed');
