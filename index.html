@@ -2188,15 +2188,6 @@ drawMountainTreePart(MOUNTAIN_TREES,
  s=>[s.scale,s.scale,s.scale],false);
 const mountainPines=MOUNTAIN_TREES.filter(s=>s.evergreen);
 const mountainBroadleaf=MOUNTAIN_TREES.filter(s=>!s.evergreen);
-if(STUDIO_CI&&new URLSearchParams(location.search).get('scene')==='broadleaf'){
- const chosen=mountainBroadleaf.find(s=>s.z>-59&&s.z<60)||mountainBroadleaf[0];
- if(chosen){
-  // This teleport exists exclusively in the still-image CI harness.
-  player.position.set(chosen.x+2,chosen.y,chosen.z+6);
-  player.rotation.y=Math.PI;
-  window.__studioTreeWitness={x:chosen.x,z:chosen.z};
- }
-}
 if(MOUNTAIN_STUDIO){
  // Real mesh variants break the old clone pattern while remaining instanced.
  for(let family=0;family<studioOrganic.pineVariants.length;family++){
@@ -3451,6 +3442,14 @@ if(STUDIO_CI){
  if(sourceScene==='plants')player.position.set(-24,0,-8);
  if(sourceScene==='summit')player.position.set(-60,0,-43);
  if(sourceScene==='route30')player.position.set(-17,0,-28);
+ if(sourceScene==='broadleaf'){
+  // Scenic fixture executes only after player has been constructed.
+  const chosen=mountainBroadleaf.find(t=>t.z>-59&&t.z<60)||mountainBroadleaf[0];
+  if(chosen){
+   player.position.set(chosen.x+2,chosen.y,chosen.z+6);
+   window.__studioTreeWitness={x:chosen.x,z:chosen.z};
+  }
+ }
  player.rotation.y=Math.PI;
 }
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
