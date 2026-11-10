@@ -112,7 +112,7 @@ export function buildMountainEnvironment(THREE, options) {
  }
  function addIsland(x,y,size,hero){
   const s=atHeight(x,y);if(!s||waterAt(x,s.p.z)||routeAt(x,s.p.z,size+.4))return;
-  rocks.push({...s,p:s.p.clone().addScaledVector(s.n,-size*(options.studio?.33:.16)),size:size*(options.studio?.76:1),angle:random()*6.28});
+  rocks.push({...s,p:s.p.clone().addScaledVector(s.n,-size*(options.studio?.62:.16)),size:size*(options.studio?.64:1),angle:random()*6.28});
   // Understory crescents occupy damp cracks beside each exposed stone,
   // leaving its centre visible. No illustrated rock billboards.
   for(let j=0;j<(hero?10:5);j++){

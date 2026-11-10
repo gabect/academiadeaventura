@@ -1997,7 +1997,7 @@ const studioRockMat=MOUNTAIN_STUDIO?new THREE.MeshStandardMaterial({
 }):null;
 const stoneShelves=cliffBatch(cliffRockGeometry,studioRockMat||mat('#a1a499'),
  MOUNTAIN_STUDIO?cliffLedges.filter((v,i)=>i%3!==0):cliffLedges,
- v=>[v.sx*(MOUNTAIN_STUDIO?.81:1),v.sy,v.sz*(MOUNTAIN_STUDIO?.84:1)]);
+ v=>[v.sx*(MOUNTAIN_STUDIO?.81:1),v.sy*(MOUNTAIN_STUDIO?1.80:1),v.sz*(MOUNTAIN_STUDIO?.84:1)]);
 stoneShelves.name='stone-ledges-with-rooted-grass';
 // Sparse, partially embedded rocky facets add real surface depth without
 // creating a parallel façade or any new collision geometry.
