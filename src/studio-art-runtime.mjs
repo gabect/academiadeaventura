@@ -5,6 +5,8 @@ export function installStudioArt(THREE, options){
  const loader=new THREE.TextureLoader();
  const status={terrainReady:false,grassReady:false,rockReady:false,plantTypesReady:0,errors:[],spriteCounts:{}};
  const groups=[];
+ const playerPosition=new THREE.Vector3(1e6,0,1e6);
+ const cameraPosition=new THREE.Vector3(1e6,0,1e6);
  const root='./assets/studio_hd/';
  const setCommon=(tex,tile=false)=>{
   tex.colorSpace=THREE.SRGBColorSpace;
@@ -52,17 +54,17 @@ export function installStudioArt(THREE, options){
  }
  const groupSpecs=[
   {key:'grass_tuft',file:'grass_tuft.webp',aspect:1.30,source:'meadow',
-   select:i=>i%5<2,height:v=>.62+v.size*.72},
+   select:i=>i%6<2,height:v=>.28+v.size*.27},
   {key:'grass_medium',file:'grass_medium.webp',aspect:1.22,source:'meadow',
-   select:i=>i%5===2||i%5===3,height:v=>.50+v.size*.60},
+   select:i=>i%6===2,height:v=>.24+v.size*.24},
   {key:'fern',file:'fern.webp',aspect:1.17,source:'meadow',
-   select:i=>i%9===0,height:v=>.67+v.size*.70},
+   select:i=>i%12===0,height:v=>.34+v.size*.34},
   {key:'broadleaf',file:'broadleaf.webp',aspect:1.18,source:'meadow',
-   select:i=>i%13===2,height:v=>.75+v.size*.65},
+   select:i=>i%18===2,height:v=>.39+v.size*.34},
   {key:'flowers_white',file:'flowers_white.webp',aspect:1.07,source:'meadow',
-   select:i=>i%32===8,height:v=>.49+v.size*.44},
+   select:i=>i%30===8,height:v=>.30+v.size*.26},
   {key:'flowers_purple',file:'flowers_purple.webp',aspect:1.04,source:'meadow',
-   select:i=>i%37===7,height:v=>.56+v.size*.53},
+   select:i=>i%34===7,height:v=>.34+v.size*.33},
   // Vegetated ledges: dark stone remains genuinely 3D behind the cards.
   {key:'hanging_edge',file:'hanging_edge.webp',aspect:1.70,source:'ledge',
    select:i=>i%2===0,height:v=>.41+v.sx*.33,hanging:true,cross:false},
@@ -88,6 +90,23 @@ export function installStudioArt(THREE, options){
   if(!sites.length)continue;
   const mat=new THREE.MeshStandardMaterial({color:'#ffffff',side:THREE.DoubleSide,
    roughness:1,alphaTest:.52,transparent:false,depthWrite:true});
+  if(spec.source==='meadow'){
+   // Ordered alpha-test dither near the player and camera. This avoids giant
+   // leaves hiding the character without changing instancing or collisions.
+   mat.onBeforeCompile=shader=>{
+    shader.uniforms.studioPlayerPos={value:playerPosition};
+    shader.uniforms.studioCameraPos={value:cameraPosition};
+    shader.vertexShader=shader.vertexShader.replace('#include <common>',
+     '#include <common>\\nvarying vec3 vStudioGroundPlantWorld;');
+    shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>',
+     '#include <worldpos_vertex>\\nvStudioGroundPlantWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.0)).xyz;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+     '#include <common>\\nvarying vec3 vStudioGroundPlantWorld;\\nuniform vec3 studioPlayerPos;\\nuniform vec3 studioCameraPos;');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',
+     '#include <alphatest_fragment>\\nfloat studioPlayerDist=distance(vStudioGroundPlantWorld.xz,studioPlayerPos.xz);\\nfloat studioCameraDist=distance(vStudioGroundPlantWorld.xz,studioCameraPos.xz);\\nfloat studioNearVisibility=min(smoothstep(.9,2.4,studioPlayerDist),smoothstep(.5,2.1,studioCameraDist));\\nfloat studioDither=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);\\nif(studioDither>studioNearVisibility)discard;');
+   };
+   mat.customProgramCacheKey=()=> 'studio-ground-plant-distance-fade-v1';
+  }
   const geo=geometry(spec.aspect,{cross:spec.cross!==false,hanging:spec.hanging===true});
   const instanced=new THREE.InstancedMesh(geo,mat,sites.length);
   const dummy=new THREE.Object3D();
@@ -118,7 +137,9 @@ export function installStudioArt(THREE, options){
   });
  }
  notify();
- const update=quality=>{
+ const update=(quality,player,camera)=>{
+  if(player)playerPosition.copy(player);
+  if(camera)cameraPosition.copy(camera);
   const ratio=quality==='low'?.28:quality==='medium'?.60:1;
   for(const g of groups)g.mesh.count=Math.max(0,Math.floor(g.full*ratio));
  };
