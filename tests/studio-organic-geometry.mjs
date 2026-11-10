@@ -10,6 +10,15 @@ function validate(g,kind){
  assert(g.isBufferGeometry,kind+' must be a BufferGeometry');
  const p=g.getAttribute('position'),c=g.getAttribute('color'),n=g.getAttribute('normal');
  assert(p.count===c.count&&n.count===p.count,kind+' attribute mismatch');
+ const uv=g.getAttribute('uv');
+ assert(uv?.count===p.count,kind+' requires UVs for painterly pigments');
+ for(const val of uv.array)assert(Number.isFinite(val),kind+' invalid UV coordinate');
+ if(kind!=='meadow'){
+  assert(g.groups.length===2,kind+' should separate leaves from bark');
+  assert(g.groups[0].materialIndex===0&&g.groups[1].materialIndex===1);
+  assert(g.groups[1].count>0,kind+' bark surface is missing');
+  assert(g.userData.leafTriangles>0&&g.userData.barkTriangles>0);
+ }
  assert(g.index.count>150,kind+' missing indexed triangles');
  for(const a of [p,c,n])for(const v of a.array)
   assert(Number.isFinite(v),kind+' contains invalid vertex data');
