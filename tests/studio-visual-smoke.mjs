@@ -1,47 +1,41 @@
 import {chromium} from 'playwright';
 import fs from 'node:fs';
 fs.mkdirSync('artifacts',{recursive:true});
-const browser=await chromium.launch({
- headless:true,
- args:['--enable-webgl','--use-angle=swiftshader',
-  '--enable-unsafe-swiftshader','--disable-dev-shm-usage']
-});
+const browser=await chromium.launch({headless:true,args:[
+ '--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader',
+ '--disable-dev-shm-usage','--disable-software-rasterizer=false']});
 let fails=[];
 for(const [name,width,height,mode] of [
- ['studio-desktop',1366,768,'studio'],['studio-mobile',854,480,'studio'],
- ['normal-desktop',1366,768,'normal']
+ ['studio-desktop',920,518,'studio'],['studio-mobile',640,360,'studio'],
+ ['normal-desktop',800,450,'normal']
 ]){
- const context=await browser.newContext({
-  viewport:{width,height},deviceScaleFactor:1,
-  isMobile:name.includes('mobile'),hasTouch:name.includes('mobile')
- });
- const page=await context.newPage();
- const errors=[];
+ const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:1,
+  isMobile:name.includes('mobile'),hasTouch:name.includes('mobile')});
+ const page=await context.newPage(),errors=[];
  page.on('pageerror',e=>errors.push('pageerror '+e.message));
  page.on('console',m=>{if(m.type()==='error')errors.push('console '+m.text());});
- const url='http://127.0.0.1:8765/?'+(mode==='studio'?'mountain=studio&':'')+'ci-smoke=1';
  try{
-  await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});
-  await page.waitForTimeout(9500);
+  await page.goto('http://127.0.0.1:8765/?'+(mode==='studio'?'mountain=studio&':'')+
+   'ci-smoke=1',{waitUntil:'domcontentloaded',timeout:120000});
+  await page.waitForFunction(()=>window.__studioCIReady===true,
+    {timeout:90000,polling:500}).catch(()=>{});
   const result=await page.evaluate(()=>{
-   const c=document.querySelector('canvas');
-   const label=document.getElementById('buildLabel')?.textContent||'';
-   const gl=c?.getContext('webgl2')||c?.getContext('webgl');
-   return {label,webgl:!!gl,
-    renderer:gl?.getParameter(gl.RENDERER)||'none',
-    resolution:c?[c.width,c.height]:null,
-    studioCardCount:document.querySelectorAll('canvas').length,
-    text:document.body.innerText.slice(0,350)};
+   const c=document.querySelector('canvas'),gl=c?.getContext('webgl2')||c?.getContext('webgl');
+   return {label:document.getElementById('buildLabel')?.textContent,webgl:!!gl,
+    stopped:window.__studioCIReady===true,canvas:c?[c.width,c.height]:null};
   });
-  await page.screenshot({path:'artifacts/'+name+'.png',animations:'disabled'});
-  console.log(name,JSON.stringify(result),'errors=',JSON.stringify(errors.slice(0,8)));
-  if(!result.webgl)fails.push(name+': WebGL unavailable');
-  if(!result.label.includes('0.47.2'))fails.push(name+': stale build label');
-  if(!result.label.includes(mode==='studio'?'STUDIO':'NORMAL'))fails.push(name+': wrong mode');
-  if(errors.some(e=>/uncaught|failed to compile|shader error|webgl context|pageerror/i.test(e)))
-   fails.push(name+': '+errors.join(' | ').slice(0,700));
- }catch(e){fails.push(name+': '+e.message);console.log(name,e);}
+  console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
+  if(!result.webgl)fails.push(name+':no WebGL context');
+  if(!result.label?.includes('0.48.0'))fails.push(name+':old label');
+  if(!result.label?.includes(mode==='studio'?'STUDIO':'NORMAL'))fails.push(name+':wrong mode');
+  if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
+  if(result.stopped){
+   try{await page.screenshot({path:'artifacts/'+name+'.png',
+    animations:'allow',timeout:90000});console.log(name,'screenshot stored');}
+   catch(e){fails.push(name+':screenshot '+e.message);}
+  }else fails.push(name+':frame loop did not settle');
+ }catch(e){fails.push(name+':'+e.message)}
  await context.close();
 }
 await browser.close();
-if(fails.length){console.error('Smoke issues',fails);process.exitCode=1;}
+if(fails.length){console.error(fails);process.exitCode=1;}

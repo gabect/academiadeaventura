@@ -52,6 +52,7 @@ export function buildMountainEnvironment(THREE, options) {
   return exclusionCache.get(key);
  };
  for(const t of triangles){
+  if(options.studio&&t.n.y<.72)continue; // no needle-like blades on near-vertical stone
   const center=t.a.clone().add(t.b).add(t.c).multiplyScalar(1/3);
   if(center.y<.1||center.y>12||excluded(center)||excluded(t.a)||excluded(t.b)||excluded(t.c))continue;
   const density=38+demoWeight(center.x)*66;
@@ -111,7 +112,7 @@ export function buildMountainEnvironment(THREE, options) {
  }
  function addIsland(x,y,size,hero){
   const s=atHeight(x,y);if(!s||waterAt(x,s.p.z)||routeAt(x,s.p.z,size+.4))return;
-  rocks.push({...s,p:s.p.clone().addScaledVector(s.n,-size*.16),size,angle:random()*6.28});
+  rocks.push({...s,p:s.p.clone().addScaledVector(s.n,-size*(options.studio?.33:.16)),size:size*(options.studio?.76:1),angle:random()*6.28});
   // Understory crescents occupy damp cracks beside each exposed stone,
   // leaving its centre visible. No illustrated rock billboards.
   for(let j=0;j<(hero?10:5);j++){
@@ -123,7 +124,7 @@ export function buildMountainEnvironment(THREE, options) {
   }
  }
  anchors.forEach(a=>addIsland(...a,true));
- for(let x=-70;x<74;x+=12){if(Math.abs(x)<15)continue;for(let j=0;j<3;j++)addIsland(x+random()*3,1.7+j*2.7,.55+random()*.65,false);}
+ for(let x=-70;x<74;x+=options.studio?21:12){if(Math.abs(x)<15)continue;for(let j=0;j<3;j++)addIsland(x+random()*3,1.7+j*2.7,.55+random()*.65,false);}
  // Sculpt an asymmetric rock with rounded fracture planes. Moss is a
  // vertex material region on upward-facing caps, not a separate hovering shell.
  function rockGeometry(){
