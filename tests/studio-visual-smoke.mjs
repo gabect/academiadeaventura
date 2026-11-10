@@ -27,11 +27,11 @@ for(const [name,width,height,mode] of [
   const result=await page.evaluate(()=>{
    const c=document.querySelector('canvas'),gl=c?.getContext('webgl2')||c?.getContext('webgl');
    return {label:document.getElementById('buildLabel')?.textContent,webgl:!!gl,
-    stopped:window.__studioCIReady===true,hd:window.__studioArtStatus||null,nature:window.__studioNaturalSiteStats||null,trees:window.__studioTreeVariantInfo||null,canvas:c?[c.width,c.height]:null};
+    stopped:window.__studioCIReady===true,hd:window.__studioArtStatus||null,nature:window.__studioNaturalSiteStats||null,trees:window.__studioTreeVariantInfo||null,painterly:window.__studioTreePainterly||null,canvas:c?[c.width,c.height]:null};
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.53.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.54.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
   if(mode!=='normal'){
@@ -41,6 +41,8 @@ for(const [name,width,height,mode] of [
    if(!(result.hd?.spriteCounts?.grass_tuft>500))fails.push(name+':grass sprites missing');
    if(!(result.hd?.spriteCounts?.grass_tuft>1000))fails.push(name+':lush 0.51 meadow missing');
    if(!(result.hd?.spriteCounts?.broadleaf>60))fails.push(name+':broadleaf sprouts missing');
+   if(result.painterly?.materialGroups!==2 || !result.painterly?.bark?.includes('256x512'))
+    fails.push(name+':painted bark and leaf material missing');
    if(!(result.trees?.pine===6&&result.trees?.broadleaf===5))
     fails.push(name+':variant families missing');
    if(!(result.trees?.pineInstances>0&&result.trees?.broadleafInstances>0))

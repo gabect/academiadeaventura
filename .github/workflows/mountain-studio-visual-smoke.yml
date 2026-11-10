@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-studio-chaotic-trees-v0.53.0
+      - feature/mountain-painterly-trees-v0.54.0
   workflow_dispatch:
 jobs:
   webgl:
