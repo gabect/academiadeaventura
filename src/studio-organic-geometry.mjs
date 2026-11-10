@@ -162,7 +162,7 @@ export function createStudioFoliageGeometry(THREE){
    const y1=mix(pineBottom,pineTop,(i+1)/sections);
    tube(g,spine(y0),spine(y1),pineRadius(y0),pineRadius(y1),bark);
   }
-  let branches=0,reach=0;
+  let branches=0,reach=0,secondaryBranches=0,tertiaryBranches=0,terminalClusters=0;
   const layerCount=9+(variant%2);
   const anisotropyAngle=r()*2*Math.PI;
   const heavySide=.22+.28*r();
@@ -182,104 +182,112 @@ export function createStudioFoliageGeometry(THREE){
     curvedBranch(g,p0,p1,.043,.024,bark,.032);
     curvedBranch(g,p1,p2,.024,.007,bark,-.016);
     if(j%3===0)branchCollar(g,p0,.055,bark);
-    if(level<4&&j%2===0)foliageBud(g,p0,angle,r,true,4);
     branches++;reach=Math.max(reach,Math.hypot(p2[0],p2[2]));
-    if(j%2===0)foliageBud(g,p1,angle,r,true,4);
-    if(j%3===0)foliageBud(g,p2,angle,r,true,4);
-    for(let k=1;k<=5;k++){
-     const t=k/6,center=[mix(p0[0],p2[0],t),mix(p0[1],p2[1],t),mix(p0[2],p2[2],t)];
-     for(let n=0;n<4;n++){
-      const spreadAngle=angle+(n-1.5)*(.70+.24*r())+.10*(r()-.5);
-      const dir=[Math.cos(spreadAngle),0,Math.sin(spreadAngle)];
-      const leafLen=(.16+.18*r())*(1-.27*t),leafWidth=.077+.055*r();
-      const tint=col(.293+.065*r(),.48+.14*r(),.205+.15*r());
-      foliageLeaf(g,center,dir,leafLen,leafWidth,tint,(r()-.27)*.22,true);
+    // Secondary shoots and tertiary needle tips stay connected to each limb.
+    for(let k=1;k<=3;k++){
+     const t=k/4;
+     const node=[mix(p0[0],p2[0],t),mix(p0[1],p2[1],t),mix(p0[2],p2[2],t)];
+     for(const side of [-1,1]){
+      const theta=angle+side*(.56+.40*r()),distance=(.20+.18*r())*(1-.18*t);
+      const mid=[node[0]+Math.cos(theta)*distance*.60,
+       node[1]+(r()-.52)*.09,node[2]+Math.sin(theta)*distance*.60];
+      const end=[node[0]+Math.cos(theta)*distance,
+       mid[1]+(r()-.35)*.07,node[2]+Math.sin(theta)*distance];
+      curvedBranch(g,node,mid,.013,.008,bark,.012);
+      curvedBranch(g,mid,end,.008,.0025,bark,.008);
+      secondaryBranches++;tertiaryBranches++;
+      foliageBud(g,end,theta,r,true,4);terminalClusters++;
+      if(k===3&&r()>.48)foliageBud(g,mid,theta,r,true,2);
      }
     }
+    foliageBud(g,p2,angle,r,true,5);terminalClusters++;
    }
   }
   for(let i=0;i<11;i++){
    const a=r()*Math.PI*2,base=spine(2.56+.23*r());
    foliageLeaf(g,base,[Math.cos(a),0,Math.sin(a)],.12+.12*r(),.045,col(.32+.02*r(),.58,.27+.07*r()),.12,true);
   }
-  return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach,integratedTrunk:true,trunkBaseY:-2.40});
+  return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach,integratedTrunk:true,trunkBaseY:-2.40,branchOrders:{primary:branches,secondary:secondaryBranches,tertiary:tertiaryBranches},terminalClusters});
  }
  function broadleaf(variant){
   const r=rng(0xB04DF3^Math.imul(variant+1,0xB5297A4D)),g=make(),bark=wood();
-  // Broadleaf trunk and main fork are continuous within this one mesh.
-  const crotch=[(r()-.5)*.14,.34,(r()-.5)*.14];
+  const dominant=r()*2*Math.PI,crotch=[(r()-.5)*.25,.30+.16*r(),(r()-.5)*.25];
+  // A curved main trunk rising from the terrain and dividing into two
+  // independent woody leaders: genuine Y-shaped tree architecture.
   const trunkBase=[0,-2.40,0];
-  const lower=[crotch[0]*.16,-1.45,crotch[2]*.16];
-  const middle=[crotch[0]*.48,-.58,crotch[2]*.48];
-  const upper=[crotch[0]*.82,-.06,crotch[2]*.82];
-  tube(g,trunkBase,lower,.222,.185,bark);
-  tube(g,lower,middle,.185,.146,bark);
-  tube(g,middle,upper,.146,.115,bark);
-  tube(g,upper,crotch,.115,.098,bark);
-  branchCollar(g,crotch,.125,bark);
-  const mains=5+Math.floor(r()*3),dominant=r()*Math.PI*2;
-  let tipCount=0,maxReach=0;
+  const stem=[trunkBase,[crotch[0]*.2,-1.38,crotch[2]*.2],
+   [crotch[0]*.47,-.55,crotch[2]*.47],
+   [crotch[0]*.76,-.04,crotch[2]*.76],crotch];
+  const radii=[.235,.185,.149,.118,.096];
+  for(let i=0;i<stem.length-1;i++)
+   tube(g,stem[i],stem[i+1],radii[i],radii[i+1],bark);
+  const opposite=dominant+Math.PI*(.67+.19*r());
+  const leaderA=[crotch[0]+Math.cos(dominant)*.42,
+   crotch[1]+.47+.12*r(),crotch[2]+Math.sin(dominant)*.42];
+  const leaderB=[crotch[0]+Math.cos(opposite)*.39,
+   crotch[1]+.42+.17*r(),crotch[2]+Math.sin(opposite)*.39];
+  curvedBranch(g,crotch,leaderA,.095,.068,bark,.045);
+  curvedBranch(g,crotch,leaderB,.091,.065,bark,.055);
+  branchCollar(g,crotch,.11,bark);
+  const orders={primary:0,secondary:0,tertiary:0};
+  let maxReach=0,terminalClusters=0;
+  const position=(start,heading,elevation,length)=>{
+   const flat=Math.cos(elevation);
+   return [start[0]+Math.cos(heading)*flat*length,
+    start[1]+Math.sin(elevation)*length,
+    start[2]+Math.sin(heading)*flat*length];
+  };
+  function leafTips(p,heading){
+   terminalClusters++;
+   // Leaves are clustered at twigs, not beside the main trunk.
+   foliageBud(g,p,heading,r,false,8+Math.floor(r()*5));
+   for(let i=0;i<3;i++){
+    const theta=heading+(r()-.5)*2.8;
+    const root=[p[0]+(r()-.5)*.13,p[1]+(r()-.5)*.13,
+     p[2]+(r()-.5)*.13];
+    foliageLeaf(g,root,[Math.cos(theta),0,Math.sin(theta)],
+     .21+.23*r(),.09+.06*r(),
+     col(.285+.06*r(),.46+.1*r(),.29+.13*r()),.10+.20*r());
+   }
+  }
+  function growBranch(start,heading,elevation,length,radius,order){
+   const end=position(start,heading,elevation,length);
+   const nextRadius=radius*(order===3?.24:.57);
+   curvedBranch(g,start,end,radius,nextRadius,bark,(r()-.25)*.07);
+   if(order===1)orders.primary++;
+   else if(order===2)orders.secondary++;
+   else orders.tertiary++;
+   maxReach=Math.max(maxReach,Math.hypot(end[0],end[2]));
+   if(order===3){leafTips(end,heading);return;}
+   // Secondary and tertiary branches originate on the actual parent wood.
+   const count=order===1?2+Math.floor(r()*2):2;
+   for(let j=0;j<count;j++){
+    const t=.56+.31*r(),side=j-(count-1)/2;
+    const base=[mix(start[0],end[0],t),
+     mix(start[1],end[1],t),mix(start[2],end[2],t)];
+    const angle=heading+side*(order===1?.70:.92)+(r()-.5)*.35;
+    const rise=Math.max(.10,Math.min(1.12,
+     elevation+(r()-.40)*(order===1?.53:.67)));
+    const segment=length*(order===1?.60:.54)*(.83+.42*r());
+    growBranch(base,angle,rise,segment,
+     Math.max(.006,nextRadius*.82),order+1);
+   }
+   if(order===2&&r()>.52)leafTips(end,heading);
+  }
+  const mains=5+Math.floor(r()*3);
   for(let i=0;i<mains;i++){
-   const angle=(i+(r()-.5)*.65)*(2*Math.PI/mains)+.15*variant;
-   const co=Math.cos(angle),si=Math.sin(angle);
-   const dominantBias=1+.38*Math.cos(angle-dominant);
-   const reach=(1.48+.72*r())*dominantBias;
-   const y1=.58+.49*r(),y2=1.13+.78*r();
-   const p1=[crotch[0]+co*(.46+.18*r()),y1,crotch[2]+si*(.46+.18*r())];
-   const p2=[crotch[0]+co*reach*.75+(r()-.5)*.23,
-      y2*.83,crotch[2]+si*reach*.75+(r()-.5)*.23];
-   const p3=[crotch[0]+co*reach+(r()-.5)*.30,
-      y2+.10+.35*r(),crotch[2]+si*reach+(r()-.5)*.30];
-   curvedBranch(g,crotch,p1,.106,.083,bark,.055);
-   curvedBranch(g,p1,p2,.083,.048,bark,.06);
-   curvedBranch(g,p2,p3,.048,.015,bark,.04);
-   branchCollar(g,p1,.086,bark);
-   foliageBud(g,crotch,angle,r,false,3);
-   foliageBud(g,p1,angle,r,false,5);
-   foliageBud(g,p2,angle,r,false,4);
-   maxReach=Math.max(maxReach,Math.hypot(p3[0],p3[2]));tipCount++;
-   // Secondary limbs reach sideways and UP; their tips carry leaves.
-   const tips=[p2,p3];
-   for(let j=0;j<2;j++){
-    const side=j===0?-1:1;
-    const t=.60+.30*r();
-    const base=[mix(p1[0],p3[0],t),mix(p1[1],p3[1],t),mix(p1[2],p3[2],t)];
-    const sideAngle=angle+side*(.35+.50*r());
-    const reach2=.36+.57*r();
-    const tip=[base[0]+Math.cos(sideAngle)*reach2,base[1]+.25+.48*r(),
-      base[2]+Math.sin(sideAngle)*reach2];
-    curvedBranch(g,base,tip,.043,.012,bark,.07);
-    foliageBud(g,base,sideAngle,r,false,4);
-    tips.push(tip);tipCount++;
-    maxReach=Math.max(maxReach,Math.hypot(tip[0],tip[2]));
-   }
-   for(const tip of tips){
-    const count=10+Math.floor(r()*7);
-    const anisAngle=angle+(r()-.5)*.65;
-    for(let j=0;j<count;j++){
-     const alpha=anisAngle+(j+(r()-.5)*.5)*Math.PI*2/count;
-     const dir=[Math.cos(alpha),0,Math.sin(alpha)];
-     // Leaf petioles stay close to actual branch endpoints.
-     const root=[tip[0]+(r()-.5)*.18,
-      tip[1]+(r()-.5)*.18,tip[2]+(r()-.5)*.18];
-     foliageLeaf(g,root,dir,.27+.39*r(),.12+.11*r(),
-      col(.275+.075*r(),.42+.18*r(),.25+.20*r()),.07+.31*r());
-    }
-   }
+   const heading=(i+(r()-.5)*.64)*2*Math.PI/mains+variant*.14;
+   const anchor=i%3===0?crotch:i%2===0?leaderA:leaderB;
+   const reach=(1.40+.62*r())*(1+.30*Math.cos(heading-dominant));
+   growBranch(anchor,heading,.20+.37*r(),reach,.077+.029*r(),1);
   }
-  // Vertical leading shoots disturb the top edge of the canopy.
-  for(let i=0;i<3;i++){
-   const a=dominant+(r()-.5)*2.4,base=[.16*Math.cos(a),.61+.28*r(),.16*Math.sin(a)];
-   const tip=[.32*Math.cos(a),1.95+.58*r(),.32*Math.sin(a)];
-   curvedBranch(g,base,tip,.046,.008,bark,.095);
-   for(let j=0;j<7;j++){
-    const around=2*Math.PI*j/7;
-    const root=[tip[0],tip[1]-.27+.12*r(),tip[2]];
-    foliageLeaf(g,root,[Math.cos(around),0,Math.sin(around)],.27+.22*r(),.115,
-     col(.29+.055*r(),.48,.28+.16*r()),.25+.12*r());
-   }
-  }
-  return finalize(g,{family:'broadleaf',variant,branchCount:tipCount,maxReach,integratedTrunk:true,trunkBaseY:-2.40});
+  // Upward leaders continue splitting instead of ending as bare spikes.
+  for(const [point,angle] of [[leaderA,dominant],[leaderB,opposite]])
+   growBranch(point,angle,.77+.15*r(),.62+.34*r(),.048,2);
+  return finalize(g,{family:'broadleaf',variant,
+   branchCount:orders.primary+orders.secondary+orders.tertiary,
+   maxReach,integratedTrunk:true,trunkBaseY:-2.40,
+   branchOrders:orders,leaderCount:2,terminalClusters});
  }
  const pineVariants=Array.from({length:6},(_,i)=>pine(i));
  const broadleafVariants=Array.from({length:5},(_,i)=>broadleaf(i));
