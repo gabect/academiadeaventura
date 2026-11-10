@@ -45,6 +45,11 @@ const BUILD='0.48.0';
 // First reversible art study. Default scene remains unchanged.
 const MOUNTAIN_STUDIO=new URLSearchParams(location.search).get('mountain')==='studio';
 const STUDIO_CI=new URLSearchParams(location.search).has('ci-smoke');
+// Shared geometry/material must exist before the older field-tree constructor.
+const studioOrganic=MOUNTAIN_STUDIO?createStudioFoliageGeometry(THREE):null;
+const studioLeafMaterial=MOUNTAIN_STUDIO?new THREE.MeshStandardMaterial({
+ color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,roughness:1
+}):null;
 document.getElementById('buildLabel').textContent='Valle · v'+BUILD+(MOUNTAIN_STUDIO?' · STUDIO':' · NORMAL');
 document.getElementById('demoBuildText').textContent='Demo '+BUILD+' · Valle de la Cascada';
 let pendingBuild=null;
@@ -1526,9 +1531,19 @@ const FIELD_TREE_POSITIONS=[
 function tree(x,z){
  const lift=naturalSurfaceY(x,z)-TERRAIN.floorTop;
  cylinder(.22,.32,2.5,wood,x,lift+1.25,z);
- const leaves=mat('#4b8864');
- cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
- cylinder(0,1.2,2.2,leaves,x,lift+4.6,z,scene,7);
+ if(MOUNTAIN_STUDIO){
+  // The older field trees used two smooth hexagonal cones. Reuse the same
+  // branch-bearing crown as the distant mountain instances.
+  const foliage=new THREE.Mesh(studioOrganic.pine,studioLeafMaterial);
+  foliage.position.set(x,lift+2.60,z);
+  foliage.scale.set(1.42,1.37,1.42);
+  foliage.castShadow=true;foliage.receiveShadow=true;
+  foliage.userData.ignoreCameraRay=true;scene.add(foliage);
+ }else{
+  const leaves=mat('#4b8864');
+  cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
+  cylinder(0,1.2,2.2,leaves,x,lift+4.6,z,scene,7);
+ }
 }
 FIELD_TREE_POSITIONS.forEach(p=>tree(...p));
 // Silhouette of the WESTERN SUMMIT: this is one peak on the giant massif,
@@ -1539,9 +1554,11 @@ for(const [x,z,height,radius] of [
  [-60,-43,3.7,1.15],[-61.8,-44.2,2.6,.84],
  [-58.35,-44.4,2.35,.75],[-59.3,-41.2,1.9,.90]
 ]){
- const crown=new THREE.Mesh(
-  new THREE.ConeGeometry(radius,height,6),summitCrownMat);
- crown.position.set(x,naturalSurfaceY(x,z)+height*.40,z);
+ const crown=MOUNTAIN_STUDIO?
+  new THREE.Mesh(studioOrganic.pine,studioLeafMaterial):
+  new THREE.Mesh(new THREE.ConeGeometry(radius,height,6),summitCrownMat);
+ crown.position.set(x,naturalSurfaceY(x,z)+height*(MOUNTAIN_STUDIO?.16:.40),z);
+ if(MOUNTAIN_STUDIO)crown.scale.setScalar(radius*.95);
  crown.rotation.y=x*.37; crown.castShadow=true;
  crown.receiveShadow=true;scene.add(crown);
 }
@@ -1885,7 +1902,6 @@ const cliffGrass=cliffBatch(createTallGrass(),
  meadowSites,v=>[v.size*(MOUNTAIN_STUDIO?.52:1),v.size*(MOUNTAIN_STUDIO?.52:1),v.size*(MOUNTAIN_STUDIO?.52:1)]);
 cliffGrass.name='cliff-rooted-tall-grass';
 // Studio uses organic leaf strips and never re-enables the failed small PNG.
-const studioOrganic=MOUNTAIN_STUDIO?createStudioFoliageGeometry(THREE):null;
 if(MOUNTAIN_STUDIO){
  cliffGrass.visible=false;
  const studioSites=meadowSites.filter((v,i)=>i%4!==0).map(v=>({...v,color:undefined}));
@@ -1993,9 +2009,6 @@ drawMountainTreePart(MOUNTAIN_TREES,
  s=>[s.scale,s.scale,s.scale],false);
 const mountainPines=MOUNTAIN_TREES.filter(s=>s.evergreen);
 const mountainBroadleaf=MOUNTAIN_TREES.filter(s=>!s.evergreen);
-const studioLeafMaterial=new THREE.MeshStandardMaterial({
- color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,roughness:1
-});
 if(MOUNTAIN_STUDIO){
  // One instanced branch crown instead of two identical polygon cones.
  drawMountainTreePart(mountainPines,
