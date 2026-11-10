@@ -97,13 +97,13 @@ export function installStudioArt(THREE, options){
     shader.uniforms.studioPlayerPos={value:playerPosition};
     shader.uniforms.studioCameraPos={value:cameraPosition};
     shader.vertexShader=shader.vertexShader.replace('#include <common>',
-     '#include <common>\\nvarying vec3 vStudioGroundPlantWorld;');
+     '#include <common>\nvarying vec3 vStudioGroundPlantWorld;');
     shader.vertexShader=shader.vertexShader.replace('#include <worldpos_vertex>',
-     '#include <worldpos_vertex>\\nvStudioGroundPlantWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.0)).xyz;');
+     '#include <worldpos_vertex>\nvStudioGroundPlantWorld=(modelMatrix*instanceMatrix*vec4(transformed,1.0)).xyz;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
-     '#include <common>\\nvarying vec3 vStudioGroundPlantWorld;\\nuniform vec3 studioPlayerPos;\\nuniform vec3 studioCameraPos;');
+     '#include <common>\nvarying vec3 vStudioGroundPlantWorld;\nuniform vec3 studioPlayerPos;\nuniform vec3 studioCameraPos;');
     shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',
-     '#include <alphatest_fragment>\\nfloat studioPlayerDist=distance(vStudioGroundPlantWorld.xz,studioPlayerPos.xz);\\nfloat studioCameraDist=distance(vStudioGroundPlantWorld.xz,studioCameraPos.xz);\\nfloat studioNearVisibility=min(smoothstep(.9,2.4,studioPlayerDist),smoothstep(.5,2.1,studioCameraDist));\\nfloat studioDither=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);\\nif(studioDither>studioNearVisibility)discard;');
+     '#include <alphatest_fragment>\nfloat studioPlayerDist=distance(vStudioGroundPlantWorld.xz,studioPlayerPos.xz);\nfloat studioCameraDist=distance(vStudioGroundPlantWorld.xz,studioCameraPos.xz);\nfloat studioNearVisibility=min(smoothstep(.9,2.4,studioPlayerDist),smoothstep(.5,2.1,studioCameraDist));\nfloat studioDither=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453);\nif(studioDither>studioNearVisibility)discard;');
    };
    mat.customProgramCacheKey=()=> 'studio-ground-plant-distance-fade-v1';
   }
