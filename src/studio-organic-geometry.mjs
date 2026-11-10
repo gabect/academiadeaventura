@@ -152,13 +152,16 @@ export function createStudioFoliageGeometry(THREE){
   const shift=y=>[Math.cos(tiltAngle)*lean*(y/2.8),Math.sin(tiltAngle)*lean*(y/2.8)];
   const spine=y=>{const p=shift(y);return [p[0],y,p[1]];};
   const bark=wood();
-  // Extend inside the external trunk; no square capped stump at the crown base.
- for(let i=0;i<7;i++){
-  const y0=-.38+i*.47,y1=y0+.47;
-  const r0=.175-i*.018,r1=.157-i*.018;
-  tube(g,spine(y0),spine(y1),r0,r1,bark);
- }
-
+  // Unified bark stem reaches into the soil and tapers inside foliage.
+  // An independent cylinder was leaving a large, square-cut wooden post.
+  const pineBottom=-2.40,pineTop=2.61,sections=13;
+  const pineRadius=y=>.012+.202*Math.pow(Math.max(0,
+   (pineTop-y)/(pineTop-pineBottom)),1.24);
+  for(let i=0;i<sections;i++){
+   const y0=mix(pineBottom,pineTop,i/sections);
+   const y1=mix(pineBottom,pineTop,(i+1)/sections);
+   tube(g,spine(y0),spine(y1),pineRadius(y0),pineRadius(y1),bark);
+  }
   let branches=0,reach=0;
   const layerCount=9+(variant%2);
   const anisotropyAngle=r()*2*Math.PI;
@@ -179,6 +182,7 @@ export function createStudioFoliageGeometry(THREE){
     curvedBranch(g,p0,p1,.043,.024,bark,.032);
     curvedBranch(g,p1,p2,.024,.007,bark,-.016);
     if(j%3===0)branchCollar(g,p0,.055,bark);
+    if(level<4&&j%2===0)foliageBud(g,p0,angle,r,true,4);
     branches++;reach=Math.max(reach,Math.hypot(p2[0],p2[2]));
     if(j%2===0)foliageBud(g,p1,angle,r,true,4);
     if(j%3===0)foliageBud(g,p2,angle,r,true,4);
@@ -198,15 +202,21 @@ export function createStudioFoliageGeometry(THREE){
    const a=r()*Math.PI*2,base=spine(2.56+.23*r());
    foliageLeaf(g,base,[Math.cos(a),0,Math.sin(a)],.12+.12*r(),.045,col(.32+.02*r(),.58,.27+.07*r()),.12,true);
   }
-  return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach});
+  return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach,integratedTrunk:true,trunkBaseY:-2.40});
  }
  function broadleaf(variant){
   const r=rng(0xB04DF3^Math.imul(variant+1,0xB5297A4D)),g=make(),bark=wood();
-  const trunk=[0,-.54,0],crotch=[(r()-.5)*.14,.34,(r()-.5)*.14];
-  const trunkMid=[crotch[0]*.35,-.12,crotch[2]*.35];
-  tube(g,trunk,trunkMid,.18,.137,bark);
-  tube(g,trunkMid,crotch,.137,.105,bark);
-  branchCollar(g,crotch,.145,bark);
+  // Broadleaf trunk and main fork are continuous within this one mesh.
+  const crotch=[(r()-.5)*.14,.34,(r()-.5)*.14];
+  const trunkBase=[0,-2.40,0];
+  const lower=[crotch[0]*.16,-1.45,crotch[2]*.16];
+  const middle=[crotch[0]*.48,-.58,crotch[2]*.48];
+  const upper=[crotch[0]*.82,-.06,crotch[2]*.82];
+  tube(g,trunkBase,lower,.222,.185,bark);
+  tube(g,lower,middle,.185,.146,bark);
+  tube(g,middle,upper,.146,.115,bark);
+  tube(g,upper,crotch,.115,.098,bark);
+  branchCollar(g,crotch,.125,bark);
   const mains=5+Math.floor(r()*3),dominant=r()*Math.PI*2;
   let tipCount=0,maxReach=0;
   for(let i=0;i<mains;i++){
@@ -224,7 +234,9 @@ export function createStudioFoliageGeometry(THREE){
    curvedBranch(g,p1,p2,.083,.048,bark,.06);
    curvedBranch(g,p2,p3,.048,.015,bark,.04);
    branchCollar(g,p1,.086,bark);
+   foliageBud(g,crotch,angle,r,false,3);
    foliageBud(g,p1,angle,r,false,5);
+   foliageBud(g,p2,angle,r,false,4);
    maxReach=Math.max(maxReach,Math.hypot(p3[0],p3[2]));tipCount++;
    // Secondary limbs reach sideways and UP; their tips carry leaves.
    const tips=[p2,p3];
@@ -267,7 +279,7 @@ export function createStudioFoliageGeometry(THREE){
      col(.29+.055*r(),.48,.28+.16*r()),.25+.12*r());
    }
   }
-  return finalize(g,{family:'broadleaf',variant,branchCount:tipCount,maxReach});
+  return finalize(g,{family:'broadleaf',variant,branchCount:tipCount,maxReach,integratedTrunk:true,trunkBaseY:-2.40});
  }
  const pineVariants=Array.from({length:6},(_,i)=>pine(i));
  const broadleafVariants=Array.from({length:5},(_,i)=>broadleaf(i));

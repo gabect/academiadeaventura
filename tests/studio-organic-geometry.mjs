@@ -6,7 +6,9 @@ import fs from 'node:fs';
 const source=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
 assert(source.includes('function curvedBranch('));
 assert(source.includes('function foliageBud('));
-assert(source.includes('const trunk=[0,-.54,0]'));
+assert(source.includes('const trunkBase=[0,-2.40,0]'));
+assert(source.includes('const pineBottom=-2.40'));
+assert(!source.includes('const trunk=[0,-.54,0]'));
 assert.equal(forest.pineVariants.length,6);
 assert.equal(forest.broadleafVariants.length,5);
 assert.strictEqual(forest.pine,forest.pineVariants[0]);
@@ -23,6 +25,11 @@ function validate(g,kind){
   assert(g.groups[0].materialIndex===0&&g.groups[1].materialIndex===1);
   assert(g.groups[1].count>0,kind+' bark surface is missing');
   assert(g.userData.leafTriangles>0&&g.userData.barkTriangles>0);
+  assert.equal(g.userData.integratedTrunk,true,kind+' requires a continuous trunk');
+  assert.equal(g.userData.trunkBaseY,-2.40);
+  g.computeBoundingBox();
+  assert(g.boundingBox.min.y<=-2.39,'trunk must reach actual terrain');
+
   assert(g.userData.barkTriangles>=(kind.startsWith('broadleaf')?240:170),
    kind+' missing continuous branch geometry');
 
