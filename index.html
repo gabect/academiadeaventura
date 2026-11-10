@@ -50,7 +50,7 @@ const STUDIO_CI=new URLSearchParams(location.search).has('ci-smoke');
 const studioOrganic=MOUNTAIN_STUDIO?createStudioFoliageGeometry(THREE):null;
 let studioMeadowFallback=null;
 const studioLeafMaterial=MOUNTAIN_STUDIO?new THREE.MeshStandardMaterial({
- color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,roughness:1
+ color:'#9db58d',vertexColors:true,side:THREE.DoubleSide,roughness:1
 }):null;
 document.getElementById('buildLabel').textContent='Valle · v'+BUILD+(MOUNTAIN_STUDIO?' · STUDIO':' · NORMAL');
 document.getElementById('demoBuildText').textContent='Demo '+BUILD+' · Valle de la Cascada';
@@ -1703,8 +1703,8 @@ function plantTuft(x,y,z,size){
 }
 function rockShelf(x,y,z,nx=0,nz=1,smallTree=false){
  const width=.7+cliffRand()*.6;
- const site={x:x+nx*.27,y:y-.05,z:z+nz*.27,
-  sx:width,sy:.15+.06*cliffRand(),sz:.42+.11*cliffRand(),
+ const site={x:x+nx*.27,y:y-.05,z:z+nz*(MOUNTAIN_STUDIO?.03:.27),
+  sx:width,sy:.15+.06*cliffRand(),sz:(MOUNTAIN_STUDIO?.66:.42)+.11*cliffRand(),
   rot:cliffRand()*2};
  cliffLedges.push(site);CLIFF_DECOR_STATS.shelves++;
  // These roots sit ON the stone shelf, not pasted to open cliff air.
