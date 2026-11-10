@@ -9,9 +9,12 @@ assert.strictEqual(forest.broadleaf,forest.broadleafVariants[0]);
 function validate(g,kind){
  assert(g.isBufferGeometry,kind+' must be a BufferGeometry');
  const p=g.getAttribute('position'),c=g.getAttribute('color'),n=g.getAttribute('normal');
+ const uv=g.getAttribute('studioPaintUV'),surface=g.getAttribute('studioSurfaceType');
+ assert(uv&&surface,kind+' missing painted-material attributes');
+ assert(uv.count===p.count&&surface.count===p.count,kind+' incorrect paint UV count');
  assert(p.count===c.count&&n.count===p.count,kind+' attribute mismatch');
  assert(g.index.count>150,kind+' missing indexed triangles');
- for(const a of [p,c,n])for(const v of a.array)
+ for(const a of [p,c,n,uv,surface])for(const v of a.array)
   assert(Number.isFinite(v),kind+' contains invalid vertex data');
  g.computeBoundingBox();
  const b=g.boundingBox,extent=b.max.clone().sub(b.min);
@@ -30,6 +33,10 @@ for(const family of ['pine','broadleaf']){
   assert.equal(g.userData.variant,i);
   assert(info.branches>=(family==='pine'?26:12));
   assert(info.reach>(family==='pine'?.9:2.1));
+  const surfaces=new Set(Array.from(g.getAttribute('studioSurfaceType').array));
+  assert(surfaces.has(0),'Bark geometry missing');
+  assert(surfaces.has(family==='pine'?1:2),'Family-specific leaf surfaces missing');
+  assert(g.getAttribute('studioPaintUV').array.length>1000);
   if(family==='broadleaf'){
    assert(info.bounds[3]-info.bounds[0]>3.5,'Broadleaf limbs must spread sideways');
    assert(info.bounds[4]-info.bounds[1]>2.0,'Broadleaf limbs must rise');

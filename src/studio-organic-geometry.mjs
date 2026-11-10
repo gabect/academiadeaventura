@@ -3,11 +3,12 @@
  * grass unrelated to these shapes. Each family has several real mesh variants.
  */
 export function createStudioFoliageGeometry(THREE){
- const make=()=>({positions:[],colors:[],indices:[]});
+ const make=()=>({positions:[],colors:[],indices:[],paintUV:[],surfaceTypes:[]});
  const col=(h,s,l)=>new THREE.Color().setHSL(h,s,l);
- const v=(g,p,c)=>{
+ const v=(g,p,c,uv=[.5,.5],surface=1)=>{
   g.positions.push(p[0],p[1],p[2]);
   g.colors.push(c.r,c.g,c.b);
+  g.paintUV.push(uv[0],uv[1]);g.surfaceTypes.push(surface);
   return g.positions.length/3-1;
  };
  const tri=(g,a,b,c,tint)=>{
@@ -22,6 +23,8 @@ export function createStudioFoliageGeometry(THREE){
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(g.positions,3));
   geo.setAttribute('color',new THREE.Float32BufferAttribute(g.colors,3));
+  geo.setAttribute('studioPaintUV',new THREE.Float32BufferAttribute(g.paintUV,2));
+  geo.setAttribute('studioSurfaceType',new THREE.Float32BufferAttribute(g.surfaceTypes,1));
   geo.setIndex(g.indices);geo.computeVertexNormals();geo.computeBoundingSphere();
   geo.userData={...info};
   return geo;
@@ -46,29 +49,41 @@ export function createStudioFoliageGeometry(THREE){
   if(ul<.0001){ux=1;uy=0;uz=0;ul=1;}
   ux/=ul;uz/=ul;
   const vx=dy*uz-dz*uy,vy=dz*ux-dx*uz,vz=dx*uy-dy*ux;
-  const n=5,start=g.positions.length/3;
+  const n=6,start=g.positions.length/3;
   for(let ring=0;ring<2;ring++){
    const p=ring?b:a,r=ring?r1:r0;
-   for(let k=0;k<n;k++){
+   for(let k=0;k<=n;k++){
     const theta=k*2*Math.PI/n,co=Math.cos(theta),si=Math.sin(theta);
-    v(g,[p[0]+r*(ux*co+vx*si),p[1]+r*(uy*co+vy*si),p[2]+r*(uz*co+vz*si)],tint);
+    v(g,[p[0]+r*(ux*co+vx*si),p[1]+r*(uy*co+vy*si),p[2]+r*(uz*co+vz*si)],
+     tint,[k/n,ring*len*1.18],0);
    }
   }
   for(let k=0;k<n;k++){
-   const next=(k+1)%n,a0=start+k,a1=start+next,b0=start+n+k,b1=start+n+next;
+   const a0=start+k,a1=start+k+1,b0=start+n+1+k,b1=start+n+2+k;
    g.indices.push(a0,a1,b0,a1,b1,b0);
   }
  }
- function foliageLeaf(g,root,dir,length,width,tint,up=.12){
+ function foliageLeaf(g,root,dir,length,width,tint,up=.12,surface=2){
+  // A folded, tapered painted leaf with a lifted midrib and rounded shoulder.
+  // Coordinates provide local UVs to the shared broadleaf/needle paint maps.
   const horizontal=Math.hypot(dir[0],dir[2])||1;
   const dx=dir[0]/horizontal,dz=dir[2]/horizontal;
-  const mx=root[0]+dx*length*.49,my=root[1]+up*.52,mz=root[2]+dz*length*.49;
-  const tip=[root[0]+dx*length,root[1]+up,root[2]+dz*length];
-  const left=[mx-dz*width,my+.055,mz+dx*width];
-  const right=[mx+dz*width,my-.025,mz-dx*width];
-  tri(g,root,left,tip,tint);tri(g,root,tip,right,tint);
-  // The leaf is visibly three-dimensional at oblique angles, not a flat disk.
-  tri(g,left,[mx,my+width*.72,mz],tip,tint);
+  const lateral=(x,y,w,height)=>{
+   const advance=length*x;
+   return [root[0]+dx*advance-dz*w*width,
+    root[1]+up*y+height,
+    root[2]+dz*advance+dx*w*width];
+  };
+  const widthFactor=surface===1?.78:1;
+  const rootId=v(g,lateral(0,0,0,0),tint,[.5,0],surface);
+  const l1=v(g,lateral(.22,.20,-.55*widthFactor,.005),tint,[.23,.25],surface);
+  const l2=v(g,lateral(.61,.57,-1.0*widthFactor,.010),tint,[.02,.63],surface);
+  const tip=v(g,lateral(1,1,0,.02),tint,[.5,1],surface);
+  const r2=v(g,lateral(.61,.57,1.0*widthFactor,-.010),tint,[.98,.63],surface);
+  const r1=v(g,lateral(.22,.20,.55*widthFactor,-.005),tint,[.77,.25],surface);
+  const ridge=v(g,lateral(.55,.52,0,.075),tint,[.5,.57],surface);
+  g.indices.push(rootId,l1,r1,l1,l2,ridge,l2,tip,ridge,
+   ridge,tip,r2,ridge,r2,r1,rootId,r1,ridge,rootId,ridge,l1);
  }
  function meadow(){
   const g=make();
@@ -125,14 +140,14 @@ export function createStudioFoliageGeometry(THREE){
       const dir=[Math.cos(spreadAngle),0,Math.sin(spreadAngle)];
       const leafLen=(.16+.18*r())*(1-.27*t),leafWidth=.077+.055*r();
       const tint=col(.293+.065*r(),.48+.14*r(),.205+.15*r());
-      foliageLeaf(g,center,dir,leafLen,leafWidth,tint,(r()-.27)*.22);
+      foliageLeaf(g,center,dir,leafLen,leafWidth,tint,(r()-.27)*.22,1);
      }
     }
    }
   }
   for(let i=0;i<11;i++){
    const a=r()*Math.PI*2,base=spine(2.56+.23*r());
-   foliageLeaf(g,base,[Math.cos(a),0,Math.sin(a)],.12+.12*r(),.045,col(.32+.02*r(),.58,.27+.07*r()),.12);
+   foliageLeaf(g,base,[Math.cos(a),0,Math.sin(a)],.12+.12*r(),.045,col(.32+.02*r(),.58,.27+.07*r()),.12,1);
   }
   return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach});
  }
