@@ -35,6 +35,7 @@ def quilt(primary, secondary, seed, alternate=.30, n=768, patch=256, stride=128)
 
 for name,a,b,seed,mix in [
     ("rock_quilt.webp","rock.webp","rock_moss.webp",7122,.19),
+    ("rock_moss_quilt.webp","rock_moss.webp","rock.webp",9872,.24),
     ("grass_quilt.webp","grass.webp","grass_dense.webp",17928,.42)]:
     tile=quilt(a,b,seed,mix)
     tile.save(ROOT/name,format="WEBP",quality=88,method=6)
