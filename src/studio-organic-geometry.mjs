@@ -73,23 +73,40 @@ export function createStudioFoliageGeometry(THREE){
   return finalize(g);
  }
  function broadleaf(){
-  const g=make(),original=new THREE.IcosahedronGeometry(1,1);
-  const base=original.index?original.toNonIndexed():original,p=base.attributes.position;
-  for(let j=0;j<18;j++){
-   const a=j*2.399963229728653,radial=.24+.68*Math.sqrt((j+.5)/18);
-   const center=[Math.cos(a)*radial,.26+.47*Math.sin(j*1.43)**2,Math.sin(a)*radial];
-   const size=.29+.19*(.5+.5*Math.sin(j*2.76));
-   const col=color(.28+.065*Math.sin(j*1.13),.47,.29+.13*(.5+.5*Math.sin(j*2.71)));
-   for(let k=0;k<p.count;k+=3){
-    const tri=[];
-    for(let v=0;v<3;v++){
-     const x=p.getX(k+v),y=p.getY(k+v),z=p.getZ(k+v);
-     const swell=1+.11*Math.sin((x+j)*7+(z-j)*5);
-     tri.push(point(g,[center[0]+size*x*swell,center[1]+size*y*.79,center[2]+size*z*swell],col));
+  // Avoid a balloon of icosahedra. Each branch gets tapered foliage
+  // sprays that follow an irregular rounded crown without polygon blobs.
+  const g=make();
+  for(let tier=0;tier<5;tier++){
+   const count=11+(tier%3),radius=1.06-tier*.14;
+   for(let j=0;j<count;j++){
+    const angle=j*6.283185307/count+tier*.43;
+    const co=Math.cos(angle),si=Math.sin(angle);
+    const reach=radius*(.84+.17*Math.sin(j*2.17+tier*1.31));
+    for(let k=1;k<=5;k++){
+     const t=k/6,rad=.14+reach*t;
+     const baseY=.30+tier*.35+.22*Math.sin(t*Math.PI)-.14*t;
+     const leafLength=.25+.19*(1-t)+.055*Math.sin(j*1.7+k);
+     const width=.11+.055*(1-t);
+     for(const side of [-1,1]){
+      const leafAngle=angle+side*(.48+.28*Math.sin(k*1.7+j));
+      const lx=Math.cos(leafAngle),lz=Math.sin(leafAngle);
+      const px=co*rad,pz=si*rad;
+      const hue=.28+.05*Math.sin(j*1.7+k*.62+tier);
+      const light=.28+.10*(.5+.5*Math.sin(k*2.3+side+j));
+      const c=color(hue,.48,light);
+      const origin=point(g,[px,baseY,pz],c);
+      const left=point(g,[px+lx*leafLength*.47-lz*width,
+       baseY+.12+leafLength*.24,pz+lz*leafLength*.47+lx*width],c);
+      const right=point(g,[px+lx*leafLength*.47+lz*width,
+       baseY+.09+leafLength*.24,pz+lz*leafLength*.47-lx*width],c);
+      const tip=point(g,[px+lx*leafLength,
+       baseY+.15+leafLength*.45,pz+lz*leafLength],c);
+      g.indices.push(origin,left,right,left,tip,right);
+     }
     }
-    g.indices.push(...tri);
    }
-  }return finalize(g);
+  }
+  return finalize(g);
  }
  return {meadow:meadow(),pine:pine(),broadleaf:broadleaf()};
 }
