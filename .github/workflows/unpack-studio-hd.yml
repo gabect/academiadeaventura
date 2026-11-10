@@ -13,6 +13,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install tile synthesis dependencies
+        run: python -m pip install --quiet pillow numpy
       - name: Extract painterly art into versioned game paths
         run: |
           set -euxo pipefail
@@ -23,6 +28,8 @@ jobs:
           test -s assets/studio_hd/sprites/fern.webp
           test -s assets/studio_hd/sprites/flowers_white.webp
           find assets/studio_hd -type f -maxdepth 3 -print | sort
+      - name: Rebuild seam-safe illustrated rock and grass tiles
+        run: python tools/quilt_studio_tiles.py
       - name: Commit extracted assets to feature branch
         run: |
           set -euxo pipefail
