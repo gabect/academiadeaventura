@@ -31,7 +31,7 @@ for(const [name,width,height,mode] of [
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.55.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.56.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
   if(mode!=='normal'){

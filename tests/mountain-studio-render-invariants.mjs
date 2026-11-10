@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.55.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.56.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.55.0');
-assert(html.includes("const BUILD='0.55.0'"));
+assert.equal(version.version,'0.56.0');
+assert(html.includes("const BUILD='0.56.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -32,7 +32,11 @@ for(const token of ['function curvedBranch(', 'function branchCollar(', 'functio
  assert(procedural.includes(token),'Missing rooted geometry: '+token);
 }
 assert(html.includes('foliage.position.set(x,lift+2.39,z)'));
-assert(html.includes('MOUNTAIN_STUDIO?studioTreePaint.barkTrunks:mat'));
+assert(html.includes('if(!MOUNTAIN_STUDIO)drawMountainTreePart(MOUNTAIN_TREES'));
+assert(html.includes('if(!MOUNTAIN_STUDIO)cylinder(.22,.32,2.5,wood'));
+assert(html.includes('if(!MOUNTAIN_STUDIO)cylinder(.11,.16,1.65,cliffTrunk'));
+assert(html.includes('studioOrganic.pineVariants'));
+assert(!html.includes("foliage.position.set(x,lift+2.54,z)"));
 
 assert(paint.includes("new THREE.CanvasTexture(canvas)"),'Painterly art must have an actual colour map');
 assert(paint.includes("const barkBranches=shaded(woodMap,true)"));
@@ -54,4 +58,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.55.0 invariants passed');
+console.log('Studio HD v0.56.0 invariants passed');
