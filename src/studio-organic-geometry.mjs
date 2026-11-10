@@ -184,8 +184,8 @@ export function createStudioFoliageGeometry(THREE){
     if(j%3===0)branchCollar(g,p0,.055,bark);
     branches++;reach=Math.max(reach,Math.hypot(p2[0],p2[2]));
     // Secondary shoots and tertiary needle tips stay connected to each limb.
-    for(let k=1;k<=3;k++){
-     const t=k/4;
+    for(let k=1;k<=2;k++){
+     const t=k/3;
      const node=[mix(p0[0],p2[0],t),mix(p0[1],p2[1],t),mix(p0[2],p2[2],t)];
      for(const side of [-1,1]){
       const theta=angle+side*(.56+.40*r()),distance=(.20+.18*r())*(1-.18*t);
@@ -193,11 +193,11 @@ export function createStudioFoliageGeometry(THREE){
        node[1]+(r()-.52)*.09,node[2]+Math.sin(theta)*distance*.60];
       const end=[node[0]+Math.cos(theta)*distance,
        mid[1]+(r()-.35)*.07,node[2]+Math.sin(theta)*distance];
-      curvedBranch(g,node,mid,.013,.008,bark,.012);
-      curvedBranch(g,mid,end,.008,.0025,bark,.008);
+      tube(g,node,mid,.013,.008,bark);
+      tube(g,mid,end,.008,.0025,bark);
       secondaryBranches++;tertiaryBranches++;
       foliageBud(g,end,theta,r,true,4);terminalClusters++;
-      if(k===3&&r()>.48)foliageBud(g,mid,theta,r,true,2);
+      if(k===2&&r()>.70)foliageBud(g,mid,theta,r,true,2);
      }
     }
     foliageBud(g,p2,angle,r,true,5);terminalClusters++;
