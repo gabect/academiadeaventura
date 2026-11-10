@@ -299,7 +299,9 @@ export function buildMountainEnvironment(THREE, options) {
   rootPath(x,9.9,.6,lean,.24,x);
   rootPath(x+lean*.5+Math.sin(3.5+x)*.27,5.25,1.4,-lean*.65,.105,x+1);
  }
- let quality='high';try{quality=localStorage.getItem('mountain-quality')||(matchMedia('(pointer:coarse)').matches?'low':'high');}catch{}
+ const qualityKey=options.studio?'mountain-studio-quality':'mountain-quality';
+ let quality=options.studio?'medium':'high';
+ try{quality=localStorage.getItem(qualityKey)||(options.studio?'medium':(matchMedia('(pointer:coarse)').matches?'low':'high'));}catch{}
  if(!['low','medium','high'].includes(quality))quality='high';
  const frustum=new THREE.Frustum(),matrix=new THREE.Matrix4(),sphere=new THREE.Sphere();
  const stats={generationMs:performance.now()-started,blades:bladeCount,rocks:rocks.length,ferns:ferns.length,roots:rootCount,sprites:spriteCount,foliageState,batches:groups.length,quality};
@@ -324,5 +326,5 @@ export function buildMountainEnvironment(THREE, options) {
   stats.quality=quality;
   if(frames.length>30){const sorted=[...frames].sort((a,b)=>a-b);stats.frameMedianMs=sorted[Math.floor(sorted.length*.5)];stats.frameP95Ms=sorted[Math.floor(sorted.length*.95)];stats.fps=1000/stats.frameMedianMs;}
  };
- return {stats,update,surface,groups,setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem('mountain-quality',value);}catch{}}},getQuality:()=>quality};
+ return {stats,update,surface,groups,setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem(qualityKey,value);}catch{}}},getQuality:()=>quality};
 }
