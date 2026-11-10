@@ -1,18 +1,21 @@
-// Source and real-file guardrails for the illustrated 0.50.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.51.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.50.0');
-assert(html.includes("const BUILD='0.50.0'"));
+assert.equal(version.version,'0.51.0');
+assert(html.includes("const BUILD='0.51.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
 assert(html.includes('studioMeadowFallback'));
 assert(!html.includes('grass_tuft_dense.png'),'broken PNG must remain unused');
 assert(env.includes('setRockTexture(tex)'));
+assert(env.includes('if(options.studio)return; // No floating decorative rocks'));
+assert(html.includes("academy-studio-feathered-trail-v1"));
+assert(html.includes('if(MOUNTAIN_STUDIO)mountainShrubs.visible=false'));
 assert(art.includes("load('tiles/rock_quilt.webp'"));
 assert(art.includes("load('tiles/rock_moss_quilt.webp'"));
 assert(art.includes("load('tiles/grass_quilt.webp'"));
@@ -26,4 +29,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.50.0 invariants passed');
+console.log('Studio HD v0.51.0 invariants passed');
