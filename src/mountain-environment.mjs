@@ -199,8 +199,8 @@ export function buildMountainEnvironment(THREE, options) {
  foliageTexture.colorSpace=THREE.SRGBColorSpace;
  foliageTexture.anisotropy=4;
  const foliageMat=new THREE.MeshStandardMaterial({
-  map:foliageTexture,alphaTest:options.studio?.39:.78,side:THREE.DoubleSide,
-  roughness:.95,color:options.studio?'#ffffff':'#b4c69d',transparent:false,depthWrite:true
+  map:foliageTexture,alphaTest:options.studio?.58:.78,side:THREE.DoubleSide,
+  roughness:.95,color:options.studio?'#b3c89e':'#b4c69d',transparent:false,depthWrite:true
  });
  foliageMat.onBeforeCompile=shader=>{
   shader.uniforms.mountainWindTime=windTime;
@@ -326,5 +326,5 @@ export function buildMountainEnvironment(THREE, options) {
   stats.quality=quality;
   if(frames.length>30){const sorted=[...frames].sort((a,b)=>a-b);stats.frameMedianMs=sorted[Math.floor(sorted.length*.5)];stats.frameP95Ms=sorted[Math.floor(sorted.length*.95)];stats.fps=1000/stats.frameMedianMs;}
  };
- return {stats,update,surface,groups,setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem(qualityKey,value);}catch{}}},getQuality:()=>quality};
+ return {stats,update,surface,groups,foliageMaterial:foliageMat,setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem(qualityKey,value);}catch{}}},getQuality:()=>quality};
 }
