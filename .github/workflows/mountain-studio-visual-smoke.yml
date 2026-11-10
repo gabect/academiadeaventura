@@ -1,0 +1,33 @@
+name: Mountain Studio visual smoke
+on:
+  push:
+    branches:
+      - feature/mountain-studio-v0.47.2
+  workflow_dispatch:
+jobs:
+  webgl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser harness
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: CPU code invariants
+        run: |
+          node tests/mountain-studio-render-invariants.mjs
+          node tests/mountain-art-studio.mjs
+      - name: Render app in SwiftShader WebGL
+        run: |
+          python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
+          node tests/studio-visual-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mountain-studio-webgl-screenshots
+          path: artifacts/*.png
+          if-no-files-found: warn
