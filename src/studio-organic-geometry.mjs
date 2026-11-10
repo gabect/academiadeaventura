@@ -120,10 +120,10 @@ export function createStudioFoliageGeometry(THREE){
     branches++;reach=Math.max(reach,Math.hypot(p2[0],p2[2]));
     for(let k=1;k<=5;k++){
      const t=k/6,center=[mix(p0[0],p2[0],t),mix(p0[1],p2[1],t),mix(p0[2],p2[2],t)];
-     for(let n=0;n<3;n++){
-      const spreadAngle=angle+(n-1)*(1.00+.42*r())+.10*(r()-.5);
+     for(let n=0;n<4;n++){
+      const spreadAngle=angle+(n-1.5)*(.70+.24*r())+.10*(r()-.5);
       const dir=[Math.cos(spreadAngle),0,Math.sin(spreadAngle)];
-      const leafLen=(.15+.16*r())*(1-.27*t),leafWidth=.065+.055*r();
+      const leafLen=(.16+.18*r())*(1-.27*t),leafWidth=.077+.055*r();
       const tint=col(.293+.065*r(),.48+.14*r(),.205+.15*r());
       foliageLeaf(g,center,dir,leafLen,leafWidth,tint,(r()-.27)*.22);
      }
@@ -171,13 +171,13 @@ export function createStudioFoliageGeometry(THREE){
     maxReach=Math.max(maxReach,Math.hypot(tip[0],tip[2]));
    }
    for(const tip of tips){
-    const count=7+Math.floor(r()*6);
+    const count=10+Math.floor(r()*7);
     const anisAngle=angle+(r()-.5)*.65;
     for(let j=0;j<count;j++){
      const alpha=anisAngle+(j+(r()-.5)*.5)*Math.PI*2/count;
      const dir=[Math.cos(alpha),0,Math.sin(alpha)];
      const root=[tip[0]+(r()-.5)*.33,tip[1]+(r()-.5)*.35,tip[2]+(r()-.5)*.33];
-     foliageLeaf(g,root,dir,.22+.37*r(),.10+.11*r(),
+     foliageLeaf(g,root,dir,.27+.39*r(),.12+.11*r(),
       col(.275+.075*r(),.42+.18*r(),.25+.20*r()),.07+.31*r());
     }
    }
@@ -187,10 +187,10 @@ export function createStudioFoliageGeometry(THREE){
    const a=dominant+(r()-.5)*2.4,base=[.16*Math.cos(a),.61+.28*r(),.16*Math.sin(a)];
    const tip=[.32*Math.cos(a),1.95+.58*r(),.32*Math.sin(a)];
    tube(g,base,tip,.046,.008,bark);
-   for(let j=0;j<5;j++){
-    const around=2*Math.PI*j/5;
+   for(let j=0;j<7;j++){
+    const around=2*Math.PI*j/7;
     const root=[tip[0],tip[1]-.27+.12*r(),tip[2]];
-    foliageLeaf(g,root,[Math.cos(around),0,Math.sin(around)],.24+.18*r(),.09,
+    foliageLeaf(g,root,[Math.cos(around),0,Math.sin(around)],.27+.22*r(),.115,
      col(.29+.055*r(),.48,.28+.16*r()),.25+.12*r());
    }
   }
