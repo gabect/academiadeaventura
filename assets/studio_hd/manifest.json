@@ -1,0 +1,125 @@
+{
+  "version": "mvp-curated-1",
+  "assets": [
+    {
+      "path": "tiles/rock.webp",
+      "size": 29924,
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "tiles/rock_moss.webp",
+      "size": 42208,
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "tiles/grass.webp",
+      "size": 45738,
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "tiles/grass_dense.webp",
+      "size": 56838,
+      "dimensions": [
+        512,
+        512
+      ]
+    },
+    {
+      "path": "sprites/grass_tuft.webp",
+      "size": 45112,
+      "dimensions": [
+        474,
+        365
+      ]
+    },
+    {
+      "path": "sprites/grass_medium.webp",
+      "size": 36502,
+      "dimensions": [
+        443,
+        365
+      ]
+    },
+    {
+      "path": "sprites/fern.webp",
+      "size": 40308,
+      "dimensions": [
+        477,
+        383
+      ]
+    },
+    {
+      "path": "sprites/broadleaf.webp",
+      "size": 35218,
+      "dimensions": [
+        453,
+        380
+      ]
+    },
+    {
+      "path": "sprites/flowers_white.webp",
+      "size": 29852,
+      "dimensions": [
+        406,
+        370
+      ]
+    },
+    {
+      "path": "sprites/flowers_purple.webp",
+      "size": 32478,
+      "dimensions": [
+        393,
+        378
+      ]
+    },
+    {
+      "path": "sprites/root.webp",
+      "size": 39746,
+      "dimensions": [
+        544,
+        263
+      ]
+    },
+    {
+      "path": "sprites/vine.webp",
+      "size": 47978,
+      "dimensions": [
+        448,
+        422
+      ]
+    },
+    {
+      "path": "sprites/hanging_edge.webp",
+      "size": 51624,
+      "dimensions": [
+        544,
+        327
+      ]
+    },
+    {
+      "path": "sprites/rock_outcrop.webp",
+      "size": 53104,
+      "dimensions": [
+        544,
+        325
+      ]
+    },
+    {
+      "path": "sprites/rock_ledge.webp",
+      "size": 43646,
+      "dimensions": [
+        544,
+        339
+      ]
+    }
+  ]
+}
