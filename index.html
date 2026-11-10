@@ -1880,12 +1880,11 @@ const meadowSites=cliffTufts.filter(v=>v.z<mountainCliffUpperZ(v.x)-2||v.z>mount
 const cliffGrass=cliffBatch(createTallGrass(),
  new THREE.MeshStandardMaterial({color:'#ffffff',
   side:THREE.DoubleSide,roughness:1}),
- meadowSites,v=>[v.size,v.size,v.size]);
+ meadowSites,v=>[v.size*(MOUNTAIN_STUDIO?.52:1),v.size*(MOUNTAIN_STUDIO?.52:1),v.size*(MOUNTAIN_STUDIO?.52:1)]);
 cliffGrass.name='cliff-rooted-tall-grass';
 // The PNG used in v0.47.1 contained opaque artifacts between leaves.
-// Do not load that small trial image. Share the vetted atlas with mountain foliage
-// and show original geometry at 0.52 scale only if that atlas fails to load.
-if(MOUNTAIN_STUDIO)cliffGrass.scale.set(.52,.52,.52);
+// Do not load that small trial image. Share the vetted atlas with mountain foliage.
+// Fallback scales each instance, not the parent mesh's world-space transform.
 function studioRockGeometry(){
  const geo=new THREE.IcosahedronGeometry(1,1),pos=geo.attributes.position;
  for(let i=0;i<pos.count;i++){
