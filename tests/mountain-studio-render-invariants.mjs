@@ -41,7 +41,7 @@ assert(!html.includes("foliage.position.set(x,lift+2.54,z)"));
 assert(paint.includes("new THREE.CanvasTexture(canvas)"),'Painterly art must have an actual colour map');
 assert(paint.includes("const barkBranches=shaded(woodMap,true)"));
 assert(paint.includes("const broadleafLeaves=shaded(broadleafMap,true)"));
-assert(html.includes('studioTreePaint.barkTrunks'),'Field trunks must receive bark map');
+assert(html.includes('const studioLeafMaterial=studioTreePaint?.pine'),'Unified trees must share painted bark and leaf materials');
 assert(html.includes("studioBroadleafMaterial,'studio-spreading-broadleaf"));
 assert(html.includes('__studioTreePainterly'));
 assert(!art.includes('studio-ground-plant-distance-fade-v1'));
