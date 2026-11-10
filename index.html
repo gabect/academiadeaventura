@@ -33,16 +33,16 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.52.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.52.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.53.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.53.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.52.0';
-import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.52.0';
-import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0.52.0';
-import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.52.0';
+import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.53.0';
+import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.53.0';
+import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0.53.0';
+import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.53.0';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.52.0';
+const BUILD='0.53.0';
 // First reversible art study. Default scene remains unchanged.
 const MOUNTAIN_STUDIO=new URLSearchParams(location.search).get('mountain')==='studio';
 const STUDIO_CI=new URLSearchParams(location.search).has('ci-smoke');
@@ -1596,19 +1596,29 @@ const FIELD_TREE_POSITIONS=[
  [58,4],[64,12],[58,24],[64,35],[56,43],
  [53,-5],[62,-14],[55,-28],[53,-42]
 ];
+function studioTreeVariant(x,z,count){
+ const h=Math.sin(x*12.9898+z*78.233)*43758.5453123;
+ return Math.floor((h-Math.floor(h))*count);
+}
+const studioTreeFamilies={pine:6,broadleaf:5};
+window.__studioTreeVariantInfo=MOUNTAIN_STUDIO?studioTreeFamilies:null;
 const studioFieldTreeCrowns=[];
 function tree(x,z){
  const lift=naturalSurfaceY(x,z)-TERRAIN.floorTop;
  cylinder(.22,.32,2.5,wood,x,lift+1.25,z);
  if(MOUNTAIN_STUDIO){
-  // The older field trees used two smooth hexagonal cones. Reuse the same
-  // branch-bearing crown as the distant mountain instances.
-  const foliage=new THREE.Mesh(studioOrganic.pine,studioLeafMaterial);
-  foliage.position.set(x,lift+2.60,z);
-  foliage.scale.set(1.42,1.37,1.42);
+  const variety=studioTreeVariant(x,z,studioOrganic.pineVariants.length);
+  const foliage=new THREE.Mesh(studioOrganic.pineVariants[variety],studioLeafMaterial);
+  foliage.position.set(x,lift+2.54,z);
+  // Every field tree has a different aspect ratio and crown lean.
+  foliage.scale.set(1.14+.22*Math.abs(Math.sin(x*.47+z*.39)),
+   1.17+.23*Math.abs(Math.cos(x*.18-z*.63)),
+   1.10+.24*Math.abs(Math.sin(x*.79-z*.21)));
+  foliage.rotation.set(.035*Math.sin(x*.34),x*.67+z*.29,.055*Math.cos(z*.37));
   foliage.castShadow=true;foliage.receiveShadow=true;
-  foliage.userData.ignoreCameraRay=true;scene.add(foliage);
-  studioFieldTreeCrowns.push(foliage);
+  foliage.userData.ignoreCameraRay=true;
+  foliage.userData.treeVariant=variety;
+  scene.add(foliage);studioFieldTreeCrowns.push(foliage);
  }else{
   const leaves=mat('#4b8864');
   cylinder(0,1.65,3,leaves,x,lift+3.3,z,scene,7);
@@ -1625,11 +1635,13 @@ for(const [x,z,height,radius] of [
  [-58.35,-44.4,2.35,.75],[-59.3,-41.2,1.9,.90]
 ]){
  const crown=MOUNTAIN_STUDIO?
-  new THREE.Mesh(studioOrganic.pine,studioLeafMaterial):
+  new THREE.Mesh(studioOrganic.pineVariants[
+   studioTreeVariant(x,z,studioOrganic.pineVariants.length)],studioLeafMaterial):
   new THREE.Mesh(new THREE.ConeGeometry(radius,height,6),summitCrownMat);
  crown.position.set(x,naturalSurfaceY(x,z)+height*(MOUNTAIN_STUDIO?.16:.40),z);
- if(MOUNTAIN_STUDIO)crown.scale.setScalar(radius*.95);
- crown.rotation.y=x*.37; crown.castShadow=true;
+ if(MOUNTAIN_STUDIO)crown.scale.set(radius*.89,radius*.99,radius*(.81+.14*Math.abs(Math.sin(x))));
+ crown.rotation.set(MOUNTAIN_STUDIO?.045*Math.sin(x):0,x*.37,MOUNTAIN_STUDIO?.04*Math.cos(z):0);
+ crown.castShadow=true;
  crown.receiveShadow=true;scene.add(crown);
 }
 // Small glacial stones trace the *base* of the mountain where the lowland
@@ -1979,12 +1991,12 @@ function buildStudioNaturalSites(){
   if(!Number.isFinite(y))return;
   accents.push({x,z,y:y+.02,size,color:cliffRand(),nearCliff});
  };
- for(let i=0;i<370;i++){
+ for(let i=0;i<540;i++){
   const x=-72+cliffRand()*144;
   const base=mountainCliffLipZ(x);
   const z=base+.83+cliffRand()*12.4;
   if(mountainRouteBuffer(x,z,1.0)||waterAt(x,z))continue;
-  const count=2+Math.floor(cliffRand()*4);
+  const count=3+Math.floor(cliffRand()*4);
   for(let j=0;j<count;j++){
    const angle=6.2831853*cliffRand(),radius=Math.sqrt(cliffRand())*1.3;
    plant(x+Math.cos(angle)*radius,z+Math.sin(angle)*radius,
@@ -2151,7 +2163,11 @@ function drawMountainTreePart(sites,geometry,material,name,position,scale,tint=t
  for(let i=0;i<sites.length;i++){
   const s=sites[i],p=position(s),k=scale(s);
   instance.position.set(p[0],p[1],p[2]);
-  instance.rotation.set(0,s.color*Math.PI*2,0);
+  if(MOUNTAIN_STUDIO&&name.startsWith('studio-')){
+   instance.rotation.set(.040*Math.sin(s.x*.53+s.z*.19),
+    s.color*Math.PI*2+.29*Math.sin(s.z*.71),
+    .045*Math.cos(s.z*.37-s.x*.24));
+  }else instance.rotation.set(0,s.color*Math.PI*2,0);
   instance.scale.set(k[0],k[1],k[2]);
   instance.updateMatrix();batch.setMatrixAt(i,instance.matrix);
   if(tint&&batch.setColorAt){
@@ -2173,15 +2189,33 @@ drawMountainTreePart(MOUNTAIN_TREES,
 const mountainPines=MOUNTAIN_TREES.filter(s=>s.evergreen);
 const mountainBroadleaf=MOUNTAIN_TREES.filter(s=>!s.evergreen);
 if(MOUNTAIN_STUDIO){
- // One instanced branch crown instead of two identical polygon cones.
- drawMountainTreePart(mountainPines,
-  studioOrganic.pine,studioLeafMaterial,'studio-branched-pine-crowns',
-  site=>[site.x,site.y+site.scale*2.10,site.z],
-  site=>[site.scale*1.10,site.scale*1.30,site.scale*1.10],false);
- drawMountainTreePart(mountainBroadleaf,
-  studioOrganic.broadleaf,studioLeafMaterial,'studio-broadleaf-crowns',
-  site=>[site.x,site.y+site.scale*2.60,site.z],
-  site=>[site.scale*1.30,site.scale*1.24,site.scale*1.30],false);
+ // Real mesh variants break the old clone pattern while remaining instanced.
+ for(let family=0;family<studioOrganic.pineVariants.length;family++){
+  const sites=mountainPines.filter(site=>studioTreeVariant(site.x,site.z,
+   studioOrganic.pineVariants.length)===family);
+  if(!sites.length)continue;
+  drawMountainTreePart(sites,studioOrganic.pineVariants[family],
+   studioLeafMaterial,'studio-irregular-pines-'+family,
+   site=>[site.x,site.y+site.scale*2.10,site.z],
+   site=>[site.scale*(1.02+.10*site.color),
+    site.scale*(1.14+.18*site.color),
+    site.scale*(.99+.14*(1-site.color))],false);
+ }
+ for(let family=0;family<studioOrganic.broadleafVariants.length;family++){
+  const sites=mountainBroadleaf.filter(site=>studioTreeVariant(site.x,site.z,
+   studioOrganic.broadleafVariants.length)===family);
+  if(!sites.length)continue;
+  drawMountainTreePart(sites,studioOrganic.broadleafVariants[family],
+   studioLeafMaterial,'studio-spreading-broadleaf-'+family,
+   site=>[site.x,site.y+site.scale*2.27,site.z],
+   site=>[site.scale*(.78+.12*site.color),
+    site.scale*(.91+.12*site.color),
+    site.scale*(.77+.13*(1-site.color))],false);
+ }
+ window.__studioTreeVariantInfo={
+  ...studioTreeFamilies,pineInstances:mountainPines.length,
+  broadleafInstances:mountainBroadleaf.length
+ };
 }else{
  drawMountainTreePart(mountainPines,new THREE.ConeGeometry(1.03,2.7,7),
   mat('#f4f6ee'),'mountain-tall-pines-lower',
@@ -2204,8 +2238,11 @@ for(const v of cliffPines){
  group.position.set(v.x,v.y,v.z);group.scale.setScalar(v.scale);
  cylinder(.11,.16,1.65,cliffTrunk,0,.825,0,group,6);
  if(MOUNTAIN_STUDIO){
-  const crown=new THREE.Mesh(studioOrganic.pine,studioLeafMaterial);
-  crown.position.y=1.10;crown.scale.set(.55,.60,.55);
+  const crown=new THREE.Mesh(studioOrganic.pineVariants[
+   studioTreeVariant(v.x,v.z,studioOrganic.pineVariants.length)],studioLeafMaterial);
+  crown.position.y=1.08;
+  crown.scale.set(.50+.07*Math.abs(Math.sin(v.x)),.56,.47+.08*Math.abs(Math.cos(v.z)));
+  crown.rotation.set(.035*Math.sin(v.x),v.x*.59+v.z*.33,.07*Math.cos(v.z));
   group.add(crown);
  }else{
   cylinder(0,.65,1.5,cliffNeedles,0,1.63,0,group,6);
@@ -3405,6 +3442,14 @@ if(STUDIO_CI){
  if(sourceScene==='plants')player.position.set(-24,0,-8);
  if(sourceScene==='summit')player.position.set(-60,0,-43);
  if(sourceScene==='route30')player.position.set(-17,0,-28);
+ if(sourceScene==='broadleaf'){
+  // Scenic fixture executes only after player has been constructed.
+  const chosen=mountainBroadleaf.find(t=>t.z>-59&&t.z<60)||mountainBroadleaf[0];
+  if(chosen){
+   player.position.set(chosen.x+2,chosen.y,chosen.z+6);
+   window.__studioTreeWitness={x:chosen.x,z:chosen.z};
+  }
+ }
  player.rotation.y=Math.PI;
 }
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
@@ -4556,7 +4601,7 @@ function animate(){
  }
  updateWaterVisual(dt);
  mountainEnvironment.update(camera,player.position,CURVED_HORIZON,performance.now());
- if(studioArt)studioArt.update(mountainEnvironment.getQuality(),player.position,camera.position);
+ if(studioArt)studioArt.update(mountainEnvironment.getQuality());
 
  marker.rotation.y+=dt;renderer.render(scene,camera);
  if(STUDIO_CI){renderedStudioCI++;window.__studioCIReady=renderedStudioCI>=3;}

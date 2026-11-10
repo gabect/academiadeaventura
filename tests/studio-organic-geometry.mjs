@@ -1,21 +1,42 @@
-// Real official Three.js CPU build, not a GPU test.
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import {createStudioFoliageGeometry} from '../src/studio-organic-geometry.mjs';
-const result=createStudioFoliageGeometry(THREE);
-for(const [kind,g] of Object.entries(result)){
- assert(g.isBufferGeometry,kind+' must be BufferGeometry');
- const pos=g.getAttribute('position'),colors=g.getAttribute('color'),norm=g.getAttribute('normal');
- assert(pos.count===colors.count&&norm.count===pos.count);
- assert(pos.count>100,kind+' too few vertices');
- assert(g.index.count>100,kind+' missing triangles');
- for(const attr of [pos,colors,norm])
-  for(const v of attr.array)assert(Number.isFinite(v),kind+' contains nonfinite geometry');
+const forest=createStudioFoliageGeometry(THREE);
+assert.equal(forest.pineVariants.length,6);
+assert.equal(forest.broadleafVariants.length,5);
+assert.strictEqual(forest.pine,forest.pineVariants[0]);
+assert.strictEqual(forest.broadleaf,forest.broadleafVariants[0]);
+function validate(g,kind){
+ assert(g.isBufferGeometry,kind+' must be a BufferGeometry');
+ const p=g.getAttribute('position'),c=g.getAttribute('color'),n=g.getAttribute('normal');
+ assert(p.count===c.count&&n.count===p.count,kind+' attribute mismatch');
+ assert(g.index.count>150,kind+' missing indexed triangles');
+ for(const a of [p,c,n])for(const v of a.array)
+  assert(Number.isFinite(v),kind+' contains invalid vertex data');
  g.computeBoundingBox();
- const bb=g.boundingBox;
- assert(bb.max.y>bb.min.y+.25,kind+' no vertical volume');
- assert(bb.max.x>bb.min.x+.5&&bb.max.z>bb.min.z+.5,kind+' no radial volume');
- console.log(kind,{vertices:pos.count,triangles:g.index.count/3,
-  boundingBox:[bb.min.toArray(),bb.max.toArray()]});
+ const b=g.boundingBox,extent=b.max.clone().sub(b.min);
+ assert(extent.y>.55&&extent.x>1&&extent.z>1,kind+' must have 3D volume');
+ return {bounds:[...b.min.toArray(),...b.max.toArray()].map(x=>+x.toFixed(2)),
+  triangles:g.index.count/3,branches:g.userData.branchCount||0,
+  reach:g.userData.maxReach||0};
 }
-console.log('Organic foliage CPU mesh checks passed');
+validate(forest.meadow,'meadow');
+const silhouettes=new Set();
+for(const family of ['pine','broadleaf']){
+ const collection=family==='pine'?forest.pineVariants:forest.broadleafVariants;
+ for(let i=0;i<collection.length;i++){
+  const g=collection[i],info=validate(g,family+'_'+i);
+  assert.equal(g.userData.family,family);
+  assert.equal(g.userData.variant,i);
+  assert(info.branches>=(family==='pine'?26:12));
+  assert(info.reach>(family==='pine'?.9:2.1));
+  if(family==='broadleaf'){
+   assert(info.bounds[3]-info.bounds[0]>3.5,'Broadleaf limbs must spread sideways');
+   assert(info.bounds[4]-info.bounds[1]>2.0,'Broadleaf limbs must rise');
+  }
+  silhouettes.add(family+JSON.stringify(info.bounds));
+  console.log(family,i,info);
+ }
+}
+assert(silhouettes.size>=11,'Forest variants must not be cloned geometry');
+console.log('Forest geometry checks passed: 6 irregular pines, 5 wide-branching trees');

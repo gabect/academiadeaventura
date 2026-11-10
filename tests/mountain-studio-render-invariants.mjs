@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.52.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.53.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.52.0');
-assert(html.includes("const BUILD='0.52.0'"));
+assert.equal(version.version,'0.53.0');
+assert(html.includes("const BUILD='0.53.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -23,10 +23,12 @@ assert(art.includes("file:'grass_tuft.webp'"));
 assert(art.includes("file:'fern.webp'"));
 assert(art.includes("file:'flowers_white.webp'"));
 assert(art.includes("alphaTest:.52"));
-assert(art.includes("studio-ground-plant-distance-fade-v1"));
-assert(art.includes('studioPlayerPos'));
-assert(art.includes('studioCameraPos'));
-assert(art.includes('height:v=>.28+v.size*.27'));
+// v0.51's rich foreground meadow is explicitly preserved by user request.
+assert(!art.includes('studio-ground-plant-distance-fade-v1'));
+assert(art.includes('height:v=>.62+v.size*.72'));
+assert(art.includes('height:v=>.50+v.size*.60'));
+assert(html.includes('for(let i=0;i<540;i++){'));
+assert(html.includes('const count=3+Math.floor(cliffRand()*4);'));
 assert(html.includes('studio-trail-embedded-pebbles'));
 assert(art.includes("source:'wall'"));
 assert(art.includes("source:'crest'"));
@@ -34,4 +36,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.52.0 invariants passed');
+console.log('Studio HD v0.53.0 invariants passed');
