@@ -30,6 +30,17 @@ function validate(g,kind){
   g.computeBoundingBox();
   assert(g.boundingBox.min.y<=-2.39,'trunk must reach actual terrain');
 
+  assert(g.userData.branchOrders?.primary>0,kind+' missing real primary branches');
+  assert(g.userData.branchOrders?.secondary>g.userData.branchOrders.primary,
+   kind+' missing secondary branches');
+  assert(g.userData.branchOrders?.tertiary>=g.userData.branchOrders.secondary,
+   kind+' missing terminal twigs');
+  assert(g.userData.terminalClusters>g.userData.branchOrders.primary,
+   kind+' no tip-supported leaf clusters');
+  if(kind.startsWith('broadleaf')){
+   assert.equal(g.userData.leaderCount,2,'Y fork must have two leaders');
+   assert(g.userData.branchOrders.tertiary>=24,'not enough terminal twigs');
+  }
   assert(g.userData.barkTriangles>=(kind.startsWith('broadleaf')?240:170),
    kind+' missing continuous branch geometry');
 

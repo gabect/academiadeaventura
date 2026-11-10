@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-unified-trees-v0.56.0
+      - feature/mountain-hierarchical-forest-v0.57.0
   workflow_dispatch:
 jobs:
   webgl:
