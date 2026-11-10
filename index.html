@@ -33,20 +33,22 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
 @media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.48.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.48.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.49.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.49.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.48.0';
-import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.48.0';
-import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0.48.0';
+import {buildMountainEnvironment} from './src/mountain-environment.mjs?v=0.49.0';
+import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.49.0';
+import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0.49.0';
+import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.49.0';
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
-const BUILD='0.48.0';
+const BUILD='0.49.0';
 // First reversible art study. Default scene remains unchanged.
 const MOUNTAIN_STUDIO=new URLSearchParams(location.search).get('mountain')==='studio';
 const STUDIO_CI=new URLSearchParams(location.search).has('ci-smoke');
 // Shared geometry/material must exist before the older field-tree constructor.
 const studioOrganic=MOUNTAIN_STUDIO?createStudioFoliageGeometry(THREE):null;
+let studioMeadowFallback=null;
 const studioLeafMaterial=MOUNTAIN_STUDIO?new THREE.MeshStandardMaterial({
  color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,roughness:1
 }):null;
@@ -734,7 +736,7 @@ for(let i=0;i<groundPositions.count;i++){
   const stonePocket=smoothWater((blanket-.61)/.25);
   // Studio preview exposes bedrock beneath the moss rather than leaving a flat green wall.
   // Old shading and physical terrain remain unchanged in normal mode.
-  const stoneFraction=exposed*(MOUNTAIN_STUDIO?(.49+.40*stonePocket):(.06+.84*stonePocket));
+  const stoneFraction=exposed*(MOUNTAIN_STUDIO?(.73+.22*stonePocket):(.06+.84*stonePocket));
   grassCoverage=1-stoneFraction;
   terrainShade.lerp(forestGrass,exposed*(1-stonePocket)*.25);
   terrainShade.lerp(freshGrass,exposed*(1-stonePocket)*.65);
@@ -851,9 +853,14 @@ function createCliffFiberTexture(){
  tex.needsUpdate=true;return tex;
 }
 const cliffFiberTexture=studioTextures?.grass||createCliffFiberTexture();
+// Uniform objects stay stable while genuine HD tiles stream in asynchronously.
+const academyRockUniform={value:rockSurfaceTexture};
+const academyMossUniform={value:rockSurfaceTexture};
+const academyGrassUniform={value:cliffFiberTexture};
 terrainMaterial.onBeforeCompile=shader=>{
- shader.uniforms.academyRockSurface={value:rockSurfaceTexture};
- shader.uniforms.academyGrassSurface={value:cliffFiberTexture};
+ shader.uniforms.academyRockSurface=academyRockUniform;
+ shader.uniforms.academyRockMossSurface=academyMossUniform;
+ shader.uniforms.academyGrassSurface=academyGrassUniform;
  shader.vertexShader=shader.vertexShader.replace(
   '#include <common>',
   '#include <common>\nattribute float academyCover;\nvarying float vAcademyCover;\nvarying vec3 vAcademyRockWorld;');
@@ -863,7 +870,7 @@ terrainMaterial.onBeforeCompile=shader=>{
   'vAcademyRockWorld=(modelMatrix*vec4(transformed,1.0)).xyz;');
  shader.fragmentShader=shader.fragmentShader.replace(
   '#include <common>',
-  '#include <common>\nuniform sampler2D academyRockSurface;\nuniform sampler2D academyGrassSurface;\n'+
+  '#include <common>\nuniform sampler2D academyRockSurface;\nuniform sampler2D academyRockMossSurface;\nuniform sampler2D academyGrassSurface;\n'+
   'varying float vAcademyCover;\nvarying vec3 vAcademyRockWorld;');
  shader.fragmentShader=shader.fragmentShader.replace(
   '#include <color_fragment>',
@@ -877,6 +884,12 @@ terrainMaterial.onBeforeCompile=shader=>{
    'vec3 sideRock=texture2D(academyRockSurface,rockSideUV).rgb;',
    MOUNTAIN_STUDIO?'vec3 topRock=texture2D(academyRockSurface,vAcademyRockWorld.xz*.195).rgb;':'vec3 topRock=texture2D(academyRockSurface,vAcademyRockWorld.xz*.081).rgb;',
    'vec3 rockColor=sideRock*weights.x+topRock*weights.y+frontRock*weights.z;',
+   MOUNTAIN_STUDIO?('float rockPatch=.5+.5*sin(vAcademyRockWorld.x*.48+sin(vAcademyRockWorld.y*.17)*2.3)*cos(vAcademyRockWorld.y*.51-vAcademyRockWorld.z*.24);'+
+    'float patchAlpha=.42*smoothstep(.41,.73,rockPatch);'+
+    'vec3 mossR=texture2D(academyRockMossSurface,rockFrontUV*.79+vec2(.17,.22)).rgb;'+
+    'vec3 mossS=texture2D(academyRockMossSurface,rockSideUV*.79+vec2(.39,.13)).rgb;'+
+    'vec3 mossT=texture2D(academyRockMossSurface,vAcademyRockWorld.xz*.16).rgb;'+
+    'rockColor=mix(rockColor,weights.z*mossR+weights.x*mossS+weights.y*mossT,patchAlpha);'):'',
    MOUNTAIN_STUDIO?'vec3 rockDetail=rockColor*vec3(1.43,1.43,1.37);':'vec3 rockDetail=vec3(.48+1.14*rockColor.r);',
    'vec3 grassTop=texture2D(academyGrassSurface,vAcademyRockWorld.xz*.83).rgb;',
    'vec3 grassFront=texture2D(academyGrassSurface,vAcademyRockWorld.xy*.89).rgb;',
@@ -890,7 +903,7 @@ terrainMaterial.onBeforeCompile=shader=>{
    MOUNTAIN_STUDIO?'diffuseColor.rgb=mix(rockColor*vec3(1.26,1.27,1.24)*mossTone+vec3(.038),diffuseColor.rgb*grassDetail,cover);':'diffuseColor.rgb*=mix(rockDetail*mossTone,grassDetail,cover);'
   ].join('\n'));
 };
-terrainMaterial.customProgramCacheKey=()=>MOUNTAIN_STUDIO?'academy-mountain-studio-triplanar-v1':'academy-mountain-layered-triplanar-v5';
+terrainMaterial.customProgramCacheKey=()=>MOUNTAIN_STUDIO?'academy-mountain-studio-painterly-tiles-v2':'academy-mountain-layered-triplanar-v5';
 
 const groundMesh=new THREE.Mesh(terrainGeometry,terrainMaterial);
 groundMesh.rotation.x=-Math.PI/2;
@@ -1910,7 +1923,7 @@ if(MOUNTAIN_STUDIO){
  });
  const meadowGrass=cliffBatch(studioOrganic.meadow,meadowMaterial,studioSites,
   v=>[v.size*.57,v.size*.70,v.size*.57]);
- meadowGrass.name='studio-organic-meadow';
+ meadowGrass.name='studio-organic-meadow';studioMeadowFallback=meadowGrass;
  // No flat black strokes, no shared mismatched atlas UVs.
 }
 function studioRockGeometry(){
@@ -1952,6 +1965,18 @@ const mountainEnvironment=buildMountainEnvironment(THREE,{
  scene,ground:groundMesh,footZ:mountainCliffLipZ,crestZ:mountainCliffUpperZ,
  waterAt,routeAt:mountainRouteBuffer,rockTexture:rockSurfaceTexture,studio:MOUNTAIN_STUDIO
 });
+const studioArt=MOUNTAIN_STUDIO?installStudioArt(THREE,{
+ scene,meadowSites,ledgeSites:cliffLedges,
+ rockUniform:academyRockUniform,mossUniform:academyMossUniform,
+ grassUniform:academyGrassUniform,rockMaterials:[studioRockMat],
+ setEnvironmentRockTexture:texture=>mountainEnvironment.setRockTexture(texture),
+ onMeadowReady:()=>{if(studioMeadowFallback)studioMeadowFallback.visible=false;},
+ statusSink:status=>{
+  window.__studioArtStatus=status;
+  if(status.grassReady&&status.rockReady)
+   document.getElementById('buildLabel').textContent='Valle · v'+BUILD+' · STUDIO HD';
+ }
+}):null;
 const studioToggle=document.createElement('button');
 studioToggle.type='button';
 studioToggle.textContent=MOUNTAIN_STUDIO?'Studio activo · volver':'Probar Mountain Studio';
@@ -4377,9 +4402,11 @@ function animate(){
  followPlayerCamera(dt);
  updateWaterVisual(dt);
  mountainEnvironment.update(camera,player.position,CURVED_HORIZON,performance.now());
+ if(studioArt)studioArt.update(mountainEnvironment.getQuality());
 
  marker.rotation.y+=dt;renderer.render(scene,camera);
  if(STUDIO_CI){renderedStudioCI++;window.__studioCIReady=renderedStudioCI>=3;}
 }
+if(STUDIO_CI)window.__studioCIRefresh=()=>renderer.render(scene,camera);
 function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
 </script></body></html>

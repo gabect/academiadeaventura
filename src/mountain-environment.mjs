@@ -327,5 +327,7 @@ export function buildMountainEnvironment(THREE, options) {
   stats.quality=quality;
   if(frames.length>30){const sorted=[...frames].sort((a,b)=>a-b);stats.frameMedianMs=sorted[Math.floor(sorted.length*.5)];stats.frameP95Ms=sorted[Math.floor(sorted.length*.95)];stats.fps=1000/stats.frameMedianMs;}
  };
- return {stats,update,surface,groups,foliageMaterial:foliageMat,setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem(qualityKey,value);}catch{}}},getQuality:()=>quality};
+ return {stats,update,surface,groups,foliageMaterial:foliageMat,
+ setRockTexture(tex){rockMat.map=tex;rockMat.bumpMap=tex;rockMat.needsUpdate=true;},
+ setQuality(value){if(['low','medium','high'].includes(value)){quality=value;try{localStorage.setItem(qualityKey,value);}catch{}}},getQuality:()=>quality};
 }
