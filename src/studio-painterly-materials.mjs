@@ -105,6 +105,7 @@ export function createStudioTreeMaterials(THREE){
  };
  const barkBranches=shaded(woodMap,true);
  const barkTrunks=shaded(woodMap,false);
+ barkBranches.roughness=.91;barkTrunks.roughness=.91;
  const pineLeaves=shaded(pineMap,true);
  const broadleafLeaves=shaded(broadleafMap,true);
  return {
@@ -113,6 +114,7 @@ export function createStudioTreeMaterials(THREE){
   barkTrunks,barkBranches,
   // This is inspected by the CI harness and useful when evaluating screenshots.
   info:{bark:'painted-grain-256x512',leaves:'painted-veins-256x256',
-   pine:'painted-needle-pigment-256x256',materialGroups:2}
+   pine:'painted-needle-pigment-256x256',materialGroups:2,
+   organicJoints:true,branchAnchoredLeaves:true}
  };
 }

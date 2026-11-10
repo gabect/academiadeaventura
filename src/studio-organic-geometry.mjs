@@ -41,7 +41,9 @@ export function createStudioFoliageGeometry(THREE){
   };
  };
  const mix=(a,b,t)=>a+(b-a)*t;
- const wood=()=>col(.083,.32,.24);
+ // Wood pigments must stay light enough to let the independently painted
+ // bark map read on branches. The old dark vertex tint crushed its detail.
+ const wood=()=>col(.082,.14,.78);
  function tube(g,a,b,r0,r1,tint){
   let dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2];
   const len=Math.hypot(dx,dy,dz);if(len<.0001)return;
@@ -63,6 +65,35 @@ export function createStudioFoliageGeometry(THREE){
   for(let k=0;k<n;k++){
    const next=(k+1)%n,a0=start+k,a1=start+next,b0=start+n+k,b1=start+n+next;
    g.barkIndices.push(a0,a1,b0,a1,b1,b0);
+  }
+ }
+ function curvedBranch(g,a,b,r0,r1,tint,arch=.055){
+  // Short overlapping tubular spans hide the mechanical straight-line seams
+  // at fork nodes, without adding physics or per-frame transforms.
+  const mid=[(a[0]+b[0])*.5,(a[1]+b[1])*.5+arch,
+    (a[2]+b[2])*.5];
+  tube(g,a,mid,r0,(r0+r1)*.55,tint);
+  tube(g,mid,b,(r0+r1)*.55,r1,tint);
+ }
+ function branchCollar(g,p,r,tint){
+  // Slightly thicker organic branch root, anchored in the parent wood.
+  const stem=[p[0],p[1]-r*1.75,p[2]];
+  const cap=[p[0],p[1]+r*1.7,p[2]];
+  tube(g,stem,cap,r*.71,r*.49,tint);
+ }
+ function foliageBud(g,site,angle,rand,needle=false,count=5){
+  // Leaves arise from short twigs close to their supporting branch;
+  // do not distribute them arbitrarily around the trunk centre.
+  for(let j=0;j<count;j++){
+   const a=angle+2*Math.PI*(j+(rand()-.5)*.22)/count;
+   const direction=[Math.cos(a),0,Math.sin(a)];
+   const offset=.026+.075*rand();
+   const root=[site[0]+direction[0]*offset,
+    site[1]+(rand()-.5)*.09,site[2]+direction[2]*offset];
+   const hue=(needle?.303:.278)+.045*rand();
+   const tint=col(hue,.43+.17*rand(),.27+.15*rand());
+   foliageLeaf(g,root,direction,(needle?.13:.20)+.13*rand(),
+    (needle?.046:.095)+.047*rand(),tint,(rand()-.18)*.23,needle);
   }
  }
  function foliageLeaf(g,root,dir,length,width,tint,up=.12,needle=false){
@@ -121,7 +152,13 @@ export function createStudioFoliageGeometry(THREE){
   const shift=y=>[Math.cos(tiltAngle)*lean*(y/2.8),Math.sin(tiltAngle)*lean*(y/2.8)];
   const spine=y=>{const p=shift(y);return [p[0],y,p[1]];};
   const bark=wood();
-  for(let i=0;i<6;i++)tube(g,spine(i*.48),spine((i+1)*.48),.085-i*.009,.076-i*.009,bark);
+  // Extend inside the external trunk; no square capped stump at the crown base.
+ for(let i=0;i<7;i++){
+  const y0=-.38+i*.47,y1=y0+.47;
+  const r0=.175-i*.018,r1=.157-i*.018;
+  tube(g,spine(y0),spine(y1),r0,r1,bark);
+ }
+
   let branches=0,reach=0;
   const layerCount=9+(variant%2);
   const anisotropyAngle=r()*2*Math.PI;
@@ -139,8 +176,12 @@ export function createStudioFoliageGeometry(THREE){
     const p0=spine(height);
     const p1=[p0[0]+co*length*.55,height-(.08+.18*r()),p0[2]+si*length*.55];
     const p2=[p0[0]+co*length*(.87+.15*r()),p1[1]+(.10*r()-.12),p0[2]+si*length*(.87+.15*r())];
-    tube(g,p0,p1,.028,.019,bark);tube(g,p1,p2,.019,.006,bark);
+    curvedBranch(g,p0,p1,.043,.024,bark,.032);
+    curvedBranch(g,p1,p2,.024,.007,bark,-.016);
+    if(j%3===0)branchCollar(g,p0,.055,bark);
     branches++;reach=Math.max(reach,Math.hypot(p2[0],p2[2]));
+    if(j%2===0)foliageBud(g,p1,angle,r,true,4);
+    if(j%3===0)foliageBud(g,p2,angle,r,true,4);
     for(let k=1;k<=5;k++){
      const t=k/6,center=[mix(p0[0],p2[0],t),mix(p0[1],p2[1],t),mix(p0[2],p2[2],t)];
      for(let n=0;n<4;n++){
@@ -161,8 +202,11 @@ export function createStudioFoliageGeometry(THREE){
  }
  function broadleaf(variant){
   const r=rng(0xB04DF3^Math.imul(variant+1,0xB5297A4D)),g=make(),bark=wood();
-  const trunk=[0,-.18,0],crotch=[(r()-.5)*.14,.34,(r()-.5)*.14];
-  tube(g,trunk,crotch,.17,.105,bark);
+  const trunk=[0,-.54,0],crotch=[(r()-.5)*.14,.34,(r()-.5)*.14];
+  const trunkMid=[crotch[0]*.35,-.12,crotch[2]*.35];
+  tube(g,trunk,trunkMid,.18,.137,bark);
+  tube(g,trunkMid,crotch,.137,.105,bark);
+  branchCollar(g,crotch,.145,bark);
   const mains=5+Math.floor(r()*3),dominant=r()*Math.PI*2;
   let tipCount=0,maxReach=0;
   for(let i=0;i<mains;i++){
@@ -176,8 +220,11 @@ export function createStudioFoliageGeometry(THREE){
       y2*.83,crotch[2]+si*reach*.75+(r()-.5)*.23];
    const p3=[crotch[0]+co*reach+(r()-.5)*.30,
       y2+.10+.35*r(),crotch[2]+si*reach+(r()-.5)*.30];
-   tube(g,crotch,p1,.102,.079,bark);tube(g,p1,p2,.079,.048,bark);
-   tube(g,p2,p3,.048,.014,bark);
+   curvedBranch(g,crotch,p1,.106,.083,bark,.055);
+   curvedBranch(g,p1,p2,.083,.048,bark,.06);
+   curvedBranch(g,p2,p3,.048,.015,bark,.04);
+   branchCollar(g,p1,.086,bark);
+   foliageBud(g,p1,angle,r,false,5);
    maxReach=Math.max(maxReach,Math.hypot(p3[0],p3[2]));tipCount++;
    // Secondary limbs reach sideways and UP; their tips carry leaves.
    const tips=[p2,p3];
@@ -189,7 +236,8 @@ export function createStudioFoliageGeometry(THREE){
     const reach2=.36+.57*r();
     const tip=[base[0]+Math.cos(sideAngle)*reach2,base[1]+.25+.48*r(),
       base[2]+Math.sin(sideAngle)*reach2];
-    tube(g,base,tip,.039,.009,bark);
+    curvedBranch(g,base,tip,.043,.012,bark,.07);
+    foliageBud(g,base,sideAngle,r,false,4);
     tips.push(tip);tipCount++;
     maxReach=Math.max(maxReach,Math.hypot(tip[0],tip[2]));
    }
@@ -199,7 +247,9 @@ export function createStudioFoliageGeometry(THREE){
     for(let j=0;j<count;j++){
      const alpha=anisAngle+(j+(r()-.5)*.5)*Math.PI*2/count;
      const dir=[Math.cos(alpha),0,Math.sin(alpha)];
-     const root=[tip[0]+(r()-.5)*.33,tip[1]+(r()-.5)*.35,tip[2]+(r()-.5)*.33];
+     // Leaf petioles stay close to actual branch endpoints.
+     const root=[tip[0]+(r()-.5)*.18,
+      tip[1]+(r()-.5)*.18,tip[2]+(r()-.5)*.18];
      foliageLeaf(g,root,dir,.27+.39*r(),.12+.11*r(),
       col(.275+.075*r(),.42+.18*r(),.25+.20*r()),.07+.31*r());
     }
@@ -209,7 +259,7 @@ export function createStudioFoliageGeometry(THREE){
   for(let i=0;i<3;i++){
    const a=dominant+(r()-.5)*2.4,base=[.16*Math.cos(a),.61+.28*r(),.16*Math.sin(a)];
    const tip=[.32*Math.cos(a),1.95+.58*r(),.32*Math.sin(a)];
-   tube(g,base,tip,.046,.008,bark);
+   curvedBranch(g,base,tip,.046,.008,bark,.095);
    for(let j=0;j<7;j++){
     const around=2*Math.PI*j/7;
     const root=[tip[0],tip[1]-.27+.12*r(),tip[2]];
