@@ -19,14 +19,19 @@ for(const [name,width,height,mode] of [
    'ci-smoke=1',{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>window.__studioCIReady===true,
     null,{timeout:120000,polling:500}).catch(()=>{});
+  if(mode!=='normal'){
+   await page.waitForFunction(()=>window.__studioArtStatus?.grassReady===true
+    &&window.__studioArtStatus?.rockReady===true,null,{timeout:22000,polling:500});
+   await page.evaluate(()=>window.__studioCIRefresh?.());
+  }
   const result=await page.evaluate(()=>{
    const c=document.querySelector('canvas'),gl=c?.getContext('webgl2')||c?.getContext('webgl');
    return {label:document.getElementById('buildLabel')?.textContent,webgl:!!gl,
-    stopped:window.__studioCIReady===true,canvas:c?[c.width,c.height]:null};
+    stopped:window.__studioCIReady===true,hd:window.__studioArtStatus||null,canvas:c?[c.width,c.height]:null};
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.48.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.49.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
   if(result.stopped){

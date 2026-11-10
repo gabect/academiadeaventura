@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-studio-v0.48.0
+      - feature/mountain-studio-hd-assets
   workflow_dispatch:
 jobs:
   webgl:
@@ -23,6 +23,8 @@ jobs:
           node tests/mountain-studio-organic.mjs
           node tests/studio-organic-geometry.mjs
           node tests/mountain-art-studio.mjs
+          node tests/studio-hd-asset-validation.mjs
+          THREE_MODULE="$GITHUB_WORKSPACE/node_modules/three/build/three.module.js" node tests/environment-smoke.mjs
       - name: Render app in SwiftShader WebGL
         run: |
           python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
