@@ -3234,6 +3234,10 @@ function stepLocomotion(dt,right,forward,runEnabled){
  }
 }
 const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
+// Headless screenshot-only mountain-facing vantage. Normal users never teleport.
+if(STUDIO_CI&&new URLSearchParams(location.search).get('scene')==='cliff'){
+ player.position.set(19,0,3);player.rotation.y=Math.PI;
+}
 const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
 // Scenic NPCs do not initiate missions or block the existing guardian.
 const NPC_MARKERS=[
