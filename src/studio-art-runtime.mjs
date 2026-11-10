@@ -1,6 +1,6 @@
 /** Opt-in illustrated mountain assets. No colliders, no external libraries. */
 export function installStudioArt(THREE, options){
- const {scene, meadowSites, ledgeSites=[], onMeadowReady, rockUniform, grassUniform,
+ const {scene, meadowSites, ledgeSites=[], wallSites=[], crestSites=[], onMeadowReady, rockUniform, grassUniform,
   mossUniform, rockMaterials=[], setEnvironmentRockTexture, statusSink}=options;
  const loader=new THREE.TextureLoader();
  const status={terrainReady:false,grassReady:false,rockReady:false,plantTypesReady:0,errors:[],spriteCounts:{}};
@@ -51,17 +51,35 @@ export function installStudioArt(THREE, options){
   g.setIndex(indices);g.computeVertexNormals();return g;
  }
  const groupSpecs=[
-  {key:'grass_tuft',file:'grass_tuft.webp',aspect:1.30,select:i=>i%5<2,height:v=>.20+v.size*.38},
-  {key:'grass_medium',file:'grass_medium.webp',aspect:1.20,select:i=>i%5===2,height:v=>.16+v.size*.34},
-  {key:'fern',file:'fern.webp',aspect:1.15,select:i=>i%12===0,height:v=>.26+v.size*.37},
-  {key:'broadleaf',file:'broadleaf.webp',aspect:1.16,select:i=>i%17===2,height:v=>.28+v.size*.42},
-  {key:'flowers_white',file:'flowers_white.webp',aspect:1.03,select:i=>i%47===8,height:v=>.30+v.size*.27},
-  {key:'flowers_purple',file:'flowers_purple.webp',aspect:1.04,select:i=>i%53===7,height:v=>.32+v.size*.37},
-  {key:'hanging_edge',file:'hanging_edge.webp',aspect:1.62,
-    select:i=>i%5===0,height:v=>.35+v.sx*.52,hanging:true,cross:false,ledge:true}
+  {key:'grass_tuft',file:'grass_tuft.webp',aspect:1.30,source:'meadow',
+   select:i=>i%5<2,height:v=>.62+v.size*.72},
+  {key:'grass_medium',file:'grass_medium.webp',aspect:1.22,source:'meadow',
+   select:i=>i%5===2||i%5===3,height:v=>.50+v.size*.60},
+  {key:'fern',file:'fern.webp',aspect:1.17,source:'meadow',
+   select:i=>i%9===0,height:v=>.67+v.size*.70},
+  {key:'broadleaf',file:'broadleaf.webp',aspect:1.18,source:'meadow',
+   select:i=>i%13===2,height:v=>.75+v.size*.65},
+  {key:'flowers_white',file:'flowers_white.webp',aspect:1.07,source:'meadow',
+   select:i=>i%32===8,height:v=>.49+v.size*.44},
+  {key:'flowers_purple',file:'flowers_purple.webp',aspect:1.04,source:'meadow',
+   select:i=>i%37===7,height:v=>.56+v.size*.53},
+  // Vegetated ledges: dark stone remains genuinely 3D behind the cards.
+  {key:'hanging_edge',file:'hanging_edge.webp',aspect:1.70,source:'ledge',
+   select:i=>i%2===0,height:v=>.75+v.sx*.57,hanging:true,cross:false},
+  {key:'cliff_crest',file:'hanging_edge.webp',aspect:1.83,source:'crest',
+   select:i=>i%2===0,height:v=>.80+v.size*.38,hanging:true,cross:false},
+  {key:'wall_vines',file:'vine.webp',aspect:1.05,source:'wall',
+   select:i=>i%3===0,height:v=>1.00+v.size*.88,hanging:true,cross:false},
+  {key:'wall_roots',file:'root.webp',aspect:2.05,source:'wall',
+   select:i=>i%11===3,height:v=>.80+v.size*.42,hanging:true,cross:false},
+  {key:'ledge_rocks',file:'rock_ledge.webp',aspect:1.65,source:'ledge',
+   select:i=>i%5===2,height:v=>.61+v.sx*.57,cross:false},
+  {key:'rock_outcrops',file:'rock_outcrop.webp',aspect:1.64,source:'ledge',
+   select:i=>i%7===5,height:v=>.69+v.sx*.52,cross:false}
  ];
  for(const spec of groupSpecs){
-  const origin=spec.ledge?ledgeSites:meadowSites;
+  const origin=spec.source==='ledge'?ledgeSites:spec.source==='wall'?wallSites:
+   spec.source==='crest'?crestSites:meadowSites;
   const sites=origin.filter((s,i)=>spec.select(i));
   if(!sites.length)continue;
   const mat=new THREE.MeshStandardMaterial({color:'#ffffff',side:THREE.DoubleSide,
@@ -71,8 +89,9 @@ export function installStudioArt(THREE, options){
   const dummy=new THREE.Object3D();
   for(let i=0;i<sites.length;i++){
    const item=sites[i],height=spec.height(item),yaw=(i*2.3999632)%6.2831853;
-   dummy.position.set(item.x,(item.y||0)+(spec.ledge?(item.sy||0)*.72:0),item.z);
-   dummy.rotation.set(0,yaw,0);
+   dummy.position.set(item.x,(item.y||0)+(spec.source==='ledge'?(item.sy||0)*.72:0),
+    item.z+(['ledge','crest','wall'].includes(spec.source)?.14:0));
+   dummy.rotation.set(0,['ledge','crest','wall'].includes(spec.source)?0:yaw,0);
    dummy.scale.set(height,height,height);
    dummy.updateMatrix();instanced.setMatrixAt(i,dummy.matrix);
   }

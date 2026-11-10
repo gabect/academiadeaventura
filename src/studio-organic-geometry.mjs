@@ -33,25 +33,39 @@ export function createStudioFoliageGeometry(THREE){
   }return finalize(g);
  }
  function pine(){
+  // Multi-layer conifer silhouette with crossed volumetric fronds per branch.
+  // Each branch has horizontal and vertical leaf surfaces, not floating disks.
   const g=make();
-  for(let layer=0;layer<6;layer++){
-   const base=.22+layer*.41,count=13+(layer%3),spread=1.21-layer*.145;
+  for(let layer=0;layer<10;layer++){
+   const base=.28+layer*.252,count=11+layer%4,spread=1.31-layer*.103;
    for(let j=0;j<count;j++){
-    const a=j*Math.PI*2/count+layer*.47,co=Math.cos(a),si=Math.sin(a);
-    const len=spread*(.85+.16*(.5+.5*Math.sin(j*4.29+layer*7)));
-    const width=(.29-layer*.029)*(.92+.12*Math.sin(j*1.5));
-    const lift=(layer*.019)+(j%3)*.012,hue=.31+.032*Math.sin(j*1.71+layer*.8);
-    let before=[];
-    for(let k=0;k<=7;k++){
-     const t=k/7,r=.065+len*t,w=Math.pow(Math.sin(Math.PI*t),.75)*width*(1-.26*t);
-     const y=base-len*.27*t+len*.10*t*t+lift;
-     const c=color(hue,.55,.235+.16*t+.075*(.5+.5*Math.sin(j*.93+layer)));
-     const lhs=point(g,[co*r-si*w,y+.03*Math.sin(Math.PI*t),si*r+co*w],c);
-     const rhs=point(g,[co*r+si*w,y,si*r-co*w],c);
-     if(before.length)quad(g,before[0],before[1],lhs,rhs);before=[lhs,rhs];
+    const a=j*Math.PI*2/count+layer*.54;
+    const co=Math.cos(a),si=Math.sin(a);
+    const len=spread*(.84+.17*(.5+.5*Math.sin(j*4.29+layer*7)));
+    const width=(.235-layer*.009)*(.84+.17*Math.sin(j*1.57+layer));
+    const lift=.09*Math.sin(j*2.6+layer*.9);
+    const hue=.30+.040*Math.sin(j*1.71+layer*.8);
+    for(let axis=0;axis<2;axis++){
+     let previous=[];
+     for(let k=0;k<=7;k++){
+      const t=k/7,r=.065+len*t;
+      const w=Math.pow(Math.sin(Math.PI*t),.83)*width*(1-.22*t);
+      const y=base-len*.31*t+len*.16*t*t+lift+.08*t*t;
+      const c=color(hue,.55,.235+.15*t+.06*(.5+.5*Math.sin(j*.93+layer)));
+      const l=axis===0?
+       [co*r-si*w,y+.035*Math.sin(Math.PI*t),si*r+co*w]:
+       [co*r,y+w*.82,si*r];
+      const q=axis===0?
+       [co*r+si*w,y-.015,si*r-co*w]:
+       [co*r,y-w*.82,si*r];
+      const aIdx=point(g,l,c),bIdx=point(g,q,c);
+      if(previous.length)quad(g,previous[0],previous[1],aIdx,bIdx);
+      previous=[aIdx,bIdx];
+     }
     }
    }
-  }return finalize(g);
+  }
+  return finalize(g);
  }
  function broadleaf(){
   const g=make(),original=new THREE.IcosahedronGeometry(1,1);
