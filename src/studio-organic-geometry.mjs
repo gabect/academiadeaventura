@@ -33,34 +33,39 @@ export function createStudioFoliageGeometry(THREE){
   }return finalize(g);
  }
  function pine(){
-  // Multi-layer conifer silhouette with crossed volumetric fronds per branch.
-  // Each branch has horizontal and vertical leaf surfaces, not floating disks.
+  // Narrow crossed needle sprays replace the horizontal pancake-like fronds.
   const g=make();
-  for(let layer=0;layer<10;layer++){
-   const base=.28+layer*.252,count=11+layer%4,spread=1.31-layer*.103;
+  function blade(a,b,c,h,l){
+   const tint=color(h,.56,l);
+   const i=point(g,a,tint),j=point(g,b,tint),k=point(g,c,tint);
+   g.indices.push(i,j,k);
+  }
+  for(let level=0;level<9;level++){
+   const base=.32+level*.302,count=12+(level%4),radius=1.22-level*.111;
    for(let j=0;j<count;j++){
-    const a=j*Math.PI*2/count+layer*.54;
-    const co=Math.cos(a),si=Math.sin(a);
-    const len=spread*(.84+.17*(.5+.5*Math.sin(j*4.29+layer*7)));
-    const width=(.235-layer*.009)*(.84+.17*Math.sin(j*1.57+layer));
-    const lift=.09*Math.sin(j*2.6+layer*.9);
-    const hue=.30+.040*Math.sin(j*1.71+layer*.8);
-    for(let axis=0;axis<2;axis++){
-     let previous=[];
-     for(let k=0;k<=7;k++){
-      const t=k/7,r=.065+len*t;
-      const w=Math.pow(Math.sin(Math.PI*t),.83)*width*(1-.22*t);
-      const y=base-len*.31*t+len*.16*t*t+lift+.08*t*t;
-      const c=color(hue,.55,.235+.15*t+.06*(.5+.5*Math.sin(j*.93+layer)));
-      const l=axis===0?
-       [co*r-si*w,y+.035*Math.sin(Math.PI*t),si*r+co*w]:
-       [co*r,y+w*.82,si*r];
-      const q=axis===0?
-       [co*r+si*w,y-.015,si*r-co*w]:
-       [co*r,y-w*.82,si*r];
-      const aIdx=point(g,l,c),bIdx=point(g,q,c);
-      if(previous.length)quad(g,previous[0],previous[1],aIdx,bIdx);
-      previous=[aIdx,bIdx];
+    const a=j*6.283185307/count+level*.51+.13*Math.sin(j*2.2+level);
+    const co=Math.cos(a),si=Math.sin(a),tx=-si,tz=co;
+    const len=radius*(.87+.12*Math.sin(j*3.67+level*4.8));
+    const yaw=.035*Math.sin(j*3.4+level*1.87);
+    for(let k=1;k<=7;k++){
+     const t=k/8,along=len*t;
+     const y=base-.27*along+.14*along*along+
+      .064*Math.sin(j*2.91+level*1.41);
+     const x=co*(.06+along)+tx*yaw,z=si*(.06+along)+tz*yaw;
+     const spread=(.135+.095*(1-t))*(.82+.18*Math.sin(j*2.7+k*1.5));
+     const hue=.305+.043*Math.sin(j*.86+k*.35+level*.54);
+     const light=Math.max(.15,Math.min(.54,
+      .24+.085*t+.064*Math.sin(j*1.7+k*.67)));
+     for(let needle=0;needle<4;needle++){
+      const phi=needle*Math.PI/2+.37*Math.sin(j+level+k);
+      const lateral=Math.cos(phi),vertical=Math.sin(phi);
+      const length=(.13+.15*(1-t))*(.84+.22*Math.sin(j*2.7+needle));
+      const baseP=[x-tx*lateral*spread*.55,y-vertical*spread*.32,z-tz*lateral*spread*.55];
+      const flank=[x+tx*lateral*spread,y+vertical*spread,z+tz*lateral*spread];
+      const tip=[x+co*length+tx*lateral*spread*.48,
+       y+vertical*spread*.57-.10*length,
+       z+si*length+tz*lateral*spread*.48];
+      blade(baseP,flank,tip,hue,light);
      }
     }
    }

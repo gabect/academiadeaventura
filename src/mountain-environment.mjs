@@ -111,6 +111,7 @@ export function buildMountainEnvironment(THREE, options) {
   return surface(x,(a+b)/2);
  }
  function addIsland(x,y,size,hero){
+  if(options.studio)return; // No floating decorative rocks in the illustrated cliff.
   const s=atHeight(x,y);if(!s||waterAt(x,s.p.z)||routeAt(x,s.p.z,size+.4))return;
   rocks.push({...s,p:s.p.clone().addScaledVector(s.n,-size*(options.studio?.62:.16)),size:size*(options.studio?.64:1),angle:random()*6.28});
   // Understory crescents occupy damp cracks beside each exposed stone,
