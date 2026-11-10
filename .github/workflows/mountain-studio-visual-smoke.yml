@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-studio-v0.47.2
+      - feature/mountain-studio-v0.48.0
   workflow_dispatch:
 jobs:
   webgl:
@@ -15,11 +15,13 @@ jobs:
           node-version: '22'
       - name: Install browser harness
         run: |
-          npm install --no-save --no-package-lock playwright
+          npm install --no-save --no-package-lock playwright three@0.170.0
           npx playwright install --with-deps chromium
       - name: CPU code invariants
         run: |
           node tests/mountain-studio-render-invariants.mjs
+          node tests/mountain-studio-organic.mjs
+          node tests/studio-organic-geometry.mjs
           node tests/mountain-art-studio.mjs
       - name: Render app in SwiftShader WebGL
         run: |

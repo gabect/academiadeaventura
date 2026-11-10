@@ -18,7 +18,7 @@ for(const [name,width,height,mode] of [
   await page.goto('http://127.0.0.1:8765/?'+(mode==='studio'?'mountain=studio&':'')+
    'ci-smoke=1',{waitUntil:'domcontentloaded',timeout:120000});
   await page.waitForFunction(()=>window.__studioCIReady===true,
-    {timeout:90000,polling:500}).catch(()=>{});
+    null,{timeout:120000,polling:500}).catch(()=>{});
   const result=await page.evaluate(()=>{
    const c=document.querySelector('canvas'),gl=c?.getContext('webgl2')||c?.getContext('webgl');
    return {label:document.getElementById('buildLabel')?.textContent,webgl:!!gl,
