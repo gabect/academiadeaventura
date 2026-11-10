@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.54.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.55.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.54.0');
-assert(html.includes("const BUILD='0.54.0'"));
+assert.equal(version.version,'0.55.0');
+assert(html.includes("const BUILD='0.55.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -25,6 +25,15 @@ assert(art.includes("file:'flowers_white.webp'"));
 assert(art.includes("alphaTest:.52"));
 const paint=fs.readFileSync(new URL('../src/studio-painterly-materials.mjs',import.meta.url),'utf8');
 assert(paint.includes('export function createStudioTreeMaterials'));
+assert(paint.includes('branchAnchoredLeaves:true'));
+const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
+for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageBud(', 'curvedBranch(g,crotch,p1',
+ 'curvedBranch(g,p0,p1', 'foliageBud(g,p1,angle,r,false']){
+ assert(procedural.includes(token),'Missing rooted geometry: '+token);
+}
+assert(html.includes('foliage.position.set(x,lift+2.39,z)'));
+assert(html.includes('MOUNTAIN_STUDIO?studioTreePaint.barkTrunks:mat'));
+
 assert(paint.includes("new THREE.CanvasTexture(canvas)"),'Painterly art must have an actual colour map');
 assert(paint.includes("const barkBranches=shaded(woodMap,true)"));
 assert(paint.includes("const broadleafLeaves=shaded(broadleafMap,true)"));
@@ -45,4 +54,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.54.0 invariants passed');
+console.log('Studio HD v0.55.0 invariants passed');
