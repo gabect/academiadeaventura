@@ -112,6 +112,26 @@ export function installStylizedCharacter(THREE,character,options={}){
   geo.userData.characterBag=m===leather||m===leatherDark;
   return add(parent,geo,m,[x,y,z]);
  }
+ function strap(parent,points,width,material){
+  // A real, double-sided ribbon follows the body. It never looks like a log.
+  const curve=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+  const N=20,positions=[],uv=[],idx=[];
+  for(let i=0;i<=N;i++){
+   const t=i/N,p=curve.getPoint(t),tangent=curve.getTangent(t);
+   const len=Math.hypot(tangent.x,tangent.y)||1;
+   const dx=-tangent.y/len*width*.5,dy=tangent.x/len*width*.5;
+   positions.push(p.x-dx,p.y-dy,p.z,p.x+dx,p.y+dy,p.z);
+   uv.push(0,t,1,t);
+  }
+  for(let i=0;i<N;i++){const k=i*2;idx.push(k,k+1,k+2,k+1,k+3,k+2);}
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+  geo.setIndex(idx);geo.computeVertexNormals();
+  const ribbonMat=material.clone();ribbonMat.side=THREE.DoubleSide;
+  const mesh=add(parent,geo,ribbonMat);
+  mesh.castShadow=false;return mesh;
+ }
  function seams(parent,x0,y0,z0,w,h){
   const verts=[];
   for(let i=0;i<12;i++){
@@ -155,7 +175,7 @@ export function installStylizedCharacter(THREE,character,options={}){
  const torso=rig.torso;
  garment(torso,clothes,[[-.105,.405,.31],[.015,.38,.295],[.17,.33,.27],
   [.39,.365,.285],[.585,.415,.255],[.73,.255,.21]]);
- ring(torso,trim,0,.736,.012,.245,.21,.022);
+ ring(torso,trim,0,.736,.012,.245,.21,.010);
  for(let i=0;i<3;i++){
   const y=.675-i*.092;
   line(torso,[[-.075,y,.218],[0,y-.018,.242],[.072,y,.218]],.012,trim,5);
@@ -163,7 +183,7 @@ export function installStylizedCharacter(THREE,character,options={}){
  // Recessed fabric creases and hand-stitching across the left shoulder.
  line(torso,[[-.31,.69,.02],[-.38,.57,.05],[-.38,.42,.06]],.009,trim);
  // Rope belt is actually round in 3D, not a flat texture.
- ring(torso,rope,0,.165,0,.375,.295,.030);
+ ring(torso,rope,0,.165,0,.375,.295,.022);
  ring(torso,trim,0,.163,0,.377,.297,.007);
  orb(torso,rope,[.08,.15,.307],[.062,.067,.039]);
  for(const x of [.035,.14]){
@@ -171,32 +191,32 @@ export function installStylizedCharacter(THREE,character,options={}){
   orb(torso,rope,[x+.006,-.11,.354],[.029,.026,.029]);
  }
  // Worn leather bag on one hip and diagonal shoulder strap.
- line(torso,[[-.31,.715,-.15],[-.06,.41,-.32],[.34,.09,-.21]],.063,leatherDark);
- line(torso,[[-.32,.718,.196],[-.11,.50,.285],[.13,.28,.326],[.42,.055,.20]],.069,leather);
+ strap(torso,[[-.31,.705,-.14],[-.06,.43,-.32],[.34,.09,-.22]],.085,leatherDark);
+ strap(torso,[[-.31,.705,.20],[-.11,.50,.287],[.13,.28,.327],[.42,.055,.20]],.092,leather);
  // Seam accent following the upper edge of the broad strap.
  line(torso,[[-.345,.713,.204],[-.13,.50,.305],[.11,.29,.346],[.405,.064,.216]],.008,rope,14);
- const satchel=new THREE.Group();satchel.position.set(.48,-.025,.015);
+ const satchel=new THREE.Group();satchel.position.set(.43,-.010,.036);
  satchel.rotation.y=-.42;torso.add(satchel);
- roundedPanel(satchel,.43,.45,.22,leather,.0,0,-.075);
- roundedPanel(satchel,.45,.19,.034,leatherDark,0,.145,.163);
- seams(satchel,0,-.008,.173,.42,.41);
- line(satchel,[[-.18,.116,.201],[0,.045,.208],[.18,.116,.201]],.008,rope,9);
- orb(satchel,rope,[0,.062,.216],[.027,.025,.012],false);
+ roundedPanel(satchel,.385,.365,.16,leather,.0,0,-.075);
+ roundedPanel(satchel,.405,.144,.024,leatherDark,0,.125,.099);
+ seams(satchel,0,-.008,.107,.375,.345);
+ line(satchel,[[-.15,.110,.135],[0,.045,.142],[.15,.110,.135]],.007,rope,9);
+ orb(satchel,rope,[0,.062,.150],[.020,.019,.009],false);
  // Prominent, poseable arms — the same joints used by collision/animation.
  for(let i=0;i<rig.arms.length;i++){
   const arm=rig.arms[i],sign=i===0?-1:1;
   garment(arm.shoulder,clothes,[[-.42,.158,.155],[-.30,.167,.155],[-.10,.18,.165],[.04,.16,.15]],13,.012);
-  ring(arm.shoulder,trim,0,-.419,0,.158,.153,.016);
+  ring(arm.shoulder,trim,0,-.419,0,.158,.153,.008);
   garment(arm.elbow,clothes,[[-.23,.129,.132],[-.13,.140,.138],[.04,.15,.146]],12,.009);
-  ring(arm.elbow,trim,0,-.236,0,.129,.13,.012);
+  ring(arm.elbow,trim,0,-.236,0,.129,.13,.007);
   orb(arm.elbow,skin,[0,-.325,0],[.10,.132,.105]);
-  orb(arm.wrist,skin,[0,-.116,.02],[.12,.15,.115]);
-  for(let j=0;j<3;j++)orb(arm.wrist,skin,[sign*.012+(j-1)*.049,-.239,.045],[.033,.066,.043],false);
+  orb(arm.wrist,skin,[0,-.116,.02],[.092,.117,.092]);
+  for(let j=0;j<3;j++)orb(arm.wrist,skin,[sign*.012+(j-1)*.038,-.204,.045],[.024,.045,.032],false);
   if(sign===1){
    // Large sewn repair: part of sleeve, so it bends with the arm.
-   const patch=roundedPanel(arm.shoulder,.225,.25,.012,
-    material('#9c7850','fabric',39),sign*.168,-.205,.026);
-   patch.rotation.y=PI/2.6;
+   const patch=roundedPanel(arm.shoulder,.160,.180,.009,
+    material('#a68156','fabric',39),sign*.155,-.205,.015);
+   patch.rotation.y=PI/2;
    // visible seams on outside of sleeve, rather than painted cardboard outlines
    line(arm.shoulder,[[.171,-.29,.055],[.182,-.20,.06],[.17,-.12,.052]],.008,trim,7);
   }
@@ -215,9 +235,9 @@ export function installStylizedCharacter(THREE,character,options={}){
    line(knee,[[-.112,y,.05],[.04,y-.018,.122],[.112,y+.015,.045]],.013,rope,7);
   }
   // Boot shafts/toe/sole are attached to IK ankle: no drifting shoes.
-  orb(ankle,leather,[0,.101,.024],[.165,.212,.157]);
-  orb(ankle,leather,[0,-.04,.208],[.183,.109,.281]);
-  orb(ankle,sole,[0,-.097,.142],[.192,.048,.347]);
+  orb(ankle,leather,[0,.095,.024],[.151,.191,.144]);
+  orb(ankle,leather,[0,-.04,.179],[.167,.094,.252]);
+  orb(ankle,sole,[0,-.100,.132],[.174,.037,.291]);
   orb(ankle,leatherDark,[0,.06,.174],[.092,.14,.02],false);
   for(let j=0;j<4;j++){
    const y=.157-j*.047,z=.183+(j/4)*.023;
