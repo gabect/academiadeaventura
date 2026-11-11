@@ -266,8 +266,8 @@ export function installHandDrawnStage({THREE,scene,camera,player,
  const shrubs=shrubSites.map((s,i)=>({...s,seed:Math.abs(Math.sin(s.x*17.2+s.z*9.1+i)),
   scale:.31+Math.abs(Math.sin(s.x+s.z))* .23}));
  addBatch('shrub',shrubs);
- const accents=shrubs.filter((_,i)=>i%19===0).map(s=>({...s,scale:.53}));
- const fungi=shrubs.filter((_,i)=>i%29===7).map(s=>({...s,scale:.48}));
+ const accents=shrubs.filter((_,i)=>i%16===0).map(s=>({...s,scale:.77}));
+ const fungi=shrubs.filter((_,i)=>i%21===7).map(s=>({...s,scale:.74}));
  addBatch('flower',accents);addBatch('mushroom',fungi);
  // Flat theater backdrop panels only in non-traversal rear perimeter sites.
  // They don't replace or alter the climbable ORIGINAL mountains.
@@ -317,17 +317,24 @@ export function installHandDrawnStage({THREE,scene,camera,player,
  const tab=new THREE.InstancedMesh(tabGeom,tabMat,tabPositions.length*2);
  tab.name='cardboard-folded-standing-tabs';tab.frustumCulled=false;
  const dummy=new THREE.Object3D();
- let lastYaw=null;
+ let lastYaw=null,lastCameraX=Infinity,lastCameraZ=Infinity;
  function update(){
   const direction=Math.atan2(camera.position.x-player.position.x,
    camera.position.z-player.position.z);
-  if(lastYaw!==null&&Math.abs(Math.atan2(Math.sin(direction-lastYaw),
-       Math.cos(direction-lastYaw)))<.012)return;
-  lastYaw=direction;
+  const yawDelta=lastYaw===null?Infinity:
+   Math.abs(Math.atan2(Math.sin(direction-lastYaw),Math.cos(direction-lastYaw)));
+  const displacement=Math.hypot(camera.position.x-lastCameraX,
+   camera.position.z-lastCameraZ);
+  if(yawDelta<.009&&displacement<.13)return;
+  lastYaw=direction;lastCameraX=camera.position.x;lastCameraZ=camera.position.z;
   for(const {mesh,positions,style} of batchStates){
    positions.forEach((p,i)=>{
     dummy.position.set(p.x,p.y+.023,p.z);
-    dummy.rotation.set(0,direction+(p.seed-.5)*.21,0);
+    // Face the real camera FROM EACH prop site. A global center-facing
+    // rotation made nearby trees turn edge-on on the western summit.
+    const towardCamera=Math.atan2(camera.position.x-p.x,
+     camera.position.z-p.z);
+    dummy.rotation.set(0,towardCamera+(p.seed-.5)*.056,0);
     const size=p.scale??1;dummy.scale.set(size,size,size);
     dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
    });
@@ -336,9 +343,11 @@ export function installHandDrawnStage({THREE,scene,camera,player,
   tabPositions.forEach((p,i)=>{
    for(let side=0;side<2;side++){
     const dx=side===0?-.18:.18;
-    dummy.position.set(p.x+Math.cos(direction)*dx,
-      p.y+.12,(p.z-Math.sin(direction)*dx));
-    dummy.rotation.set(Math.PI/2,direction,side?.12:-.12);
+    const towardCamera=Math.atan2(camera.position.x-p.x,
+      camera.position.z-p.z);
+    dummy.position.set(p.x+Math.cos(towardCamera)*dx,
+      p.y+.12,p.z-Math.sin(towardCamera)*dx);
+    dummy.rotation.set(Math.PI/2,towardCamera,side?.12:-.12);
     dummy.scale.set(1,1,1);dummy.updateMatrix();tab.setMatrixAt(i*2+side,dummy.matrix);
    }
   });
