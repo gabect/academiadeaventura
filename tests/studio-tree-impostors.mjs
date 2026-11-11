@@ -24,7 +24,7 @@ const THREE={
  LinearMipmapLinearFilter:1008,LinearFilter:1006
 };
 const forest=createStudioTreeImpostors(THREE);
-assert.equal(forest.info.version,'0.60.0');
+assert.equal(forest.info.version,'0.61.0');
 assert.equal(forest.info.style,'licensed-rendered-tree-billboards');
 assert.equal(forest.info.loaded,2);
 assert.equal(forest.info.errors.length,0);
@@ -50,6 +50,7 @@ for(const [family,geos] of [['pine',forest.pineVariants],
  }
  const mat=forest[family+'Material'];
  assert.equal(mat.alphaTest,.28);
+ assert.equal(mat.userData.academyTreeBillboard,true,'Tree must be tagged for AC bending');
  assert.equal(mat.transparent,false);
  assert.equal(mat.visible,true);
  assert(mat.map,'PNG must have loaded');

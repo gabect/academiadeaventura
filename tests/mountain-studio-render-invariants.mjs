@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.60.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.61.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.60.0');
-assert(html.includes("const BUILD='0.60.0'"));
+assert.equal(version.version,'0.61.0');
+assert(html.includes("const BUILD='0.61.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -28,7 +28,7 @@ assert(paint.includes('export function createStudioTreeImpostors'));
 assert(!paint.includes('function crownBlob('));
 assert(!paint.includes('paintStudioTreeAtlasCanvas'));
 assert(paint.includes('licensed-rendered-tree-billboards'));
-assert(paint.includes('academy-upright-real-tree-impostor-v2'));
+assert(paint.includes('academy-upright-real-tree-impostor-v3'));
 assert(paint.includes('paintedWholeTree:true'));
 const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
 for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageClump(',
@@ -51,6 +51,15 @@ assert(paint.includes('quadsPerTree:1'));
 assert(!html.includes('createStudioTreeMaterials(THREE)'));
 assert(html.includes('foliage.castShadow=false'));
 assert(html.includes('batch.castShadow=!geometry.userData?.impostor'));
+assert(html.includes('if(material.userData?.academyTreeBillboard)'),'Tree materials must opt into AC');
+assert(html.includes('acTreeWorld.y-=acCurveAmount*acTreeForward*acTreeForward'),
+ 'Sprite world root must bend using the SAME distance parabola as the ground');
+assert(html.includes('vec4 origin=viewMatrix*acTreeWorld;'));
+assert(html.includes('foliage.rotation.set(0,0,0)'));
+assert(html.includes('instance.rotation.set(0,0,0)'));
+assert(html.includes('crown.rotation.set(0,0,0)'));
+assert(!html.includes("foliage.rotation.set(.035*Math.sin(x*.34)"));
+
 assert(procedural.includes('function foliageClump('));
 assert(html.includes('const studioLeafMaterial=studioOrganic?.pineMaterial'),'PNG trees must share one material per family');
 assert(html.includes("studioBroadleafMaterial,'studio-spreading-broadleaf"));
@@ -69,4 +78,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.60.0 invariants passed');
+console.log('Studio HD v0.61.0 invariants passed');

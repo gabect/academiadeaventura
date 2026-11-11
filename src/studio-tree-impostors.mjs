@@ -38,6 +38,8 @@ function createBillboardMaterial(THREE,playerPosition){
   toneMapped:true,polygonOffset:false,fog:true
  });
  material.visible=false; // A late PNG must never appear as an opaque card.
+ material.userData ||= {};
+ material.userData.academyTreeBillboard=true; // Apply the terrain's AC curvature at the tree root.
  material.onBeforeCompile=shader=>{
   shader.uniforms.academyTreePlayer={value:playerPosition};
   shader.vertexShader='varying vec3 academyTreeOriginWorld;\n'+shader.vertexShader;
@@ -60,12 +62,12 @@ function createBillboardMaterial(THREE,playerPosition){
    'gl_Position=projectionMatrix*mvPosition;'
   ].join('\n'));
  };
- material.customProgramCacheKey=()=> 'academy-upright-real-tree-impostor-v2';
+ material.customProgramCacheKey=()=> 'academy-upright-real-tree-impostor-v3';
  return material;
 }
 export function createStudioTreeImpostors(THREE,options={}){
  const root=options.root||'./assets/studio_hd/trees/';
- const info={version:'0.60.0',style:'licensed-rendered-tree-billboards',
+ const info={version:'0.61.0',style:'licensed-rendered-tree-billboards',
   pine:6,broadleaf:5,quadsPerTree:1,paintedWholeTree:true,
   source:'klamtii.itch.io/tree-sprites',loaded:0,errors:[]};
  const loader=new THREE.TextureLoader();
