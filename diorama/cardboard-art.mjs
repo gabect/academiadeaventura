@@ -74,6 +74,9 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  }
  function visit(node){
   if(exempt.has(node))return;
+  // Path ribbons already have the user's hand-painted dirt material.
+  // Never clone or recolor them into CRAYON.red as if they were cardboard props.
+  if(node.userData?.preserveCrayonTrail)return;
   if(node.isMesh){
    if(node.geometry?.userData?.impostor){node.visible=false;return;}
    if(!waterMeshes.has(node)){
