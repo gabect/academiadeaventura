@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.58.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.59.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.58.0');
-assert(html.includes("const BUILD='0.58.0'"));
+assert.equal(version.version,'0.59.0');
+assert(html.includes("const BUILD='0.59.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -23,9 +23,11 @@ assert(art.includes("file:'grass_tuft.webp'"));
 assert(art.includes("file:'fern.webp'"));
 assert(art.includes("file:'flowers_white.webp'"));
 assert(art.includes("alphaTest:.52"));
-const paint=fs.readFileSync(new URL('../src/studio-painterly-materials.mjs',import.meta.url),'utf8');
-assert(paint.includes('export function createStudioTreeMaterials'));
-assert(paint.includes('branchAnchoredLeaves:true'));
+const paint=fs.readFileSync(new URL('../src/studio-tree-impostors.mjs',import.meta.url),'utf8');
+assert(paint.includes('export function createStudioTreeImpostors'));
+assert(paint.includes('paintStudioTreeAtlasCanvas'));
+assert(paint.includes('academy-upright-full-tree-impostor-v1'));
+assert(paint.includes('paintedWholeTree:true'));
 const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
 for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageClump(',
  'curvedBranch(g,p0,p1', 'function growBranch(start,heading,elevation,length,radius,order)',
@@ -39,15 +41,18 @@ assert(html.includes('if(!MOUNTAIN_STUDIO)cylinder(.11,.16,1.65,cliffTrunk'));
 assert(html.includes('studioOrganic.pineVariants'));
 assert(!html.includes("foliage.position.set(x,lift+2.54,z)"));
 
-assert(paint.includes("new THREE.CanvasTexture(canvas)"),'Painterly art must have an actual colour map');
-assert(paint.includes("const barkBranches=shaded(woodMap,true)"));
-assert(paint.includes("const broadleafLeaves=cutout(broadleafMap)"));
-assert(paint.includes('function foliageAtlas(kind)'));
-assert(paint.includes('alphaTest:.39'));
-assert(!procedural.includes('function foliageBud('));
-assert(html.includes('const studioLeafMaterial=studioTreePaint?.pine'),'Unified trees must share painted bark and leaf materials');
+assert(paint.includes('new THREE.CanvasTexture('),'Painterly fallback must have real painted textures');
+assert(paint.includes("tree-' + family".replace("' + family", "'+family")) || paint.includes("'tree-'+family"));
+assert(paint.includes('alphaTest:.43'));
+assert(paint.includes('gl_Position=projectionMatrix'));
+assert(paint.includes('quadsPerTree:1'));
+assert(!html.includes('createStudioTreeMaterials(THREE)'));
+assert(html.includes('foliage.castShadow=false'));
+assert(html.includes('batch.castShadow=!geometry.userData?.impostor'));
+assert(procedural.includes('function foliageClump('));
+assert(html.includes('const studioLeafMaterial=studioOrganic?.pineMaterial'),'PNG trees must share one material per family');
 assert(html.includes("studioBroadleafMaterial,'studio-spreading-broadleaf"));
-assert(html.includes('__studioTreePainterly'));
+assert(html.includes('__studioTreeImpostors'));
 assert(!art.includes('studio-ground-plant-distance-fade-v1'));
 // v0.51's rich foreground meadow is explicitly preserved by user request.
 assert(!art.includes('studio-ground-plant-distance-fade-v1'));
@@ -62,4 +67,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.58.0 invariants passed');
+console.log('Studio HD v0.59.0 invariants passed');
