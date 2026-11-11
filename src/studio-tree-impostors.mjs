@@ -177,7 +177,8 @@ function billboard(THREE){
    'vec4 origin=modelViewMatrix*root;',
    'vec3 up=normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz);',
    'vec3 viewPoint=origin.xyz+vec3(position.x*sx,0.,0.)+up*(position.y*sy);',
-   'gl_Position=projectionMatrix*vec4(viewPoint,1.);'
+   'vec4 mvPosition=vec4(viewPoint,1.);',
+   'gl_Position=projectionMatrix*mvPosition;'
   ].join('\n'));
  };
  mat.customProgramCacheKey=()=> 'academy-upright-full-tree-impostor-v1';
