@@ -23,9 +23,10 @@ const THREE={
  LinearMipmapLinearFilter:1008,LinearFilter:1006
 };
 const forest=createStudioTreeImpostors(THREE);
-assert.equal(forest.info.version,'0.59.0');
-assert.equal(forest.info.style,'complete-png-tree-billboards');
+assert.equal(forest.info.version,'0.60.0');
+assert.equal(forest.info.style,'licensed-whole-tree-billboards');
 assert.equal(forest.info.loaded,2);
+assert.equal(forest.info.licensedRealAssets,true);
 assert.equal(forest.info.errors.length,0);
 assert.equal(forest.pineVariants.length,6);
 assert.equal(forest.broadleafVariants.length,5);
@@ -48,7 +49,7 @@ for(const [family,geos] of [['pine',forest.pineVariants],
   assert(g.getAttribute('position').array[1]===-2.40);
  }
  const mat=forest[family+'Material'];
- assert.equal(mat.alphaTest,.43);
+ assert.equal(mat.alphaTest,.21);
  assert.equal(mat.transparent,false);
  assert.equal(mat.visible,true);
  assert(mat.map,'PNG must have loaded');
@@ -62,8 +63,8 @@ for(const [family,geos] of [['pine',forest.pineVariants],
  const bytes=fs.readFileSync(file);
  assert(bytes.length>20000,file+': PNG too small');
  assert.equal(bytes.subarray(0,8).toString('hex'),'89504e470d0a1a0a','Not PNG');
- assert.equal(bytes.readUInt32BE(16),960,'Atlas width should be 3x320');
+ assert.equal(bytes.readUInt32BE(16),1536,'Atlas width should be 3x512');
  assert.equal(bytes.readUInt32BE(20),1024,'Atlas height should be 2x512');
  console.log(file,bytes.length+' bytes',geos.length+' unique whole-tree sprites');
 }
-console.log('Full-tree PNG billboard structural checks passed');
+console.log('Licensed real tree PNG billboard checks passed');
