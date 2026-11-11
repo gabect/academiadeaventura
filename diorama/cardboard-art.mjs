@@ -252,5 +252,5 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   palette:'primary-wax'
  };
  window.__dioramaWorld=status;
- return {status,forest};
+ return {status,forest,locations};
 }
