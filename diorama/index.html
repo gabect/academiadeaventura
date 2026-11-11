@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#a8c5aa"/>
+<meta name="description" content="Academia de Aventura — prototipo independiente del nuevo mundo isométrico de cartón."/>
+<title>Academia de Aventura · Diorama de Cartón</title>
+<link rel="stylesheet" href="./styles.css"/>
+</head><body>
+<main id="app" aria-label="Escenario isométrico del mundo de cartón">
+ <div id="world" aria-hidden="true"></div>
+ <header class="hud">
+  <div class="heading"><span class="eyebrow">ACADEMIA DE AVENTURA · LABORATORIO VISUAL</span>
+  <h1>Diorama de cartón</h1><span class="tag">Fase 1 · cámara isométrica</span></div>
+  <a class="back" href="../" title="Regresar al juego original">Mundo original <span aria-hidden="true">↗</span></a>
+ </header>
+ <div class="bottom">
+  <div class="caption"><span class="paper-icon" aria-hidden="true">✦</span>
+   <div><strong>Un mundo nuevo, sin tocar el anterior.</strong>
+   <small>Escenario de prueba: montañas, agua, árboles y casita de papel. El mapa completo se recreará en fases posteriores.</small></div>
+  </div>
+  <div class="controls"><span class="desktop-help">WASD / flechas · mover &nbsp; · &nbsp; Q/E · girar 45° &nbsp; · &nbsp; rueda · zoom</span>
+   <button id="rotateL" type="button" aria-label="Girar cámara a la izquierda">↶</button>
+   <button id="rotateR" type="button" aria-label="Girar cámara a la derecha">↷</button>
+   <button id="zoomOut" type="button" aria-label="Alejar cámara">−</button>
+   <button id="zoomIn" type="button" aria-label="Acercar cámara">+</button>
+  </div>
+ </div>
+ <div id="stick" aria-label="Control táctil de movimiento" role="group"><div id="knob"></div></div>
+ <div id="error" role="alert" hidden></div>
+</main>
+<script type="module" src="./app.mjs"></script>
+</body></html>
