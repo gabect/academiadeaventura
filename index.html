@@ -3461,6 +3461,12 @@ if(STUDIO_CI){
  if(sourceScene==='meadow')player.position.set(0,0,-11);
  if(sourceScene==='plants')player.position.set(-24,0,-8);
  if(sourceScene==='summit')player.position.set(-60,0,-43);
+ if(sourceScene==='summit-overlook'){
+  player.position.set(-60,0,-43);
+  cameraHeading=0; // horizon toward the southern valley, only in CI
+  cameraPitch=.52;
+  window.__studioCIVantage='summit-overlook';
+ }
  if(sourceScene==='route30')player.position.set(-17,0,-28);
  if(sourceScene==='broadleaf'){
   // Scenic fixture executes only after player has been constructed.
