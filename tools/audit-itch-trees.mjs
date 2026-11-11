@@ -27,24 +27,22 @@ try {
  }
  let links=await page.locator('a').evaluateAll(xs=>xs.map(x=>({text:(x.textContent||'').trim().slice(0,70),href:x.href})).filter(x=>/download|trees.zip/i.test(x.text+' '+x.href)));
  console.log('FILE LINKS',JSON.stringify(links.slice(0,30)));
- let candidates=page.getByText(/Download/i).all();
- for(const l of await candidates){
-  const txt=(await l.innerText().catch(()=>''))?.trim();
-  if(!txt||txt.length>80)continue;
-  console.log('BUTTON TEXT',txt);
- }
- // Download only freely accessible trees.zip, never purchase or submit payment.
- const zipLink=page.locator('a').filter({hasText:/Download/i}).last();
- if(await zipLink.count()){
-  try{
-   const dl=await Promise.race([
-    page.waitForEvent('download',{timeout:20000}),
-    zipLink.click({timeout:15000}).then(()=>new Promise((_,reject)=>setTimeout(()=>reject(Error('No download event')),20000)))
-   ]);
-   if(dl&&dl.suggestedFilename){
-    console.log('DOWNLOADED',dl.suggestedFilename());
-    await dl.saveAs('art-audit/itch/trees.zip');
-   }
-  }catch(e){console.log('Download not available',String(e))}
+ // The exact itch download link (not the surrounding "downloads not starting" link).
+ const actual=page.getByRole('link',{name:'Download',exact:true}).first();
+ console.log('DOWNLOAD BUTTON COUNT',await actual.count());
+ if(await actual.count()){
+  console.log('DOWNLOAD BUTTON',await actual.evaluate(el=>el.outerHTML.slice(0,1400)));
+  page.on('request',req=>{if(/download|upload|cdn|hwcdn/i.test(req.url()))console.log('REQUEST',req.method(),req.url().slice(0,300))});
+  page.on('response',res=>{if(/download|upload|cdn|hwcdn/i.test(res.url()))console.log('RESPONSE',res.status(),res.url().slice(0,300))});
+  const pending=page.waitForEvent('download',{timeout:45000}).catch(e=>{console.log('NO DOWNLOAD EVENT',String(e));return null});
+  await actual.click({timeout:20000});
+  const dl=await pending;
+  if(dl){
+   console.log('DOWNLOADED',dl.suggestedFilename());
+   await dl.saveAs('art-audit/itch/trees.zip');
+   console.log('ZIP SIZE',fs.statSync('art-audit/itch/trees.zip').size);
+  }else {
+   console.log('FINAL URL',page.url(),'TEXT', (await page.locator('body').innerText()).slice(-1400));
+  }
  }
 }finally{await browser.close()}
