@@ -163,15 +163,31 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
         abs(edge-(edgeLimit-.07)));
       float brokenInk=.65+.35*(.5+.5*wearFine);
       handmadeSoil=mix(handmadeSoil,vec3(.33,.25,.12),
-        rim*brokenInk*.30);
+        rim*brokenInk*.17);
       // A few faint scratch marks blend the path naturally into the grass.
       float flecks=smoothstep(.93,.99,
         .5+.5*sin(vStudioTrailWorld.x*31.9)*
           sin(vStudioTrailWorld.z*23.4));
       handmadeSoil=mix(handmadeSoil,handmadeSoil*1.10,
         flecks*.16*(1.0-smoothstep(.50,.85,edge)));
-      diffuseColor.rgb=mix(diffuseColor.rgb,handmadeSoil,.97);
-      diffuseColor.a*=visibleSoil;
+      // Wax-pigment gradient: dirt -> mixed earth/grass -> meadow.
+      // Sample exactly the same world-space grass texture as the ground;
+      // no fixed green swatch or visible border stripe.
+      vec3 edgeGrass=texture2D(crayonGrass,
+        vStudioTrailWorld.xz*.22).rgb;
+      float fadeStart=edgeLimit-(.35+.035*wearBroad);
+      float fadeEnd=edgeLimit-.025;
+      float edgeGradient=smoothstep(fadeStart,fadeEnd,edge);
+      float grainBreak=.5+.5*wearFine;
+      edgeGradient=clamp(edgeGradient+
+        .035*grainBreak*smoothstep(.48,.82,edge),0.0,1.0);
+      vec3 fadedEarth=mix(handmadeSoil,edgeGrass,
+        edgeGradient*.89);
+      diffuseColor.rgb=mix(diffuseColor.rgb,fadedEarth,.97);
+      // Keep an opaque walking center; become progressively transparent
+      // toward the frayed silhouette, exposing real grass underneath.
+      float fadingAlpha=1.0-.88*edgeGradient;
+      diffuseColor.a*=visibleSoil*fadingAlpha;
     `;
     shader.fragmentShader=shader.fragmentShader.replace(
      '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
@@ -191,7 +207,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v6';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v7';
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
