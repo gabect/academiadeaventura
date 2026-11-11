@@ -24,15 +24,24 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
    vec3 grass=vec3(.14,.57,.18)+crayonGrain*.52;
    grass=mix(grass,vec3(.30,.72,.20),.36+
       .22*sin(vAcademyRockWorld.x*.39)*sin(vAcademyRockWorld.z*.37));
-   float rib=sin(y*23.4+
+   // Gray pencil mountain faces over white handmade card, rather than
+   // a giant brown ribbed wall. Only thin cut bands expose the flutes.
+   float pencil=sin(vAcademyRockWorld.x*7.1+
+     vAcademyRockWorld.z*5.4+y*3.7)*.07+
+     sin(vAcademyRockWorld.x*18.5-y*9.3)*.033;
+   vec3 graphite=mix(vec3(.43,.49,.54),vec3(.84,.85,.83),
+     .48+.27*sin(vAcademyRockWorld.x*.46+y*.29+
+       vAcademyRockWorld.z*.33))+pencil;
+   float rib=sin(y*24.1+
        sin(vAcademyRockWorld.x*.52+vAcademyRockWorld.z*.31)*.65);
-   vec3 core=mix(vec3(.55,.31,.13),vec3(.91,.62,.29),.50+.50*rib);
-   float groove=1.-smoothstep(.16,.38,abs(rib));
-   core=mix(core,vec3(.25,.16,.08),groove*.53);
-   float cutWobble=sin(vAcademyRockWorld.x*.21+
-       vAcademyRockWorld.z*.24+y*.18)*.42;
-   float inkLine=1.-smoothstep(.07,.24,abs(sin(y*7.7+cutWobble)));
-   core=mix(core,vec3(.025,.038,.034),inkLine*.82);
+   vec3 flute=mix(vec3(.52,.34,.16),vec3(.87,.65,.38),.50+.50*rib);
+   float groove=1.-smoothstep(.12,.38,abs(rib));
+   flute=mix(flute,vec3(.27,.17,.09),groove*.49);
+   float roughCut=sin(vAcademyRockWorld.x*.21+
+       vAcademyRockWorld.z*.24+y*.18)*.39;
+   float thinLayer=1.-smoothstep(.08,.30,abs(sin(y*2.58+roughCut)));
+   vec3 core=mix(graphite,flute,.065+thinLayer*.29);
+   core=mix(core,vec3(.065,.071,.076),thinLayer*.20);
    float paintCoverage=clamp(.15+vAcademyCover*.97-exposed*.99,0.,1.);
    diffuseColor.rgb=mix(core,grass,paintCoverage);
    float cutInk=exposed*(1.-exposed)*4.;
@@ -41,7 +50,7 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
    #include <alphamap_fragment>
   `);
  };
-  terrainMaterial.customProgramCacheKey=()=>'academy-crayola-corrugated-strata-v2';
+  terrainMaterial.customProgramCacheKey=()=>'academy-gray-pencil-cardboard-cliff-v3';
  const paper=makeCrayonTexture(THREE);
  const corrugated=makeCorrugatedTexture(THREE);
  const cache=new Map();
@@ -252,5 +261,5 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   palette:'primary-wax'
  };
  window.__dioramaWorld=status;
- return {status,forest};
+ return {status,forest,locations};
 }

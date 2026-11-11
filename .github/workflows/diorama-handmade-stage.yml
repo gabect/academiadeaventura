@@ -1,0 +1,46 @@
+name: Handmade cardboard stage visual regression
+on:
+  push:
+    branches:
+      - feature/diorama-handdrawn-standees-v2
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure original game untouched
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main HEAD | tee /tmp/changed.txt
+          if grep -vE '^(diorama/|tests/diorama-handmade-stage.mjs$|tests/diorama-original-map-smoke.mjs$|\.github/workflows/diorama-handmade-stage.yml$)' /tmp/changed.txt; then
+            echo 'Unexpected edit outside Diorama'
+            exit 1
+          fi
+      - name: Validate original map and illustrated stage
+        run: |
+          node --check diorama/handdrawn-stage.mjs
+          node --check diorama/cardboard-art.mjs
+          node --check diorama/cardboard-details.mjs
+          node tests/diorama-handmade-stage.mjs
+          node tests/diorama-directional-facing.mjs
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Verify five desktop and mobile WebGL scenes
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-server.log 2>&1 &
+          node tests/diorama-original-map-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: handmade-school-diorama-five-scenes
+          path: artifacts/diorama-full/*.png
+          if-no-files-found: warn
