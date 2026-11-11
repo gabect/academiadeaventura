@@ -102,6 +102,14 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
   // traversal that installs the Animal-Crossing terrain deformation.
   // Curve every PNG standee exactly like the terrain it touches.
   for(const material of Object.values(mats))applyTerrainCurve?.(material);
+  // Contact patches follow the same curvature as the terrain.
+  const groundShadowMaterial=new THREE.MeshBasicMaterial({
+   color:0x27351e,transparent:true,opacity:.27,depthWrite:false,
+   side:THREE.DoubleSide,polygonOffset:true,polygonOffsetFactor:-1,
+   polygonOffsetUnits:-1
+  });
+  applyTerrainCurve?.(groundShadowMaterial);
+  const groundShadowGeometry=new THREE.CircleGeometry(1,20);
   for(const {def,sites} of groups){
    if(!sites.length)continue;
    const geo=spritePlane(THREE,def);
@@ -109,11 +117,16 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
    mesh.name='original-PNG-'+def[0];
    mesh.frustumCulled=false;mesh.castShadow=false;
    mesh.userData={isUserSprite:true,source:def[1],rect:def[2]};
-   scene.add(mesh);batches.push({mesh,sites,def});
+   const shadow=new THREE.InstancedMesh(
+    groundShadowGeometry,groundShadowMaterial,sites.length);
+   shadow.name='cardboard-ground-contact-'+def[0];
+   shadow.frustumCulled=false;shadow.renderOrder=1;
+   scene.add(shadow,mesh);batches.push({mesh,shadow,sites,def});
   }
   status.orientation='fixed-stage-front';status.groundAnchored=true;
   status.curvedWithTerrain=typeof applyTerrainCurve==='function';
   status.shrubHeightRange=[.44,.68];status.slopeFootprintGrounding=true;
+  status.contactShadows=true;
   status.ready=true;status.drawCalls=batches.length;
   status.sprites=batches.reduce((n,b)=>n+b.sites.length,0);
   status.usedVariants=batches.map(b=>b.def[0]);
@@ -128,7 +141,7 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
   if(!status.ready||(!force&&matricesInitialized))return;
   matricesInitialized=true;
   const temp=new THREE.Object3D();
-  for(const {mesh,sites,def} of batches){
+  for(const {mesh,shadow,sites,def} of batches){
    for(let i=0;i<sites.length;i++){
     const p=sites[i];
     // Sample the support footprint: center-only anchoring leaves cutouts
@@ -151,8 +164,15 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
     temp.rotation.set(0,0,0);
     temp.scale.setScalar(scale);temp.updateMatrix();
     mesh.setMatrixAt(i,temp.matrix);
+    // Place visible contact under each tree or low bush.
+    temp.position.set(p.x,sample(p.x,p.z)+.055,p.z);
+    temp.rotation.set(-Math.PI/2,0,0);
+    const tree=def[1]!=='bushes';
+    temp.scale.set((tree?.90:.38)*scale,(tree?.36:.18)*scale,1);
+    temp.updateMatrix();shadow.setMatrixAt(i,temp.matrix);
    }
    mesh.instanceMatrix.needsUpdate=true;
+   shadow.instanceMatrix.needsUpdate=true;
   }
  }
  return {status,ready,update,batches};
