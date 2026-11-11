@@ -1,0 +1,39 @@
+name: Diorama full original-map regression
+on:
+  push:
+    branches:
+      - feature/diorama-full-original-map-cardboard-camera
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  map:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Original remains untouched
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main...HEAD | tee /tmp/diorama-diff
+          if grep -vE '^(diorama/|tests/diorama-original-map-smoke.mjs$|\.github/workflows/diorama-original-map.yml$)' /tmp/diorama-diff; then
+            echo "Unexpected original game modification"
+            exit 1
+          fi
+      - name: Install browser QA
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Map invariants and 5 WebGL viewpoints
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-server.log 2>&1 &
+          node tests/diorama-original-map-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diorama-original-map-five-views
+          path: artifacts/diorama-full/*.png
+          if-no-files-found: warn
