@@ -47,9 +47,6 @@ try{
   assert(Math.abs(angleError(state.yaw,move.heading))<.54,
    'Did not turn toward '+move.name);
   assert.equal(errors.length,0,errors.join('\n'));
-  if(move.name==='toward-camera'||move.name==='right'){
-   await page.screenshot({path:'artifacts/diorama-turning/'+move.name+'.png'});
-  }
   console.log('PASS '+move.name+' yaw='+state.yaw.toFixed(3)+
    ' position=('+state.x.toFixed(2)+','+state.z.toFixed(2)+')');
   await page.waitForTimeout(180);
@@ -71,5 +68,5 @@ try{
 }catch(error){
  console.error('Browser directional test failed:',error.message,errors);
  process.exitCode=1;
- try{await page.screenshot({path:'artifacts/diorama-turning/failure.png',timeout:20000})}catch(_){}
+ // Avoid page.screenshot while software WebGL is animating continuously.
 }finally{await context.close();await browser.close()}
