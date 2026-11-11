@@ -31,7 +31,7 @@ for(const [name,width,height,mode] of [
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.57.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.58.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
   if(mode!=='normal'){
@@ -43,6 +43,8 @@ for(const [name,width,height,mode] of [
    if(!(result.hd?.spriteCounts?.broadleaf>60))fails.push(name+':broadleaf sprouts missing');
    if(result.painterly?.materialGroups!==2 || !result.painterly?.organicJoints || !result.painterly?.bark?.includes('256x512'))
     fails.push(name+':painted bark and leaf material missing');
+   if(!(result.painterly?.foliageCards && result.painterly?.alphaCutout && result.painterly?.canopyAtlasTiles===8))
+    fails.push(name+':cutout canopy atlas missing');
    if(!(result.trees?.pine===6&&result.trees?.broadleaf===5))
     fails.push(name+':variant families missing');
    if(!(result.trees?.pineInstances>0&&result.trees?.broadleafInstances>0))

@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.57.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.58.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.57.0');
-assert(html.includes("const BUILD='0.57.0'"));
+assert.equal(version.version,'0.58.0');
+assert(html.includes("const BUILD='0.58.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -27,9 +27,9 @@ const paint=fs.readFileSync(new URL('../src/studio-painterly-materials.mjs',impo
 assert(paint.includes('export function createStudioTreeMaterials'));
 assert(paint.includes('branchAnchoredLeaves:true'));
 const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
-for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageBud(',
+for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageClump(',
  'curvedBranch(g,p0,p1', 'function growBranch(start,heading,elevation,length,radius,order)',
- 'leaderCount:2', 'leafTips(end,heading)', 'foliageBud(g,end,theta,r,true,4)']){
+ 'leaderCount:2', 'leafTips(end,heading)', 'foliageClump(g,end,theta,r,true,1.12)']){
  assert(procedural.includes(token),'Missing rooted geometry: '+token);
 }
 assert(html.includes('foliage.position.set(x,lift+2.39,z)'));
@@ -41,7 +41,10 @@ assert(!html.includes("foliage.position.set(x,lift+2.54,z)"));
 
 assert(paint.includes("new THREE.CanvasTexture(canvas)"),'Painterly art must have an actual colour map');
 assert(paint.includes("const barkBranches=shaded(woodMap,true)"));
-assert(paint.includes("const broadleafLeaves=shaded(broadleafMap,true)"));
+assert(paint.includes("const broadleafLeaves=cutout(broadleafMap)"));
+assert(paint.includes('function foliageAtlas(kind)'));
+assert(paint.includes('alphaTest:.39'));
+assert(!procedural.includes('function foliageBud('));
 assert(html.includes('const studioLeafMaterial=studioTreePaint?.pine'),'Unified trees must share painted bark and leaf materials');
 assert(html.includes("studioBroadleafMaterial,'studio-spreading-broadleaf"));
 assert(html.includes('__studioTreePainterly'));
@@ -59,4 +62,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.57.0 invariants passed');
+console.log('Studio HD v0.58.0 invariants passed');

@@ -46,48 +46,101 @@ export function createStudioTreeMaterials(THREE){
   }
   return canvas;
  }
- function leaf(kind){
-  const pine=kind==='pine',canvas=makeCanvas(256,256),ctx=canvas.getContext('2d');
-  const r=makeRandom(pine?90183:61194);
-  const base=ctx.createLinearGradient(0,0,256,256);
-  if(pine){
-   base.addColorStop(0,'#c1cda7');base.addColorStop(.45,'#e0e2b6');
-   base.addColorStop(1,'#a8c2a0');
-  }else{
-   base.addColorStop(0,'#d7dfbd');base.addColorStop(.48,'#f3ecc1');
-   base.addColorStop(1,'#bdd1aa');
-  }
-  ctx.fillStyle=base;ctx.fillRect(0,0,256,256);
-  // Pigment mottling, more broad-surface brushwork on deciduous leaves.
-  for(let i=0;i<(pine?480:720);i++){
-   const x=r()*256,y=r()*256,rad=(pine?2:4)+r()*(pine?9:19);
-   ctx.fillStyle=r()>.5?'rgba(59,86,52,'+(.02+.10*r())+')':
-    'rgba(255,248,189,'+(.03+.16*r())+')';
-   ctx.beginPath();ctx.ellipse(x,y,rad*(.3+.6*r()),rad*(.5+r()),r()*6.28,0,6.28);ctx.fill();
-  }
-  // Longitudinal luminous strokes that follow the leaf's growing axis.
-  for(let i=0;i<(pine?125:90);i++){
-   const x=r()*256,y=r()*256,len=15+r()*83;
-   stroke(ctx,r,x,y,(r()-.5)*13,len,.5+r()*(pine?1.7:3.2),
-    r()>.46?'rgba(255,253,205,.24)':'rgba(54,76,51,.13)');
-  }
-  // Vein of the leaf, soft enough to avoid a printed icon appearance.
-  ctx.strokeStyle=pine?'rgba(236,239,187,.27)':'rgba(95,115,65,.19)';
-  ctx.lineWidth=pine?2.4:4;
-  ctx.beginPath();ctx.moveTo(128,247);ctx.quadraticCurveTo(129,143,129,16);ctx.stroke();
-  if(!pine){
-   for(let y=37;y<218;y+=21){
-    ctx.strokeStyle='rgba(94,120,67,.12)';ctx.lineWidth=1.9;
-    ctx.beginPath();ctx.moveTo(129,y+16);ctx.lineTo(57+(y%19),y-11);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(129,y+16);ctx.lineTo(201-(y%16),y-16);ctx.stroke();
+ // Eight distinct hand-painted, alpha-cutout foliage silhouettes per family.
+ // One 1024x512 atlas is shared by all tree instances: no per-tree textures.
+ // Cards sample a single padded 256x256 tile, never smear leaf paint across a quad.
+ function foliageAtlas(kind){
+  const pine=kind==='pine',canvas=makeCanvas(1024,512),ctx=canvas.getContext('2d');
+  const dark=pine?['#284936','#31553b','#396447']:['#315639','#3b6440','#456f42'];
+  const mids=pine?['#396947','#48784e','#568454','#678e58']:
+    ['#48763c','#568344','#648b46','#76984d','#84a354'];
+  const lights=pine?['#799d66','#91ac77','#b2bd89']:
+    ['#98ad5d','#a6b66e','#bec787'];
+  for(let tile=0;tile<8;tile++){
+   const rand=makeRandom((pine?71371:33769)+tile*1009);
+   const tx=tile%4,ty=Math.floor(tile/4);
+   ctx.save();ctx.translate(tx*256,ty*256);
+   ctx.beginPath();ctx.rect(9,9,238,238);ctx.clip();
+   // Vary the silhouette's weight and dominant sunward lean.
+   const lean=(rand()-.5)*25,wide=.84+.23*rand();
+   if(pine){
+    const line=(x0,y0,x1,y1,width,color)=>{
+     ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';
+     ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    };
+    // Layer broad shadow sprays first, then overlapping fine needle fans.
+    for(let layer=0;layer<2;layer++){
+     for(let sprig=0;sprig<29;sprig++){
+      const a=rand()*Math.PI*2,rr=Math.sqrt(rand())*.87;
+      const x=128+lean+Math.cos(a)*87*rr*wide,y=135+Math.sin(a)*77*rr;
+      const heading=a+(rand()-.5)*1.5,reach=19+rand()*33;
+      const ex=x+Math.cos(heading)*reach,ey=y+Math.sin(heading)*reach*.80;
+      line(x,y,ex,ey,1.1+rand()*1.8,layer?mids[Math.floor(rand()*mids.length)]:dark[Math.floor(rand()*dark.length)]);
+      const count=10+Math.floor(rand()*8);
+      for(let i=1;i<=count;i++){
+       const t=i/(count+1),px=x+(ex-x)*t,py=y+(ey-y)*t;
+       const needleLen=(7+rand()*13)*(1-.30*t);
+       for(const side of [-1,1]){
+        const alphaColor=(layer&&rand()>.73?lights:mids);
+        const c=layer?alphaColor[Math.floor(rand()*alphaColor.length)]:dark[Math.floor(rand()*dark.length)];
+        const spread=heading+side*(.73+.40*rand());
+        line(px,py,px+Math.cos(spread)*needleLen,
+         py+Math.sin(spread)*needleLen,1.35+rand()*1.6,c);
+       }
+      }
+     }
+    }
+    // A few lighter needle tips break up the silhouette without a plastic shine.
+    for(let i=0;i<68;i++){
+     const a=rand()*Math.PI*2,rr=Math.sqrt(rand())*.88;
+     const x=128+lean+Math.cos(a)*100*rr*wide,y=132+Math.sin(a)*96*rr;
+     const t=a+(rand()-.5)*1.1,l=3+rand()*9;
+     line(x,y,x+Math.cos(t)*l,y+Math.sin(t)*l,1+rand()*1.1,
+      lights[Math.floor(rand()*lights.length)]);
+    }
+   }else{
+    // Irregular overlapping brush-painted leaf bundles rather than one green ball.
+    const drawLeaf=(x,y,angle,length,width,color,vein)=>{
+     ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+     const grad=ctx.createLinearGradient(-width*.55,0,width*.65,-length);
+     grad.addColorStop(0,color);grad.addColorStop(.62,color);
+     grad.addColorStop(1,vein?'#b2ba76':color);
+     ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(0,2);
+     ctx.bezierCurveTo(-width*.83,-length*.13,-width*1.02,-length*.65,0,-length);
+     ctx.bezierCurveTo(width*.96,-length*.74,width*.89,-length*.24,0,2);
+     ctx.fill();
+     ctx.strokeStyle=vein?'rgba(223,231,171,.27)':'rgba(30,68,32,.17)';
+     ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-length*.88);ctx.stroke();
+     if(width>9){
+      ctx.beginPath();ctx.moveTo(0,-length*.40);ctx.lineTo(-width*.47,-length*.62);
+      ctx.moveTo(0,-length*.53);ctx.lineTo(width*.45,-length*.75);ctx.stroke();
+     }
+     ctx.restore();
+    };
+    for(let layer=0;layer<3;layer++){
+     const count=layer===0?44:layer===1?66:38;
+     for(let i=0;i<count;i++){
+      const a=rand()*Math.PI*2,rr=Math.sqrt(rand())*(layer===0?.77:.99);
+      const x=128+lean+Math.cos(a)*87*rr*wide;
+      const y=131+Math.sin(a)*(layer===0?77:88)*rr;
+      const radial=Math.atan2(x-128-lean,131-y);
+      const rot=radial+(rand()-.5)*1.95;
+      const len=(layer===0?18:15)+rand()*(layer===2?24:31);
+      const width=(layer===2?6:8)+rand()*9;
+      const palette=layer===0?dark:layer===1?mids:(rand()>.42?lights:mids);
+      drawLeaf(x,y,rot,len,width,palette[Math.floor(rand()*palette.length)],layer===2);
+     }
+    }
+    // Natural crown gaps remain between cards; avoid a solid opaque round shell.
    }
+   ctx.restore();
   }
   return canvas;
  }
- const texture=(canvas,repeat)=>{
+ const texture=(canvas,repeat,cutout=false)=>{
   const t=new THREE.CanvasTexture(canvas);
   t.colorSpace=THREE.SRGBColorSpace;
-  t.wrapS=THREE.RepeatWrapping;t.wrapT=THREE.RepeatWrapping;
+  t.wrapS=t.wrapT=cutout?THREE.ClampToEdgeWrapping:THREE.RepeatWrapping;
   t.repeat.set(repeat[0],repeat[1]);
   t.anisotropy=4;t.generateMipmaps=true;
   t.minFilter=THREE.LinearMipmapLinearFilter;
@@ -95,8 +148,8 @@ export function createStudioTreeMaterials(THREE){
   t.needsUpdate=true;return t;
  };
  const woodMap=texture(bark(),[1,1.0]);
- const pineMap=texture(leaf('pine'),[1,1]);
- const broadleafMap=texture(leaf('broadleaf'),[1,1]);
+ const pineMap=texture(foliageAtlas('pine'),[1,1],true);
+ const broadleafMap=texture(foliageAtlas('broadleaf'),[1,1],true);
  const shaded=(map,vertexColors)=>{
   return new THREE.MeshStandardMaterial({
    map,color:'#ffffff',vertexColors,side:THREE.DoubleSide,
@@ -106,15 +159,22 @@ export function createStudioTreeMaterials(THREE){
  const barkBranches=shaded(woodMap,true);
  const barkTrunks=shaded(woodMap,false);
  barkBranches.roughness=.91;barkTrunks.roughness=.91;
- const pineLeaves=shaded(pineMap,true);
- const broadleafLeaves=shaded(broadleafMap,true);
+ // Cutout, not alpha blending: stable z-buffer and shadows on crossed cards.
+ const cutout=map=>new THREE.MeshStandardMaterial({
+  map,color:'#ffffff',vertexColors:true,side:THREE.DoubleSide,
+  roughness:1,metalness:0,alphaTest:.39,transparent:false,depthWrite:true,
+  alphaToCoverage:true
+ });
+ const pineLeaves=cutout(pineMap);
+ const broadleafLeaves=cutout(broadleafMap);
  return {
   pine:[pineLeaves,barkBranches],
   broadleaf:[broadleafLeaves,barkBranches],
   barkTrunks,barkBranches,
   // This is inspected by the CI harness and useful when evaluating screenshots.
-  info:{bark:'painted-grain-256x512',leaves:'painted-veins-256x256',
-   pine:'painted-needle-pigment-256x256',materialGroups:2,
-   organicJoints:true,branchAnchoredLeaves:true}
+  info:{bark:'painted-grain-256x512',leaves:'painted-broadleaf-clump-atlas-1024x512',
+   pine:'painted-needle-spray-atlas-1024x512',materialGroups:2,
+   organicJoints:true,branchAnchoredLeaves:true,foliageCards:true,
+   canopyAtlasTiles:8,alphaCutout:true}
  };
 }
