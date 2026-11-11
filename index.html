@@ -4607,6 +4607,7 @@ function animate(){
  updateSlopeStatus();
  updateRegionStatus();
  followPlayerCamera(dt);
+ if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
  // When the over-the-shoulder camera is inside a conifer crown, temporarily
  // hide that decorative crown rather than covering the entire player view.
  if(MOUNTAIN_STUDIO){
