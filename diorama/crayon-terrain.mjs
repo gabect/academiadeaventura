@@ -28,7 +28,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
   if(!material||material.userData.crayonTerrainApplied)return;
   material.userData.crayonTerrainApplied=true;
   const old=material.onBeforeCompile?.bind(material);
-  const oldKey=material.customProgramCacheKey();
+  const oldKey=material.customProgramCacheKey.bind(material);
   material.onBeforeCompile=(shader,renderer)=>{
    if(old)old(shader,renderer);
    shader.uniforms.crayonAtlas=atlasUniform;
