@@ -31,17 +31,17 @@ export function installStylizedCharacter(THREE,character,options={}){
  const player=options.role==='player',seed=options.seed||0;
  const palette=PALETTES[player?0:Math.abs(seed)%PALETTES.length];
  const coat=options.coat||(player?'#818052':'#877f71');
- const skinColor=options.skin||palette.skin,hatColor=player?'#947047':'#77634f';
+ const skinColor=options.skin||palette.skin,hatColor=player?'#805a3d':'#77634f';
  const hairColor=player?'#68412e':palette.hair;
  const hairHighlight=player?'#9b623e':palette.hairLight;
- const clothes=material(coat,'fabric',21+seed);
+ const clothes=material(player?'#77764d':coat,'fabric',21+seed);
  const trim=material('#594834','fabric',3),skin=new THREE.MeshStandardMaterial({color:skinColor,roughness:.79});
  const cheek=new THREE.MeshStandardMaterial({color:'#f29375',roughness:.88,transparent:true,opacity:.48,depthWrite:false});
  const noseMat=new THREE.MeshStandardMaterial({color:'#ed9d78',roughness:.8});
  const hair=material(hairColor,'hair',42),hairLit=material(hairHighlight,'hair',14);
- const cap=material(hatColor,'fabric',8),capShade=material('#765737','fabric',11);
+ const cap=material(hatColor,'fabric',8),capShade=material('#65472f','fabric',11);
  const trousers=material(player?'#56493e':'#625247','fabric',51);
- const leather=material('#9a5b35','leather',71),leatherDark=material('#764328','leather',13);
+ const leather=material('#935832','leather',71),leatherDark=material('#6a412b','leather',13);
  const rope=material('#d9b88b','rope',23),bandage=material('#d6c5a5','fabric',17);
  const sole=new THREE.MeshStandardMaterial({color:'#3f332e',roughness:1});
  const eyesWhite=new THREE.MeshStandardMaterial({color:'#fff7ec',roughness:.22});
@@ -173,8 +173,8 @@ export function installStylizedCharacter(THREE,character,options={}){
  }
  // Tailored olive linen dress: silhouette is a softly flared, uneven tunic.
  const torso=rig.torso;
- garment(torso,clothes,[[-.105,.405,.31],[.015,.38,.295],[.17,.33,.27],
-  [.39,.365,.285],[.585,.415,.255],[.73,.255,.21]]);
+ garment(torso,clothes,[[-.145,.357,.285],[-.04,.355,.266],[.15,.305,.239],
+  [.39,.317,.247],[.585,.346,.229],[.73,.229,.185]]);
  ring(torso,trim,0,.736,.012,.245,.21,.010);
  for(let i=0;i<3;i++){
   const y=.675-i*.092;
@@ -205,17 +205,18 @@ export function installStylizedCharacter(THREE,character,options={}){
  // Prominent, poseable arms — the same joints used by collision/animation.
  for(let i=0;i<rig.arms.length;i++){
   const arm=rig.arms[i],sign=i===0?-1:1;
-  garment(arm.shoulder,clothes,[[-.42,.158,.155],[-.30,.167,.155],[-.10,.18,.165],[.04,.16,.15]],13,.012);
-  ring(arm.shoulder,trim,0,-.419,0,.158,.153,.008);
-  garment(arm.elbow,clothes,[[-.23,.129,.132],[-.13,.140,.138],[.04,.15,.146]],12,.009);
-  ring(arm.elbow,trim,0,-.236,0,.129,.13,.007);
-  orb(arm.elbow,skin,[0,-.325,0],[.10,.132,.105]);
+  arm.shoulder.position.x=sign*.378;
+  garment(arm.shoulder,clothes,[[-.40,.116,.112],[-.27,.128,.120],[-.10,.138,.132],[.04,.136,.13]],13,.011);
+  ring(arm.shoulder,trim,0,-.399,0,.117,.112,.007);
+  garment(arm.elbow,clothes,[[-.23,.092,.092],[-.13,.108,.103],[.04,.118,.111]],12,.007);
+  ring(arm.elbow,trim,0,-.236,0,.095,.091,.006);
+  orb(arm.elbow,skin,[0,-.325,0],[.074,.111,.078]);
   orb(arm.wrist,skin,[0,-.116,.02],[.092,.117,.092]);
   for(let j=0;j<3;j++)orb(arm.wrist,skin,[sign*.012+(j-1)*.038,-.204,.045],[.024,.045,.032],false);
   if(sign===1){
    // Large sewn repair: part of sleeve, so it bends with the arm.
-   const patch=roundedPanel(arm.shoulder,.160,.180,.009,
-    material('#a68156','fabric',39),sign*.155,-.205,.015);
+   const patch=roundedPanel(arm.shoulder,.132,.155,.009,
+    material('#a68156','fabric',39),sign*.123,-.205,.015);
    patch.rotation.y=PI/2;
    // visible seams on outside of sleeve, rather than painted cardboard outlines
    line(arm.shoulder,[[.171,-.29,.055],[.182,-.20,.06],[.17,-.12,.052]],.008,trim,7);
@@ -245,8 +246,8 @@ export function installStylizedCharacter(THREE,character,options={}){
   }
   ring(ankle,leatherDark,0,.262,.02,.165,.158,.024);
  }
- // Distinctly real, rounded head (front = local +Z), ears and cheeks.
- const head=rig.head;
+ // Slightly oversized readable head and restrained shoulders match the concept.
+ const head=rig.head;head.scale.setScalar(1.07);
  orb(head,skin,[0,.152,.016],[.294,.300,.246]);
  for(const side of [-1,1]){
   orb(head,skin,[side*.278,.112,-.008],[.085,.105,.066]);
