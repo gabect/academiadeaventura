@@ -87,11 +87,12 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  function shape(pine){
   const s=new THREE.Shape();
   if(pine){
-   s.moveTo(0,2.8);s.lineTo(-.55,2.06);s.lineTo(-.3,2.06);
-   s.lineTo(-.90,1.35);s.lineTo(-.51,1.35);
-   s.lineTo(-1.27,.60);s.quadraticCurveTo(0,.38,1.27,.60);
-   s.lineTo(.51,1.35);s.lineTo(.90,1.35);
-   s.lineTo(.3,2.06);s.lineTo(.55,2.06);
+   s.moveTo(.07,2.83);s.lineTo(-.55,2.11);s.lineTo(-.26,2.07);
+   s.lineTo(-.98,1.37);s.lineTo(-.49,1.34);
+   s.lineTo(-1.32,.58);s.quadraticCurveTo(-.29,.46,.08,.64);
+   s.quadraticCurveTo(.42,.50,1.21,.70);
+   s.lineTo(.48,1.38);s.lineTo(.88,1.42);
+   s.lineTo(.33,2.10);s.lineTo(.57,2.09);
   }else{
    s.moveTo(-1.37,.21);
    s.bezierCurveTo(-1.75,.59,-1.51,1.38,-1.12,1.43);
