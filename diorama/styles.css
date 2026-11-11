@@ -13,3 +13,5 @@
 @media(max-width:880px){.desktop-help{display:none}.caption{max-width:53vw}.caption small{display:none}}
 @media(pointer:coarse){#stick{display:block}.bottom{bottom:max(18px,env(safe-area-inset-bottom))}.caption{margin-left:145px;max-width:48vw}.controls button{width:40px;height:40px}}
 @media(max-width:620px){.heading{padding:10px 12px}.heading h1{font-size:20px}.eyebrow{font-size:8px}.back{font-size:11px;padding:10px}.caption{display:none}#stick{bottom:24px}.bottom{left:auto}}
+
+@media(max-height:520px){.caption{display:none}.bottom{left:auto}.controls{margin-left:auto}}
