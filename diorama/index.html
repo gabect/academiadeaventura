@@ -58,7 +58,7 @@ import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
-import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=3';
+import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=4';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -104,6 +104,8 @@ const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
 let cameraHeading=Math.PI,cameraPitch=.62;
+// Stationary depth/elevation, horizontal side-to-side stage tracking only.
+let cameraRailZ=null,cameraRailY=null;
 const CAMERA_MIN_PITCH=.51,CAMERA_MAX_PITCH=.79;
 const FOLLOW_FACING_SPEED=8.4;
 let lastCameraManualAt=-100000;
@@ -114,12 +116,10 @@ const horizonViewButton=document.getElementById('viewModeButton');
 const cameraHint=document.getElementById('cameraHint');
 const isPointerLocked=()=>document.pointerLockElement===renderer.domElement;
 function updateCameraHint(){
- cameraHint.textContent=isPointerLocked()?
-  'Mouse activo · Esc libera':
-  matchMedia('(pointer:coarse)').matches?
-   'Arrastra: cámara · Pellizca: zoom':
-   'Clic: mouse · Flechas: cámara';
+ cameraHint.textContent=matchMedia('(pointer:coarse)').matches?
+  'Cámara fija · Pellizca: zoom':'Cámara fija · Rueda: zoom';
 }
+
 function setHorizonView(enabled){
  rollingHorizon=!!enabled;
  horizonViewButton.textContent=rollingHorizon?'AC':'3P';
@@ -133,16 +133,9 @@ horizonViewButton.addEventListener('click',()=>setHorizonView(!rollingHorizon));
 document.addEventListener('pointerlockchange',updateCameraHint);
 setHorizonView(true);
 function rotateThirdPersonCamera(deltaX,deltaY){
- lastCameraManualAt=performance.now();
- // Mouse right means look right. The old north-up heading was PI,
- // so yaw decreases to look east when dragging right.
- cameraHeading-=deltaX*MOUSE_SENSITIVITY;
- cameraPitch=THREE.MathUtils.clamp(
-  cameraPitch+deltaY*MOUSE_SENSITIVITY,
-  CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
- if(Math.abs(cameraHeading)>Math.PI*2)cameraHeading=
-  Math.atan2(Math.sin(cameraHeading),Math.cos(cameraHeading));
+ // Camera orbit intentionally disabled for stationary theatrical scenery.
 }
+
 const cameraHistory=[];
 const cameraUndoButton=document.getElementById('cameraUndo');
 function recordCameraChange(){
@@ -200,15 +193,7 @@ let mouseDragId=null;
 renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());
 renderer.domElement.addEventListener('pointerdown',e=>{
  if(e.pointerType==='mouse'){
-  if(e.button===0){
-   if(!isPointerLocked()&&renderer.domElement.requestPointerLock){
-    try{
-     const request=renderer.domElement.requestPointerLock();
-     if(request?.catch)request.catch(()=>{});
-    }catch(_){}
-   }
-   return;
-  }
+  if(e.button===0)return;
   if(e.button!==2||isPointerLocked())return;
   e.preventDefault();mouseDragId=e.pointerId;
   try{renderer.domElement.setPointerCapture(e.pointerId)}catch(_){}
@@ -3527,7 +3512,7 @@ function thirdPersonCameraClearance(target,desired){
 function followPlayerCamera(dt){
  // A ladder faces a fixed wall: gradually follow its direction from
  // behind unless the player has manually orbited within the last 900ms.
- if(LADDER_STATE.active&&performance.now()-lastCameraManualAt>900){
+ if(false&&LADDER_STATE.active&&performance.now()-lastCameraManualAt>900){
   const delta=Math.atan2(Math.sin(player.rotation.y-cameraHeading),
    Math.cos(player.rotation.y-cameraHeading));
   cameraHeading+=THREE.MathUtils.clamp(delta,-dt*2.2,dt*2.2);
@@ -3542,7 +3527,8 @@ function followPlayerCamera(dt){
  const centerY=LADDER_STATE.active?player.position.y+head:
   WATER_STATE.mode==='swim'?
    (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
- cameraTarget.set(player.position.x,centerY,player.position.z);
+ if(cameraRailZ===null){cameraRailZ=player.position.z;cameraRailY=centerY;}
+ cameraTarget.set(player.position.x,cameraRailY,cameraRailZ);
  // A closer following distance and wider FOV keep the character large
  // and recognizable on PC, with the horizon above shoulder height.
  const distance=10.7/cameraZoom; // wider Animal Crossing follow composition
@@ -4501,7 +4487,8 @@ Object.assign(window.__dioramaWorld,{
 });
 const originalPNGSprites=installExactUserSprites({
  THREE,scene,camera,world:window.__dioramaWorld,oldStage:handdrawnStage,
- treeLocations:dioramaArt.locations,shrubSites:dioramaDetails.sites
+ treeLocations:dioramaArt.locations,shrubSites:dioramaDetails.sites,
+ naturalSurfaceY
 });
 window.__dioramaWorld.assetStyle='user-uploaded-original-png-sprites';
 window.__dioramaWorld.outlinedWater=true;
@@ -4663,13 +4650,7 @@ function animate(){
    (keys.has('ArrowLeft')?1:0);
   const tilt=(keys.has('ArrowDown')?1:0)-
    (keys.has('ArrowUp')?1:0);
-  if(yaw||tilt){
-   lastCameraManualAt=performance.now();
-   cameraHeading-=yaw*ARROW_YAW_SPEED*dt;
-   cameraPitch=THREE.MathUtils.clamp(
-    cameraPitch+tilt*ARROW_PITCH_SPEED*dt,
-    CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
-  }
+  // Arrow keys do not orbit or tilt the fixed camera.
  }
  if(ENABLE_RAGDOLL&&FALL.active){updateFall(dt);}
  else if(BALANCE.active){updateBalanceRecovery(dt);}
@@ -4684,7 +4665,7 @@ function animate(){
  updateRegionStatus();
  followPlayerCamera(dt);
  handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
- originalPNGSprites.update(); // User's exact PNG trees/bushes, camera-facing
+ originalPNGSprites.update(); // Stationary front-facing cardboard stage props
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
  // When the over-the-shoulder camera is inside a conifer crown, temporarily
  // hide that decorative crown rather than covering the entire player view.
