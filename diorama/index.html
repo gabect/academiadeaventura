@@ -58,7 +58,7 @@ import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
-import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=4';
+import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=5';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -104,8 +104,8 @@ const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
 let cameraHeading=Math.PI,cameraPitch=.62;
-// Stationary depth/elevation, horizontal side-to-side stage tracking only.
-let cameraRailZ=null,cameraRailY=null;
+// Stationary elevation and view angle, with smooth X/Z ground-plane tracking.
+let cameraRailY=null;
 const CAMERA_MIN_PITCH=.51,CAMERA_MAX_PITCH=.79;
 const FOLLOW_FACING_SPEED=8.4;
 let lastCameraManualAt=-100000;
@@ -3527,8 +3527,10 @@ function followPlayerCamera(dt){
  const centerY=LADDER_STATE.active?player.position.y+head:
   WATER_STATE.mode==='swim'?
    (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
- if(cameraRailZ===null){cameraRailZ=player.position.z;cameraRailY=centerY;}
- cameraTarget.set(player.position.x,cameraRailY,cameraRailZ);
+ if(cameraRailY===null)cameraRailY=centerY;
+ // Follow both ground-plane axes (X/Z) while keeping the same pitch,
+ // elevation rail and viewing direction; never orbit around the avatar.
+ cameraTarget.set(player.position.x,cameraRailY,player.position.z);
  // A closer following distance and wider FOV keep the character large
  // and recognizable on PC, with the horizon above shoulder height.
  const distance=10.7/cameraZoom; // wider Animal Crossing follow composition
