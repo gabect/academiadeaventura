@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'diorama/index.html'
+      - 'diorama/personaje-3d.html'
       - 'diorama/stylized-characters.mjs'
       - 'tests/diorama-stylized-characters.mjs'
       - 'tests/diorama-stylized-browser.mjs'
