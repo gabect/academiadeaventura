@@ -24,8 +24,12 @@ with zipfile.ZipFile(SRC) as archive:
    if not bbox: raise RuntimeError(f'Empty source alpha: {filename}')
    raw=raw.crop(bbox)
    # Balance deep source greens for the brighter stylized mountain art.
-   rgb=ImageEnhance.Brightness(raw.convert('RGB')).enhance(1.13)
-   rgb=ImageEnhance.Color(rgb).enhance(1.13)
+   rgb=raw.convert('RGB')
+   # Lift dark needle shadows without destroying the detailed natural branches.
+   gamma=[min(255,round(255*(v/255)**.72)) for v in range(256)]
+   rgb=rgb.point(gamma*3)
+   rgb=ImageEnhance.Color(rgb).enhance(1.10)
+   rgb=ImageEnhance.Brightness(rgb).enhance(1.04)
    raw=rgb.convert('RGBA');raw.putalpha(alpha.crop(bbox))
    max_w=460 if family=='broadleaf' else 440
    ratio=min(max_w/raw.width,490/raw.height,1.24)
