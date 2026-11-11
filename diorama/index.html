@@ -61,6 +61,7 @@ import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
 import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
+import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
@@ -3463,7 +3464,9 @@ function stepLocomotion(dt,right,forward,runEnabled){
     WATER_STATE.water.surfaceY-1.20,WATER_STATE.blend);
  }
 }
-const player=person(blue,mat('#eac7a1'));scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
+const player=person(blue,mat('#eac7a1'));
+installStylizedCharacter(THREE,player,{role:'player',coat:'#818052',seed:0});
+scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
 // Headless screenshot-only mountain-facing vantage. Normal users never teleport.
 if(STUDIO_CI){
  const sourceScene=new URLSearchParams(location.search).get('scene');
@@ -3488,7 +3491,9 @@ if(STUDIO_CI){
  }
  player.rotation.y=Math.PI;
 }
-const guardian=person(red,gold);guardian.position.set(3,0,-3);scene.add(guardian);
+const guardian=person(red,gold);
+installStylizedCharacter(THREE,guardian,{role:'guardian',coat:'#a9634e',seed:1});
+guardian.position.set(3,0,-3);scene.add(guardian);
 // Scenic NPCs do not initiate missions or block the existing guardian.
 const NPC_MARKERS=[
  {x:-39,z:-43,coat:'#d88961',facing:1.2},
@@ -3503,11 +3508,18 @@ const NPC_MARKERS=[
 const AMBIENT_NPCS=[];
 for(const def of NPC_MARKERS){
  const npc=person(mat(def.coat),mat('#ebc7a5'));
+ installStylizedCharacter(THREE,npc,{role:'npc',coat:def.coat,seed:AMBIENT_NPCS.length+2});
  npc.position.set(def.x,groundTopAt(def.x,def.z)-TERRAIN.floorTop,def.z);
  npc.rotation.y=def.facing;
  scene.add(npc);AMBIENT_NPCS.push(npc);
 }
 prepareFeet(player);
+window.__dioramaCharacters={
+ renderMode:'fully-volumetric-3d',reference:'rustic-fantasy-adventurer',
+ player:player.userData.characterArt,guardian:guardian.userData.characterArt,
+ npcCount:AMBIENT_NPCS.length,articulated:true,originalMapPreserved:true,
+ cardboardOnlyForEnvironment:true
+};
 function thirdPersonCameraClearance(target,desired){
  // Third-person chase view must not disappear behind a solid ridge,
  // the lookout tower or the closed cabin. Sample physical topography,
