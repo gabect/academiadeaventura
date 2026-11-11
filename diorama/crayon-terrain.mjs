@@ -140,13 +140,38 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
     shader.fragmentShader=shader.fragmentShader.replace(
      '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }else if(kind==='path'){
+    // Fray the visible silhouette, not the collision geometry. The shader
+    // uses world space so scuffed patches connect across curve segments.
     const overlay=String.raw`
       vec3 handmadeSoil=crayonTile(vStudioTrailWorld.xz*.24,vec2(1.0,1.0));
-      // Organic, dark-pencil transition at the paper-dirt footpath edges.
-      float pathEdge=smoothstep(.73,.91,abs(vStudioLateral))
-        *(1.0-smoothstep(.91,1.0,abs(vStudioLateral)));
-      handmadeSoil=mix(handmadeSoil,vec3(.30,.28,.13),pathEdge*.28);
-      diffuseColor.rgb=mix(diffuseColor.rgb,handmadeSoil,.96);
+      float edge=abs(vStudioLateral);
+      float wearBroad=sin(vStudioTrailWorld.x*4.9+
+          sin(vStudioTrailWorld.z*3.7)*1.3)*
+          cos(vStudioTrailWorld.z*5.3-vStudioTrailWorld.x*2.4);
+      float wearFine=sin(vStudioTrailWorld.x*13.0+
+          vStudioTrailWorld.z*9.0)*
+          cos(vStudioTrailWorld.z*10.4-vStudioTrailWorld.x*6.2);
+      float scratch=sin(vStudioTrailWorld.x*28.7+
+          vStudioTrailWorld.z*19.3);
+      // Broad bites + small notches, with an antialiased silhouette.
+      float edgeLimit=.88+.10*wearBroad+.045*wearFine+.012*scratch;
+      float feather=max(fwidth(edge)*1.3,.012);
+      float visibleSoil=1.0-smoothstep(edgeLimit-feather,
+        edgeLimit+feather,edge);
+      // Dark, interrupted compacted-soil line just inside the worn edge.
+      float rim=1.0-smoothstep(.012,.085,
+        abs(edge-(edgeLimit-.07)));
+      float brokenInk=.65+.35*(.5+.5*wearFine);
+      handmadeSoil=mix(handmadeSoil,vec3(.33,.25,.12),
+        rim*brokenInk*.30);
+      // A few faint scratch marks blend the path naturally into the grass.
+      float flecks=smoothstep(.93,.99,
+        .5+.5*sin(vStudioTrailWorld.x*31.9)*
+          sin(vStudioTrailWorld.z*23.4));
+      handmadeSoil=mix(handmadeSoil,handmadeSoil*1.10,
+        flecks*.16*(1.0-smoothstep(.50,.85,edge)));
+      diffuseColor.rgb=mix(diffuseColor.rgb,handmadeSoil,.97);
+      diffuseColor.a*=visibleSoil;
     `;
     shader.fragmentShader=shader.fragmentShader.replace(
      '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
@@ -166,7 +191,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v5';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v6';
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
