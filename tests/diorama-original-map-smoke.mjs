@@ -67,6 +67,8 @@ for(const conf of [
   assert.equal(state.world.bounds.plateauHeight,10);
   assert(state.world.treeCounts.pine>10);
   assert(state.world.treeCounts.broadleaf>10);
+  assert(state.world.papercraftShrubs>50,'Real shrub placement data must render as paper');
+  assert(state.world.waterRipples>15,'Original water requires drawn ripples');
   assert.equal(state.world.npcCount,9);
   assert(state.world.ramps.some(x=>x.rise>2));
   assert(state.world.waterBodies.some(x=>x.id==='lake-organic'));
