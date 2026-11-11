@@ -17,9 +17,9 @@ a{color:#355d74}#error{position:fixed;top:50%;left:50%;transform:translate(-50%,
 </style></head><body>
 <div id="viewport"></div>
 <header><h1>Academia de Aventura · Personaje 3D</h1>
-<p>Modelo volumétrico procedural conectado al esqueleto del juego. Arrastra para girar; usa la rueda o pellizca para acercar.</p>
+<p>Nuevo diseño 3D con cel shading, contornos de tinta y colores limpios. Arrastra para girar; pellizca para acercar.</p>
 <p><a href="./">Volver al mundo de cartón</a></p></header>
-<div id="hint">Prototipo tridimensional interactivo · sin sprites</div>
+<div id="hint">CEL SHADING · 3D ARTICULADO · SIN SPRITES</div>
 <nav aria-label="Vistas del personaje">
 <select id="role" aria-label="Personaje"><option value="player">Protagonista</option><option value="guardian">Guardián</option><option value="npc">NPC</option></select>
 <button data-view="front" aria-pressed="true">Frente</button>
@@ -30,7 +30,7 @@ a{color:#355d74}#error{position:fixed;top:50%;left:50%;transform:translate(-50%,
 </nav><div id="error"></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installStylizedCharacter} from './stylized-characters.mjs?v=1';
+import {installStylizedCharacter} from './stylized-characters.mjs?v=2';
 const PI=Math.PI;
 const canvasHost=document.getElementById('viewport');
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
@@ -77,7 +77,7 @@ const load=(role)=>{
   root.traverse(o=>{
    if(o.geometry)geometries.add(o.geometry);
    if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){
-    materials.add(m);if(m.map)textures.add(m.map);
+    materials.add(m);if(m.map)textures.add(m.map);if(m.gradientMap)textures.add(m.gradientMap);
    }
   });
   geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());
@@ -90,13 +90,15 @@ const load=(role)=>{
  installStylizedCharacter(THREE,root,settings);scene.add(root);
  let count=0;root.traverse(o=>{if(o.isMesh)count++});
  window.__characterPreviewReady={ready:true,role,meshCount:count,
+  shading:root.userData.characterArt.shading,
+  outlineMeshes:root.userData.characterArt.outlineMeshes,
   full3D:root.userData.characterArt.mode==='fully-volumetric-3d'};
 };
 document.getElementById('role').addEventListener('change',e=>load(e.target.value));
 load('player');
 const views={front:[0,0],back:[Math.PI,0],left:[-Math.PI/2,0],
  right:[Math.PI/2,0],top:[0,1.32],bottom:[0,-.90]};
-let theta=0,phi=.08,radius=4.8,walking=false;
+let theta=0,phi=.08,radius=4.95,walking=false;
 const buttons=[...document.querySelectorAll('[data-view]')];
 const mark=(name)=>buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
 buttons.forEach(b=>b.addEventListener('click',()=>{
@@ -127,7 +129,7 @@ const release=e=>{active.delete(e.pointerId);pointer=null;pinch=0;};
 canvasHost.addEventListener('pointerup',release);
 canvasHost.addEventListener('pointercancel',release);
 canvasHost.addEventListener('wheel',e=>{
- e.preventDefault();radius=THREE.MathUtils.clamp(radius*(e.deltaY>0?1.09:.91),2.6,8.2);
+ e.preventDefault();radius=THREE.MathUtils.clamp(radius*(e.deltaY>0?1.09:.91),4.05,8.2);
 },{passive:false});
 addEventListener('resize',()=>{
  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
