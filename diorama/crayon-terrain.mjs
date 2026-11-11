@@ -52,16 +52,22 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
     // The base mountain renderer already supplies accurate normal weights,
     // world coordinates and mountain grass/rock blend via vAcademyCover.
     const overlay=String.raw`
-      vec2 grassUV=vAcademyRockWorld.xz*.24;
+      // Use the user's clean seamless grass as the actual ground color.
+      // Compute weights locally: the old layer-scoped weights variable is
+      // not guaranteed to remain in scope after shader patch composition.
+      vec2 grassUV=vAcademyRockWorld.xz*.22;
       vec3 handmadeGrass=texture2D(crayonGrass,grassUV).rgb;
       vec3 handmadeStoneTop=crayonTile(vAcademyRockWorld.xz*.19,vec2(0.0,0.0));
       vec3 handmadeStoneFront=crayonTile(vAcademyRockWorld.xy*.19,vec2(0.0,0.0));
       vec3 handmadeStoneSide=crayonTile(vAcademyRockWorld.zy*.19,vec2(0.0,0.0));
-      vec3 handmadeStone=handmadeStoneFront*weights.z+
-        handmadeStoneSide*weights.x+handmadeStoneTop*weights.y;
+      vec3 crayonNormal=normalize(cross(dFdx(vAcademyRockWorld),dFdy(vAcademyRockWorld)));
+      vec3 crayonWeights=pow(abs(crayonNormal),vec3(4.0));
+      crayonWeights/=max(dot(crayonWeights,vec3(1.0)),0.0001);
+      vec3 handmadeStone=handmadeStoneFront*crayonWeights.z+
+        handmadeStoneSide*crayonWeights.x+handmadeStoneTop*crayonWeights.y;
       float meadow=smoothstep(.12,.88,clamp(vAcademyCover,0.0,1.0));
       vec3 handmadeGround=mix(handmadeStone,handmadeGrass,meadow);
-      diffuseColor.rgb=mix(diffuseColor.rgb,handmadeGround,.84);
+      diffuseColor.rgb=mix(diffuseColor.rgb,handmadeGround,.98);
     `;
     shader.fragmentShader=shader.fragmentShader.replace(
      '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
@@ -88,13 +94,13 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v2';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v3';
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
  decorate(trailMat,'path');
  for(const mesh of waterMeshes)decorate(mesh.material,'water');
  return {name:'continuous-frameless-handmade-crayon',atlas:'96-to-64-pixel source swatches',
-   sourceArt:'user-supplied-seamless-crayon-grass',grassTexture:'crayon-grass-seamless.webp',physicalMapChanged:false,
+   sourceArt:'user-supplied-seamless-crayon-grass',grassTexture:'crayon-grass-seamless.webp',grassCoverage:.98,physicalMapChanged:false,
    brownBorders:false,seamlessSampling:true,water:true,grass:true,stone:true,soil:true};
 }
