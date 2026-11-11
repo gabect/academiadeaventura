@@ -1,0 +1,41 @@
+name: Diorama directional walking QA
+on:
+  push:
+    branches:
+      - feature/diorama-natural-8way-facing
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  direction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm original game untouched
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main...HEAD | tee /tmp/diorama-changed
+          if grep -vE '^(diorama/|tests/diorama-directional-facing.mjs$|tests/diorama-directional-browser.mjs$|\.github/workflows/diorama-directional-walking.yml$)' /tmp/diorama-changed; then
+            echo "Unexpected modification outside Diorama"
+            exit 1
+          fi
+      - name: Unit test eight walking directions
+        run: node tests/diorama-directional-facing.mjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Real-time character turning WebGL smoke
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
+          node tests/diorama-directional-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diorama-walk-turn-front-facing-screenshots
+          path: artifacts/diorama-turning/*.png
+          if-no-files-found: warn
