@@ -1,12 +1,12 @@
-// Source and real-file guardrails for the illustrated 0.59.0 Studio view.
+// Source and real-file guardrails for the illustrated 0.60.0 Studio view.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const env=fs.readFileSync(new URL('../src/mountain-environment.mjs',import.meta.url),'utf8');
 const art=fs.readFileSync(new URL('../src/studio-art-runtime.mjs',import.meta.url),'utf8');
 const version=JSON.parse(fs.readFileSync(new URL('../version.json',import.meta.url)));
-assert.equal(version.version,'0.59.0');
-assert(html.includes("const BUILD='0.59.0'"));
+assert.equal(version.version,'0.60.0');
+assert(html.includes("const BUILD='0.60.0'"));
 assert(html.includes('installStudioArt(THREE'));
 assert(html.includes('academyRockMossSurface'));
 assert(html.includes('academyRockUniform'));
@@ -26,7 +26,7 @@ assert(art.includes("alphaTest:.52"));
 const paint=fs.readFileSync(new URL('../src/studio-tree-impostors.mjs',import.meta.url),'utf8');
 assert(paint.includes('export function createStudioTreeImpostors'));
 assert(paint.includes('paintStudioTreeAtlasCanvas'));
-assert(paint.includes('academy-upright-full-tree-impostor-v1'));
+assert(paint.includes('academy-upright-full-tree-impostor-v2'));
 assert(paint.includes('paintedWholeTree:true'));
 const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
 for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageClump(',
@@ -34,7 +34,8 @@ for(const token of ['function curvedBranch(', 'function branchCollar(', 'functio
  'leaderCount:2', 'leafTips(end,heading)', 'foliageClump(g,end,theta,r,true,1.12)']){
  assert(procedural.includes(token),'Missing rooted geometry: '+token);
 }
-assert(html.includes('foliage.position.set(x,lift+2.39,z)'));
+assert(html.includes('foliage.position.set(x,lift+2.40,z)'));
+assert(html.includes('site=>[site.x,site.y+site.scale*2.40,site.z]'));
 assert(html.includes('if(!MOUNTAIN_STUDIO)drawMountainTreePart(MOUNTAIN_TREES'));
 assert(html.includes('if(!MOUNTAIN_STUDIO)cylinder(.22,.32,2.5,wood'));
 assert(html.includes('if(!MOUNTAIN_STUDIO)cylinder(.11,.16,1.65,cliffTrunk'));
@@ -43,7 +44,8 @@ assert(!html.includes("foliage.position.set(x,lift+2.54,z)"));
 
 assert(paint.includes('new THREE.CanvasTexture('),'Painterly fallback must have real painted textures');
 assert(paint.includes("tree-' + family".replace("' + family", "'+family")) || paint.includes("'tree-'+family"));
-assert(paint.includes('alphaTest:.43'));
+assert(paint.includes('alphaTest:.21'));
+assert(paint.includes("licensedRealAssets:true"));
 assert(paint.includes('gl_Position=projectionMatrix'));
 assert(paint.includes('quadsPerTree:1'));
 assert(!html.includes('createStudioTreeMaterials(THREE)'));
@@ -67,4 +69,4 @@ assert(html.includes('buildStudioNaturalSites'));
 assert(html.includes('studioNatureSites.accents'));
 assert(html.includes('studioNatureSites.walls'));
 assert(html.includes('studioNatureSites.crests'));
-console.log('Studio HD v0.59.0 invariants passed');
+console.log('Studio HD v0.60.0 invariants passed');
