@@ -37,14 +37,14 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #skillPanel,#zoomControls,.diorama-badge{filter:drop-shadow(2px 3px 0 #1e24224a)}
 #skillPanel{border:2px solid #272b27!important;background:#fff3c1f0!important;border-radius:12px!important}
 #skillPanel button,#zoomControls button{border:2px solid #202827!important;box-shadow:2px 3px 0 #20282777!important}
-#zoomControls button{background:#ffe15e!important;color:#15262d!important}
+#zoomControls button{background:#f5d86b!important;color:#15262d!important}
 #zoomControls button:active{background:#f88c33!important}
-#actionCluster button{background:#2669d6!important;border:3px solid #20272a!important;box-shadow:2px 4px 0 #20272a96!important}
-#runButton{background:#ef4540!important}
+#actionCluster button{background:#3973c9!important;border:3px solid #20272a!important;box-shadow:2px 4px 0 #20272a96!important}
+#runButton{background:#de554a!important}
 #message{background:#fff0bceb!important;color:#272827!important;border:3px solid #202827!important;border-radius:11px!important;box-shadow:3px 5px 0 #20282752!important;font-weight:700}
 #stickBase{border:3px solid #202827!important;background:#336dda70!important}
 #stickKnob{background:#ffe15e!important;border:3px solid #202827!important}
-#buildLabel{border:2px solid #222e2d!important;background:#ffdc4fef!important;color:#253029!important}
+#buildLabel{border:2px solid #3c4940!important;background:#f5e7baf2!important;color:#253029!important}
 </style></head>
 <body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.61.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse wheel: zoom · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.61.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">Cámara: ↑↓ inclinar · Rueda zoom</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
@@ -55,11 +55,11 @@ import {createMountainStudioTextures} from './src/mountain-art-studio.mjs?v=0.61
 import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0.61.0';
 import {createStudioTreeImpostors} from './src/studio-tree-impostors.mjs?v=0.61.0';
 import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
-import {installCardboardArt} from './diorama/cardboard-art.mjs?v=2';
+import {installCardboardArt} from './diorama/cardboard-art.mjs?v=3';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
-import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=7';
+import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -245,7 +245,9 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
  });
 }
 setCameraZoom(.94);
-scene.add(new THREE.HemisphereLight(0xe6f5ff,0x6c7854,2));const sun=new THREE.DirectionalLight(0xffefcf,2.3);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);scene.add(sun.target);
+// Matte paper illumination, not overexposed studio lights.
+scene.add(new THREE.HemisphereLight(0xf4f3e7,0x858d70,1.55));
+const sun=new THREE.DirectionalLight(0xffeedc,1.75);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);scene.add(sun.target);
 const mat=(color)=>new THREE.MeshStandardMaterial({color,roughness:.92,metalness:0});const grass=mat('#80aa71'),stone=mat('#9ca5a0'),wall=mat('#d5c6a6'),roof=mat('#745e68'),wood=mat('#73533d'),gold=mat('#efc56a'),blue=mat('#497e9e'),red=mat('#b8574b');
 const boxCache=new Map(),cylCache=new Map();function box(w,h,d,m,x,y,z,parent=scene){const k=`${w}/${h}/${d}`;if(!boxCache.has(k))boxCache.set(k,new THREE.BoxGeometry(w,h,d));const o=new THREE.Mesh(boxCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
 function cylinder(rt,rb,h,m,x,y,z,parent=scene,n=8){const k=`${rt}/${rb}/${h}/${n}`;if(!cylCache.has(k))cylCache.set(k,new THREE.CylinderGeometry(rt,rb,h,n));const o=new THREE.Mesh(cylCache.get(k),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
@@ -4611,8 +4613,8 @@ scene.traverse(node=>{
 });
 // A real sky dome supplies the missing visual horizon and a soft cloud layer.
 // Unlike ground assets, the sky does NOT bend: it follows the camera.
-const HORIZON_SKY_TOP=new THREE.Color('#6db4f1');
-const HORIZON_SKY_BASE=new THREE.Color('#d0edfb');
+const HORIZON_SKY_TOP=new THREE.Color('#83b6d9');
+const HORIZON_SKY_BASE=new THREE.Color('#d6eae2');
 const skyDome=new THREE.Mesh(new THREE.SphereGeometry(180,32,16),
  new THREE.ShaderMaterial({
  depthWrite:false,depthTest:false,side:THREE.BackSide,
@@ -4631,16 +4633,19 @@ uniform vec3 horizonColor;
 varying vec3 vSky;
 void main(){
  vec3 direction=normalize(vSky);
- float gradient=smoothstep(-0.14,0.75,direction.y);
+ float gradient=smoothstep(-.10,.80,direction.y);
  vec3 sky=mix(horizonColor,topColor,gradient);
- // Deliberately subtle broad clouds instead of repeated static textures.
- float cross=sin(direction.x*29.0+direction.z*11.0);
- float wisps=sin(direction.x*47.0-direction.z*35.0);
- float cloud=smoothstep(0.69,0.93,0.56+
-  0.23*cross+0.20*wisps);
- cloud*=smoothstep(0.015,0.23,direction.y)*
-  (1.0-smoothstep(0.48,0.80,direction.y));
- sky=mix(sky,vec3(.97,.96,.87),cloud*.50);
+ // 3D brush noise instead of the old azimuth-only cloud bands, which
+ // produced conspicuous vertical streaks when looking along the horizon.
+ float fiber=sin(dot(direction,vec3(89.3,131.1,57.5)))*
+   sin(dot(direction,vec3(-76.2,54.7,93.1)));
+ sky+=vec3(.005,.005,.004)*fiber;
+ float cloudNoise=.5+.5*sin(direction.x*8.1+direction.y*11.3+
+   sin(direction.z*6.2)*1.1)*cos(direction.z*9.7-direction.y*7.6);
+ float cloud=smoothstep(.72,.94,cloudNoise)*
+   smoothstep(.09,.27,direction.y)*
+   (1.0-smoothstep(.49,.75,direction.y));
+ sky=mix(sky,vec3(.95,.95,.91),cloud*.12);
  gl_FragColor=vec4(sky,1.0);
 }
 `
@@ -4659,9 +4664,11 @@ dioramaExit.textContent='Mundo original ↗';
 dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
 const dioramaTitle=document.createElement('div');
-dioramaTitle.textContent='DIORAMA · SPRITES PNG ORIGINALES · MAPA ORIGINAL';
-dioramaTitle.style.cssText='position:fixed;top:11px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:7px 10px;border:2px solid #202827;background:#ffda34f5;border-radius:11px;color:#212b27;font:800 11px system-ui;box-shadow:3px 4px 0 #20282755';
-document.body.append(dioramaTitle);
+dioramaTitle.textContent='ESCENARIO DE CARTÓN';
+dioramaTitle.style.cssText='position:fixed;top:9px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:5px 9px;border:1px solid #51645e;background:#f5ecd9e3;border-radius:8px;color:#31463c;font:700 10px system-ui;box-shadow:0 2px 4px #2028272a';
+// The upper-right badge already identifies the original map. The second
+// bright banner is only useful for an explicit debug/comparison view.
+if(new URLSearchParams(location.search).has('art-debug'))document.body.append(dioramaTitle);
 const DIORAMA_MOTION_TEST=new URLSearchParams(location.search).has('motion-test');
 if(DIORAMA_MOTION_TEST)window.__dioramaMotionQA={frames:0};
 const clock=new THREE.Clock();
