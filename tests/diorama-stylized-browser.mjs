@@ -24,6 +24,9 @@ try{
     title:document.title
    }));
    assert.equal(state.art.renderMode,'fully-volumetric-3d');
+   assert.equal(state.art.player.shading,'cel-shaded-vector-3d');
+   assert(state.art.player.outlineMeshes>=6,'Missing player outlines');
+   assert.equal(state.art.guardian.shading,'cel-shaded-vector-3d');
    assert.equal(state.art.player.installed,true);
    assert.equal(state.art.player.articulated,true);
    assert.equal(state.art.guardian.installed,true);
