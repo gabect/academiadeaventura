@@ -12,7 +12,7 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  const previousTerrainCompiler=terrainMaterial.onBeforeCompile;
  terrainMaterial.onBeforeCompile=shader=>{
   previousTerrainCompiler(shader);
-  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',String.raw\`
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',String.raw`
    vec3 cardboardNormal=normalize(cross(dFdx(vAcademyRockWorld),dFdy(vAcademyRockWorld)));
    float vertical=1.-smoothstep(.32,.84,abs(cardboardNormal.y));
    float band=.5+.5*sin(vAcademyRockWorld.y*14.5+
@@ -24,7 +24,7 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
    float green=clamp(.13+vAcademyCover*.95-vertical*.93,0.,1.);
    diffuseColor.rgb=mix(edgeColor,grassPigment,green);
    #include <alphamap_fragment>
-  \`);
+  `);
  };
  terrainMaterial.customProgramCacheKey=()=>'academy-cardboard-geography-strata-v1';
  const paper=new THREE.CanvasTexture((()=>{
