@@ -1,0 +1,42 @@
+name: Diorama 3D cast geometry and WebGL QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'diorama/index.html'
+      - 'diorama/stylized-characters.mjs'
+      - 'tests/diorama-stylized-characters.mjs'
+      - 'tests/diorama-stylized-browser.mjs'
+      - '.github/workflows/diorama-3d-cast.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Three.js and Playwright
+        run: |
+          npm install --no-save --no-package-lock three@0.170.0 playwright
+          npx playwright install --with-deps chromium
+      - name: Validate all new character geometry and legacy animation
+        run: |
+          node --check diorama/stylized-characters.mjs
+          node --check tests/diorama-stylized-characters.mjs
+          node tests/diorama-stylized-characters.mjs
+          node tests/diorama-directional-facing.mjs
+      - name: Browser checks on original map with screenshots
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
+          node tests/diorama-stylized-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: volumetric-3d-cast-before-after-QA
+          path: artifacts/diorama-3d-cast/*.png
+          if-no-files-found: warn
