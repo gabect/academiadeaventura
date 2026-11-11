@@ -3,7 +3,7 @@
  * grass unrelated to these shapes. Each family has several real mesh variants.
  */
 export function createStudioFoliageGeometry(THREE){
- const make=()=>({positions:[],colors:[],uvs:[],indices:[],barkIndices:[]});
+ const make=()=>({positions:[],colors:[],uvs:[],indices:[],barkIndices:[],cardCount:0});
  const col=(h,s,l)=>new THREE.Color().setHSL(h,s,l);
  const v=(g,p,c,uv=[.5,.5])=>{
   g.positions.push(p[0],p[1],p[2]);
@@ -28,7 +28,7 @@ export function createStudioFoliageGeometry(THREE){
   if(leafCount)geo.addGroup(0,leafCount,0);
   if(g.barkIndices.length)geo.addGroup(leafCount,g.barkIndices.length,1);
   geo.computeVertexNormals();geo.computeBoundingSphere();
-  geo.userData={...info,leafTriangles:leafCount/3,barkTriangles:g.barkIndices.length/3};
+  geo.userData={...info,leafTriangles:leafCount/3,barkTriangles:g.barkIndices.length/3,canopyCards:g.cardCount,foliageStyle:'crossed-alpha-clumps'};
   return geo;
  };
  const rng=seed=>{
@@ -81,47 +81,41 @@ export function createStudioFoliageGeometry(THREE){
   const cap=[p[0],p[1]+r*1.7,p[2]];
   tube(g,stem,cap,r*.71,r*.49,tint);
  }
- function foliageBud(g,site,angle,rand,needle=false,count=5){
-  // Leaves arise from short twigs close to their supporting branch;
-  // do not distribute them arbitrarily around the trunk centre.
-  for(let j=0;j<count;j++){
-   const a=angle+2*Math.PI*(j+(rand()-.5)*.22)/count;
-   const direction=[Math.cos(a),0,Math.sin(a)];
-   const offset=.026+.075*rand();
-   const root=[site[0]+direction[0]*offset,
-    site[1]+(rand()-.5)*.09,site[2]+direction[2]*offset];
-   const hue=(needle?.303:.278)+.045*rand();
-   const tint=col(hue,.43+.17*rand(),.27+.15*rand());
-   foliageLeaf(g,root,direction,(needle?.13:.20)+.13*rand(),
-    (needle?.046:.095)+.047*rand(),tint,(rand()-.18)*.23,needle);
-  }
+ // Billboard-free crossed cards with four vertices and two triangles each.
+ // The card is physically situated at a terminal twig, never at random in space.
+ function foliageCard(g,centre,yaw,width,height,tilt,tile,tint){
+  const axis=[Math.cos(yaw),0,Math.sin(yaw)],normal=[-axis[2],0,axis[0]];
+  const up=[normal[0]*Math.sin(tilt),Math.cos(tilt),normal[2]*Math.sin(tilt)];
+  const corner=(side,high)=>[
+   centre[0]+axis[0]*side*width*.5+up[0]*high*height*.5,
+   centre[1]+up[1]*high*height*.5,
+   centre[2]+axis[2]*side*width*.5+up[2]*high*height*.5];
+  // CanvasTexture flips Y: the upper atlas row occupies high UV v.
+  const column=tile%4,row=Math.floor(tile/4),padding=5;
+  const u0=(column*256+padding)/1024,u1=((column+1)*256-padding)/1024;
+  const top=1-(row*256+padding)/512,bottom=1-((row+1)*256-padding)/512;
+  const first=g.positions.length/3;
+  v(g,corner(-1,-1),tint,[u0,bottom]);
+  v(g,corner(1,-1),tint,[u1,bottom]);
+  v(g,corner(-1,1),tint,[u0,top]);
+  v(g,corner(1,1),tint,[u1,top]);
+  g.indices.push(first,first+1,first+2,first+1,first+3,first+2);
+  g.cardCount++;
  }
- function foliageLeaf(g,root,dir,length,width,tint,up=.12,needle=false){
-  const horizontal=Math.hypot(dir[0],dir[2])||1;
-  const dx=dir[0]/horizontal,dz=dir[2]/horizontal;
-  const at=(t,side,height)=>[
-   root[0]+dx*length*t-dz*width*side,
-   root[1]+up*t+height,
-   root[2]+dz*length*t+dx*width*side
-  ];
-  const pale=tint.clone().multiplyScalar(1.17);
-  const shade=tint.clone().multiplyScalar(.79);
-  const body=tint.clone();
-  // Triangulated leaf with a raised midrib and swept, tapered margins.
-  // The UV carries soft painterly pigments/veins instead of flat colour.
-  const base=v(g,at(0,0,0),shade,[.5,0]);
-  const aLeft=v(g,at(.38,.77,-.008),body,[.10,.38]);
-  const aRight=v(g,at(.38,-.77,-.025),shade,[.90,.38]);
-  const mid=v(g,at(.42,0,width*(needle?.24:.42)),pale,[.5,.42]);
-  const tip=v(g,at(1,0,up*.08),pale,[.5,1]);
-  g.indices.push(base,aLeft,mid,base,mid,aRight,aLeft,tip,mid,mid,tip,aRight);
-  if(!needle){
-   const bLeft=v(g,at(.74,.79,-.018),body,[.14,.76]);
-   const bRight=v(g,at(.74,-.78,-.031),shade,[.86,.76]);
-   const ridge=v(g,at(.77,0,width*.40),pale,[.5,.77]);
-   g.indices.push(aLeft,bLeft,ridge,aLeft,ridge,mid,
-    mid,ridge,aRight,aRight,ridge,bRight,
-    bLeft,tip,ridge,ridge,tip,bRight);
+ function foliageClump(g,site,heading,rand,needle=false,scale=1){
+  const n=3,widthBase=needle?.45:.68,heightBase=needle?.43:.59;
+  const tone=col(needle?.298:.278,.075+.055*rand(),.91+.07*rand());
+  const rotation=heading+(rand()-.5)*.63;
+  for(let i=0;i<n;i++){
+   const yaw=rotation+i*Math.PI/n+(rand()-.5)*.25;
+   const offset=(rand()-.50)*(needle?.15:.23)*scale;
+   const centre=[
+    site[0]+Math.cos(heading)*offset+Math.cos(yaw)*.065*scale,
+    site[1]+(rand()-.44)*(needle?.16:.21)*scale,
+    site[2]+Math.sin(heading)*offset+Math.sin(yaw)*.065*scale];
+   foliageCard(g,centre,yaw,widthBase*scale*(.84+.36*rand()),
+    heightBase*scale*(.81+.40*rand()),(rand()-.5)*.72,
+    Math.floor(rand()*8),tone);
   }
  }
  function meadow(){
@@ -196,17 +190,19 @@ export function createStudioFoliageGeometry(THREE){
       tube(g,node,mid,.013,.008,bark);
       tube(g,mid,end,.008,.0025,bark);
       secondaryBranches++;tertiaryBranches++;
-      foliageBud(g,end,theta,r,true,4);terminalClusters++;
-      if(k===2&&r()>.70)foliageBud(g,mid,theta,r,true,2);
+      foliageClump(g,end,theta,r,true,1.12);terminalClusters++;
+      if(k===2&&r()>.54)foliageClump(g,mid,theta,r,true,.65);
      }
     }
-    foliageBud(g,p2,angle,r,true,5);terminalClusters++;
+    foliageClump(g,p2,angle,r,true,1.22);terminalClusters++;
+    if(j%2===0)foliageClump(g,p1,angle,r,true,.72);
    }
   }
-  for(let i=0;i<11;i++){
-   const a=r()*Math.PI*2,base=spine(2.56+.23*r());
-   foliageLeaf(g,base,[Math.cos(a),0,Math.sin(a)],.12+.12*r(),.045,col(.32+.02*r(),.58,.27+.07*r()),.12,true);
-  }
+   // Small terminal needle sprays hide the trunk tip.
+   for(let i=0;i<9;i++){
+    const angle=r()*Math.PI*2,top=spine(2.43+.17*r());
+    foliageClump(g,top,angle,r,true,.54+.22*r());
+   }
   return finalize(g,{family:'pine',variant,branchCount:branches,maxReach:reach,integratedTrunk:true,trunkBaseY:-2.40,branchOrders:{primary:branches,secondary:secondaryBranches,tertiary:tertiaryBranches},terminalClusters});
  }
  function broadleaf(variant){
@@ -239,16 +235,8 @@ export function createStudioFoliageGeometry(THREE){
   };
   function leafTips(p,heading){
    terminalClusters++;
-   // Leaves are clustered at twigs, not beside the main trunk.
-   foliageBud(g,p,heading,r,false,8+Math.floor(r()*5));
-   for(let i=0;i<3;i++){
-    const theta=heading+(r()-.5)*2.8;
-    const root=[p[0]+(r()-.5)*.13,p[1]+(r()-.5)*.13,
-     p[2]+(r()-.5)*.13];
-    foliageLeaf(g,root,[Math.cos(theta),0,Math.sin(theta)],
-     .21+.23*r(),.09+.06*r(),
-     col(.285+.06*r(),.46+.1*r(),.29+.13*r()),.10+.20*r());
-   }
+   // These overlap naturally into irregular crowns while following woody tips.
+   foliageClump(g,p,heading,r,false,1.22+.22*r());
   }
   function growBranch(start,heading,elevation,length,radius,order){
    const end=position(start,heading,elevation,length);
@@ -258,7 +246,12 @@ export function createStudioFoliageGeometry(THREE){
    else if(order===2)orders.secondary++;
    else orders.tertiary++;
    maxReach=Math.max(maxReach,Math.hypot(end[0],end[2]));
-   if(order===3){leafTips(end,heading);return;}
+   if(order===3){
+     leafTips(end,heading);
+     const inner=position(start,heading,elevation,length*.63);
+     if(r()>.22)foliageClump(g,inner,heading,r,false,.78);
+     return;
+    }
    // Secondary and tertiary branches originate on the actual parent wood.
    const count=order===1?2+Math.floor(r()*2):2;
    for(let j=0;j<count;j++){
@@ -272,7 +265,7 @@ export function createStudioFoliageGeometry(THREE){
     growBranch(base,angle,rise,segment,
      Math.max(.006,nextRadius*.82),order+1);
    }
-   if(order===2&&r()>.52)leafTips(end,heading);
+   if(order===2&&r()>.25)foliageClump(g,end,heading,r,false,.82);
   }
   const mains=5+Math.floor(r()*3);
   for(let i=0;i<mains;i++){
