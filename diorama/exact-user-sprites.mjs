@@ -50,7 +50,7 @@ function selector(site,i){
  return Math.floor(Math.abs(Math.sin(site.x*3.71+site.z*2.13+i*.61))*8)%8;
 }
 export function installExactUserSprites({THREE,scene,camera,world,oldStage,
- treeLocations,shrubSites,naturalSurfaceY}){
+ treeLocations,shrubSites,naturalSurfaceY,applyTerrainCurve}){
  // Replace the older procedural drawings only, leaving its mountain-stage
  // backdrops and original cabin façade in place.
  for(const mesh of oldStage.cards){
@@ -98,6 +98,10 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
    bushes:new THREE.MeshBasicMaterial({map:c,side:THREE.DoubleSide,alphaTest:.105,
     transparent:false,alphaToCoverage:true,depthWrite:true,toneMapped:false})
   };
+  // These texture materials arrive asynchronously, AFTER the initial scene
+  // traversal that installs the Animal-Crossing terrain deformation.
+  // Curve every PNG standee exactly like the terrain it touches.
+  for(const material of Object.values(mats))applyTerrainCurve?.(material);
   for(const {def,sites} of groups){
    if(!sites.length)continue;
    const geo=spritePlane(THREE,def);
@@ -108,6 +112,7 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
    scene.add(mesh);batches.push({mesh,sites,def});
   }
   status.orientation='fixed-stage-front';status.groundAnchored=true;
+  status.curvedWithTerrain=typeof applyTerrainCurve==='function';
   status.shrubHeightRange=[.44,.68];status.slopeFootprintGrounding=true;
   status.ready=true;status.drawCalls=batches.length;
   status.sprites=batches.reduce((n,b)=>n+b.sites.length,0);
