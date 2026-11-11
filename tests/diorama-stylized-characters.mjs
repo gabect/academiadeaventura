@@ -72,7 +72,7 @@ const guardian=inspect('guardian',1,'#a9634e');
 const npc=inspect('npc',3,'#6a9d96');
 const html=fs.readFileSync('diorama/index.html','utf8');
 for(const token of [
- "import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=2';",
+ "import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=3';",
  "installStylizedCharacter(THREE,player,{role:'player'",
  "installStylizedCharacter(THREE,guardian,{role:'guardian'",
  "installStylizedCharacter(THREE,npc,{role:'npc'",
