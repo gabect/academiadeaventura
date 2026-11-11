@@ -1,0 +1,46 @@
+name: Diorama Crayola art and full-map visual QA
+on:
+  push:
+    branches:
+      - feature/diorama-crayola-ink-corrugated-v1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Keep existing game intact
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main...HEAD | tee /tmp/changed.txt
+          if grep -vE '^(diorama/|tests/diorama-crayola-art.mjs$|\.github/workflows/diorama-crayola.yml$)' /tmp/changed.txt; then
+            echo "Change detected outside the isolated diorama"
+            exit 1
+          fi
+      - name: Static art and eight-way movement checks
+        run: |
+          node --check diorama/crayon-style.mjs
+          node --check diorama/cardboard-art.mjs
+          node --check diorama/cardboard-details.mjs
+          node tests/diorama-crayola-art.mjs
+          node tests/diorama-directional-facing.mjs
+      - name: Install headless browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Original map parity, wax cutouts and five WebGL screenshots
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-server.log 2>&1 &
+          node tests/diorama-original-map-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diorama-crayola-black-ink-five-views
+          path: artifacts/diorama-full/*.png
+          if-no-files-found: warn

@@ -1,3 +1,4 @@
+import {CRAYON,makeCrayonTexture,makeCorrugatedTexture,addSceneryInk} from './crayon-style.mjs';
 /* Cardboard art on the REAL original-world coordinates. Visuals only. */
 export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  naturalSurfaceY,fieldTreeCrowns,mountainTreeSites,cliffPineSites,
@@ -5,44 +6,44 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  waterBodies,terrainBounds}){
  const exempt=new Set([player,guardian,...ambientNPCs]);
  const waterMeshes=new Set([waterSurface,upperWaterSurface,waterfallPlane,groundMesh]);
- scene.background.set('#a9cad1');
- if(scene.fog){scene.fog.color.set('#a9cad1');scene.fog.near=56;scene.fog.far=145;}
+ scene.background.set(CRAYON.sky);
+ if(scene.fog){scene.fog.color.set(CRAYON.sky);scene.fog.near=56;scene.fog.far=145;}
  // Cliff and terrain retain original geometry, surface functions and
  // climbable trail slopes. Only the shader's PIGMENT changes to paper/corrugate.
  const previousTerrainCompiler=terrainMaterial.onBeforeCompile;
  terrainMaterial.onBeforeCompile=shader=>{
   previousTerrainCompiler(shader);
   shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',String.raw`
-   vec3 cardboardNormal=normalize(cross(dFdx(vAcademyRockWorld),dFdy(vAcademyRockWorld)));
-   float vertical=1.-smoothstep(.32,.84,abs(cardboardNormal.y));
-   float band=.5+.5*sin(vAcademyRockWorld.y*14.5+
-     sin(vAcademyRockWorld.x*.44+vAcademyRockWorld.z*.32)*.52);
-   float fibers=.018*sin(vAcademyRockWorld.x*22.+vAcademyRockWorld.z*18.);
-   vec3 edgeColor=mix(vec3(.61,.48,.32),vec3(.77,.64,.47),band)+fibers;
-   float brush=.5+.5*sin(vAcademyRockWorld.x*.32)*sin(vAcademyRockWorld.z*.43);
-   vec3 grassPigment=mix(vec3(.53,.68,.45),vec3(.71,.80,.55),brush);
-   float green=clamp(.13+vAcademyCover*.95-vertical*.93,0.,1.);
-   diffuseColor.rgb=mix(edgeColor,grassPigment,green);
+   vec3 cNormal=normalize(cross(dFdx(vAcademyRockWorld),dFdy(vAcademyRockWorld)));
+   float exposed=1.-smoothstep(.32,.81,abs(cNormal.y));
+   float y=vAcademyRockWorld.y;
+   float crayonGrain=sin(vAcademyRockWorld.x*13.6+y*3.2+
+       vAcademyRockWorld.z*11.2)*.04;
+   crayonGrain+=sin(vAcademyRockWorld.x*31.0-
+       vAcademyRockWorld.z*9.0+y*6.3)*.021;
+   vec3 grass=vec3(.14,.57,.18)+crayonGrain*.52;
+   grass=mix(grass,vec3(.30,.72,.20),.36+
+      .22*sin(vAcademyRockWorld.x*.39)*sin(vAcademyRockWorld.z*.37));
+   float rib=sin(y*23.4+
+       sin(vAcademyRockWorld.x*.52+vAcademyRockWorld.z*.31)*.65);
+   vec3 core=mix(vec3(.55,.31,.13),vec3(.91,.62,.29),.50+.50*rib);
+   float groove=1.-smoothstep(.16,.38,abs(rib));
+   core=mix(core,vec3(.25,.16,.08),groove*.53);
+   float cutWobble=sin(vAcademyRockWorld.x*.21+
+       vAcademyRockWorld.z*.24+y*.18)*.42;
+   float inkLine=1.-smoothstep(.07,.24,abs(sin(y*7.7+cutWobble)));
+   core=mix(core,vec3(.025,.038,.034),inkLine*.82);
+   float paintCoverage=clamp(.15+vAcademyCover*.97-exposed*.99,0.,1.);
+   diffuseColor.rgb=mix(core,grass,paintCoverage);
+   float cutInk=exposed*(1.-exposed)*4.;
+   diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.028,.041,.038),
+       smoothstep(.33,.85,cutInk)*.58);
    #include <alphamap_fragment>
   `);
  };
- terrainMaterial.customProgramCacheKey=()=>'academy-cardboard-geography-strata-v1';
- const paper=new THREE.CanvasTexture((()=>{
-  const c=document.createElement('canvas');c.width=c.height=128;
-  const x=c.getContext('2d');x.fillStyle='#f7f2e7';x.fillRect(0,0,128,128);
-  let seed=45431;const r=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
-  for(let i=0;i<2500;i++){
-   x.fillStyle=r()>.50?'#ffffff36':'#78694516';
-   x.fillRect(r()*128,r()*128,r()*2+.15,r()*2+.2);
-  }
-  for(let i=0;i<85;i++){
-   const px=r()*128,py=r()*128;x.strokeStyle='#816d4b18';x.lineWidth=.5;
-   x.beginPath();x.moveTo(px,py);x.lineTo(px+9*r(),py+2*r());x.stroke();
-  }
-  return c;
- })());
- paper.colorSpace=THREE.SRGBColorSpace;paper.wrapS=paper.wrapT=THREE.RepeatWrapping;
- paper.repeat.set(2,2);paper.anisotropy=2;
+  terrainMaterial.customProgramCacheKey=()=>'academy-crayola-corrugated-strata-v2';
+ const paper=makeCrayonTexture(THREE);
+ const corrugated=makeCorrugatedTexture(THREE);
  const cache=new Map();
  function rep(m){
   if(!m||!m.isMeshStandardMaterial)return m;
@@ -52,10 +53,13 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   const green=h.h>.19&&h.h<.49&&h.s>.1;
   const blue=h.h>.48&&h.h<.70&&h.s>.14;
   const warm=h.h<.17&&h.s>.18;
-  const color=green?(h.l>.54?'#b3ce9f':'#8eb88a'):
-   blue?'#92c8d0':warm?(h.l<.34?'#a17e63':'#d6b18d'):
-   (h.l<.33?'#8c806b':'#d4bd96');
-  a.color.set(color);a.roughness=1;a.metalness=0;a.flatShading=true;
+  const color=green?(h.l>.54?CRAYON.lightGreen:CRAYON.green):
+   blue?CRAYON.blue:
+   warm?(h.l<.34?CRAYON.red:(h.s>.36?CRAYON.orange:CRAYON.yellow)):
+   h.l>.71?CRAYON.cream:
+   h.l<.34?'#9e6f42':
+   h.s>.12?CRAYON.yellow:CRAYON.card;
+  a.color.set(color);a.roughness=.70;a.metalness=0;a.flatShading=true;
   a.normalMap=null;a.roughnessMap=null;a.metalnessMap=null;
   a.map=paper;a.needsUpdate=true;return a;
  }
@@ -72,6 +76,10 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  }
  for(const child of scene.children)visit(child);
  for(const tree of fieldTreeCrowns)tree.visible=false;
+ const ink=addSceneryInk({THREE,scene,
+  exclude:[player,guardian,...ambientNPCs,groundMesh,waterSurface,
+   upperWaterSurface,waterfallPlane,...fieldTreeCrowns],
+  limit:180});
  if(mountainShrubs){mountainShrubs.visible=true;
   mountainShrubs.material=rep(mountainShrubs.material);}
  // Single non-indexed, vertex-colored 3D cardstock model per species.
@@ -79,11 +87,12 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  function shape(pine){
   const s=new THREE.Shape();
   if(pine){
-   s.moveTo(0,2.8);s.lineTo(-.55,2.06);s.lineTo(-.3,2.06);
-   s.lineTo(-.90,1.35);s.lineTo(-.51,1.35);
-   s.lineTo(-1.27,.60);s.quadraticCurveTo(0,.38,1.27,.60);
-   s.lineTo(.51,1.35);s.lineTo(.90,1.35);
-   s.lineTo(.3,2.06);s.lineTo(.55,2.06);
+   s.moveTo(.07,2.83);s.lineTo(-.55,2.11);s.lineTo(-.26,2.07);
+   s.lineTo(-.98,1.37);s.lineTo(-.49,1.34);
+   s.lineTo(-1.32,.58);s.quadraticCurveTo(-.29,.46,.08,.64);
+   s.quadraticCurveTo(.42,.50,1.21,.70);
+   s.lineTo(.48,1.38);s.lineTo(.88,1.42);
+   s.lineTo(.33,2.10);s.lineTo(.57,2.09);
   }else{
    s.moveTo(-1.37,.21);
    s.bezierCurveTo(-1.75,.59,-1.51,1.38,-1.12,1.43);
@@ -96,46 +105,74 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   s.closePath();return s;
  }
  function template(pine){
-  const geos=[],base=[
-   new THREE.Color('#ad875f'),new THREE.Color('#d3b390'),
-   new THREE.Color(pine?'#4d8869':'#6f9f74'),
-   new THREE.Color(pine?'#68a080':'#8dbc80'),
-   new THREE.Color(pine?'#86b69a':'#b0cf98')
+  const geos=[],colors=[
+   new THREE.Color('#b98043'),new THREE.Color(CRAYON.yellow),
+   new THREE.Color(pine?'#13894c':'#1c9d56'),
+   new THREE.Color(pine?'#2ebf59':'#3cd550'),
+   new THREE.Color(pine?'#6be56e':'#a2ed62'),
+   new THREE.Color(CRAYON.ink)
   ];
-  const trunk=new THREE.BoxGeometry(pine?.31:.43,2.17,.34);
-  trunk.translate(0,1.085,0);geos.push([trunk,0]);
+  // Every paper cut is imperfectly inset over a larger black ink outline.
+  const frame=new THREE.BoxGeometry(pine?.355:.475,2.22,.40);
+  frame.translate(0,1.10,-.03);geos.push([frame,5]);
+  const trunk=new THREE.BoxGeometry(pine?.29:.41,2.17,.36);
+  trunk.translate(0,1.085,.025);geos.push([trunk,0]);
   const leaf=shape(pine);
   for(let i=0;i<3;i++){
-   const g=new THREE.ExtrudeGeometry(leaf,{depth:.13,steps:1,
-    bevelEnabled:true,bevelThickness:.035,bevelSize:.06,
-    bevelSegments:1,curveSegments:5});
-   g.scale(1-i*.10,1-i*.08,1);
-   g.translate((i-1)*(pine?.07:.17),
-    (pine?1.17:1.95)+i*(pine?.29:.14),-.10+i*.11);
-   g.rotateY(i===1?Math.PI*.37:(i===2?-.15:.12));
-   geos.push([g,i+2]);
+   // Three layers: front paint, a thin black edge, and BACK paint.
+   // A 3D camera can see either side without ever showing a black slab.
+   for(const face of ['ink','front','back']){
+    const outlined=face==='ink';
+    const geom=new THREE.ExtrudeGeometry(leaf,{
+     depth:outlined?.085:.052,steps:1,
+     bevelEnabled:true,bevelThickness:outlined?.031:.022,
+     bevelSize:outlined?.042:.018,bevelSegments:1,curveSegments:6
+    });
+    geom.scale((1-i*.095)*(outlined?1.040:1),
+       (1-i*.07)*(outlined?1.032:1),1);
+    const shift=face==='front'?.057:face==='back'?-.075:-.025;
+    geom.translate((i-1)*(pine?.07:.17)+
+       (outlined?-.010:.006),
+      (pine?1.17:1.94)+i*(pine?.29:.14)-
+       (outlined?.008:0),
+      -.10+i*.12+shift);
+    geom.rotateY(i===1?Math.PI*.37:(i===2?-.16:.13));
+    geos.push([geom,outlined?5:i+2]);
+   }
   }
-  let positions=[],normals=[],uvs=[],colors=[];
-  const edge=new THREE.Color('#c2a37c');
-  for(const [geom,idx] of geos){
+  const positions=[],normals=[],uvs=[],rgb=[],edgeValues=[];
+  const edgeColor=new THREE.Color('#dfb47d');
+  const shadedEdge=new THREE.Color('#85522e');
+  for(const [geom,index] of geos){
    const g=geom.index?geom.toNonIndexed():geom;
-   const p=g.getAttribute('position'),n=g.getAttribute('normal'),uv=g.getAttribute('uv');
+   const p=g.getAttribute('position'),n=g.getAttribute('normal'),
+    uv=g.getAttribute('uv');
    for(let i=0;i<p.count;i++){
     positions.push(p.getX(i),p.getY(i),p.getZ(i));
     normals.push(n.getX(i),n.getY(i),n.getZ(i));
-    uvs.push(uv?uv.getX(i):0,uv?uv.getY(i):0);
-    const side=g.groups.some(gr=>gr.materialIndex===1&&i>=gr.start&&i<gr.start+gr.count);
-    const c=side?edge:base[idx];
-    colors.push(c.r,c.g,c.b);
+    const u=uv?uv.getX(i):0,v=uv?uv.getY(i):0;
+    uvs.push(u,v);
+    const isEdge=index!==5&&g.groups.some(gr=>
+     gr.materialIndex===1&&i>=gr.start&&i<gr.start+gr.count);
+    const rib=.64+.36*(.5+.5*Math.sin(u*35+v*18));
+    const col=index===5?colors[5]:
+     isEdge?edgeColor.clone().lerp(shadedEdge,1-rib):colors[index];
+    rgb.push(col.r,col.g,col.b);
+    edgeValues.push(isEdge?1:0);
    }
    g.dispose();
   }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  g.computeBoundingSphere();g.userData.cardboardTree=true;return g;
+  const result=new THREE.BufferGeometry();
+  result.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  result.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+  result.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  result.setAttribute('color',new THREE.Float32BufferAttribute(rgb,3));
+  result.setAttribute('cardboardEdge',new THREE.Float32BufferAttribute(edgeValues,1));
+  result.computeBoundingSphere();
+  result.userData.cardboardTree=true;
+  result.userData.blackInkCutout=true;
+  result.userData.corrugatedEdges=true;
+  return result;
  }
  const locations={pine:[],broadleaf:[]};
  const seen=new Set();
@@ -158,8 +195,21 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   [-58.35,-44.4,.75],[-59.3,-41.2,.90]])
   push(x,naturalSurfaceY(x,z),z,'pine',k*.84,x*.1);
  const material=new THREE.MeshStandardMaterial({
-  color:'#ffffff',vertexColors:true,roughness:1,
+  color:'#ffffff',map:paper,vertexColors:true,roughness:.68,
   metalness:0,flatShading:true,side:THREE.DoubleSide});
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.uCorrugated={value:corrugated};
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nattribute float cardboardEdge;\nvarying float vCardboardEdge;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\nvCardboardEdge=cardboardEdge;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\nuniform sampler2D uCorrugated;\nvarying float vCardboardEdge;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
+   '#include <map_fragment>\nvec3 flute=texture2D(uCorrugated,vMapUv).rgb;'+
+   '\ndiffuseColor.rgb=mix(diffuseColor.rgb,flute,vCardboardEdge*.84);');
+ };
+ material.customProgramCacheKey=()=>'diorama-corrugated-ink-wax-v2';
  const forest=[];
  for(const kind of ['pine','broadleaf']){
   const entries=locations[kind];
@@ -180,9 +230,9 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  for(const obj of [waterSurface,upperWaterSurface,waterfallPlane]){
   if(!obj?.material)continue;
   for(const m of Array.isArray(obj.material)?obj.material:[obj.material]){
-   if(m.color)m.color.set('#7dc8d4');
+   if(m.color)m.color.set(CRAYON.water);
    if('metalness' in m)m.metalness=0;
-   if('roughness' in m)m.roughness=1;
+   if('roughness' in m)m.roughness=.67;
    if('opacity' in m)m.opacity=.90;
    m.transparent=true;m.depthWrite=false;
    if(m.map)m.map=null;
@@ -197,7 +247,9 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
    pine:locations.pine.length,broadleaf:locations.broadleaf.length},
   waterBodies:waterBodies.map(w=>({id:w.id,x:w.x,z:w.z})),
   npcCount:ambientNPCs.length+1,originalGameModified:false,
-  assetStyle:'layered-extruded-cardboard'
+  assetStyle:'crayola-primary-ink-corrugated',artVersion:'crayon-v1',
+  outlinedScenery:ink.outlineCount,blackInk:true,corrugatedEdges:true,
+  palette:'primary-wax'
  };
  window.__dioramaWorld=status;
  return {status,forest};
