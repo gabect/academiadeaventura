@@ -58,7 +58,7 @@ import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
-import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=6';
+import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -104,7 +104,7 @@ const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
 let cameraHeading=Math.PI,cameraPitch=.62;
-// Stationary elevation and view angle, with smooth X/Z ground-plane tracking.
+// Fixed camera orientation with smooth 3D (X/Y/Z) follow and zoom.
 let cameraRailY=null;
 const cameraRailOffset=new THREE.Vector3();
 const CAMERA_MIN_PITCH=.51,CAMERA_MAX_PITCH=.79;
@@ -3529,8 +3529,10 @@ function followPlayerCamera(dt){
   WATER_STATE.mode==='swim'?
    (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
  if(cameraRailY===null)cameraRailY=centerY;
- // Explicit X/Z travel rails: horizontal camera translation follows both
- // player coordinates but maintains a constant world-facing camera angle.
+ // Follow the traversable surface elevation on ramps, hills and mountain
+ // paths, using a damped vertical rail to avoid abrupt steps and jitter.
+ cameraRailY=THREE.MathUtils.damp(cameraRailY,centerY,5.0,dt);
+ // X/Y/Z translation only. Heading and pitch remain fixed, even on slopes.
  cameraTarget.set(player.position.x,cameraRailY,player.position.z);
  const distance=10.7/cameraZoom;
  const horizontal=distance*Math.cos(cameraPitch);
