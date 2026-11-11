@@ -44,6 +44,7 @@ import {createStudioTreeImpostors} from './src/studio-tree-impostors.mjs?v=0.61.
 import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
+import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
@@ -3358,38 +3359,19 @@ function stepLocomotion(dt,right,forward,runEnabled){
  gait.cooldown=Math.max(0,gait.cooldown-dt);
  updateWaterState();
  const len=Math.hypot(right,forward);
- let dx=0,dz=0;
- if(len>.03){
-  right/=len;forward/=len;
-  // The joystick is camera-relative: forward goes toward the horizon,
-  // right goes toward the right edge of the third-person screen.
-  dx=forward*Math.sin(cameraHeading)-right*Math.cos(cameraHeading);
-  dz=forward*Math.cos(cameraHeading)+right*Math.sin(cameraHeading);
-  // Align the avatar's FRONT with the chase view. A/D genuinely
-  // strafe sideways rather than rotating the avatar out of the view.
+ // Camera-relative eight-way input. The torso always turns in the direction
+ // of travel rather than facing camera-forward while strafing/backpedaling.
+ const desired=worldWalkDirection(right,forward,cameraHeading);
+ let dx=desired.x,dz=desired.z;
+ if(desired.length>0){
   const previousFacing=player.rotation.y;
-  const deltaYaw=Math.atan2(Math.sin(cameraHeading-previousFacing),
-   Math.cos(cameraHeading-previousFacing));
-  player.rotation.y=previousFacing+THREE.MathUtils.clamp(
-   deltaYaw,-dt*FOLLOW_FACING_SPEED,dt*FOLLOW_FACING_SPEED);
+  player.rotation.y=faceWalkDirection(previousFacing,dx,dz,dt,8.5);
   if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
-      groundTopAt(player.position.x,player.position.z),true))
+     groundTopAt(player.position.x,player.position.z),true))
    player.rotation.y=previousFacing;
  }
- // Rotate toward camera-forward in place when mouse-look moves while
- // stationary. This keeps the third-person view behind the avatar.
- if(len<=.03){
-  const previousFacing=player.rotation.y;
-  const yawError=Math.atan2(Math.sin(cameraHeading-previousFacing),
-   Math.cos(cameraHeading-previousFacing));
-  if(Math.abs(yawError)>.0005){
-   player.rotation.y=previousFacing+THREE.MathUtils.clamp(yawError,
-    -dt*FOLLOW_FACING_SPEED,dt*FOLLOW_FACING_SPEED);
-   if(!bodyVolumeFits(player.position.x,player.position.z,currentPosture(),
-    groundTopAt(player.position.x,player.position.z),true))
-    player.rotation.y=previousFacing;
-  }
- }
+ // Idle facing is stable, even if the user turns/orbits the camera.
+ // During movement the already existing planted-foot IK solves the turn.
  const wasStopped=Math.hypot(gait.vx,gait.vz)<.05;
  if(len>.03&&wasStopped&&gait.moveBlend<.03){
   // Begin midway through the first grounded step, not at full rearward reach.
@@ -4630,6 +4612,8 @@ const dioramaTitle=document.createElement('div');
 dioramaTitle.textContent='DIORAMA DE CARTÓN · MAPA ORIGINAL · CÁMARA 3/4';
 dioramaTitle.style.cssText='position:fixed;top:11px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:7px 10px;border:1px solid #e0cb9d;background:#fff5daef;border-radius:11px;color:#425c4b;font:750 11px system-ui;box-shadow:0 4px 14px #36544420';
 document.body.append(dioramaTitle);
+const DIORAMA_MOTION_TEST=new URLSearchParams(location.search).has('motion-test');
+if(DIORAMA_MOTION_TEST)window.__dioramaMotionQA={frames:0};
 const clock=new THREE.Clock();
 let renderedStudioCI=0;
 function animate(){
@@ -4681,6 +4665,15 @@ function animate(){
  mountainEnvironment.update(camera,player.position,CURVED_HORIZON,performance.now());
  if(studioArt)studioArt.update(mountainEnvironment.getQuality());
 
+ if(DIORAMA_MOTION_TEST){
+  const sample=window.__dioramaMotionQA;
+  sample.frames++;
+  sample.yaw=player.rotation.y;
+  sample.cameraHeading=cameraHeading;
+  sample.x=player.position.x;sample.z=player.position.z;
+  sample.vx=LOCOMOTION.vx;sample.vz=LOCOMOTION.vz;
+  sample.inputRight=right;sample.inputForward=forward;
+ }
  marker.rotation.y+=dt;renderer.render(scene,camera);
  if(STUDIO_CI){renderedStudioCI++;window.__studioCIReady=renderedStudioCI>=3;}
 }
