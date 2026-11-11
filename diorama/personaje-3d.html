@@ -30,7 +30,7 @@ a{color:#355d74}#error{position:fixed;top:50%;left:50%;transform:translate(-50%,
 </nav><div id="error"></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installStylizedCharacter} from './stylized-characters.mjs?v=2';
+import {installStylizedCharacter} from './stylized-characters.mjs?v=3';
 const PI=Math.PI;
 const canvasHost=document.getElementById('viewport');
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
@@ -98,7 +98,7 @@ document.getElementById('role').addEventListener('change',e=>load(e.target.value
 load('player');
 const views={front:[0,0],back:[Math.PI,0],left:[-Math.PI/2,0],
  right:[Math.PI/2,0],top:[0,1.32],bottom:[0,-.90]};
-let theta=0,phi=.08,radius=4.95,walking=false;
+let theta=0,phi=.08,radius=5.5,walking=false;
 const buttons=[...document.querySelectorAll('[data-view]')];
 const mark=(name)=>buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
 buttons.forEach(b=>b.addEventListener('click',()=>{
@@ -147,7 +147,7 @@ function render(){
   for(const l of root.userData.rig.legs)l.hip.rotation.x*=Math.exp(-9*dt);
   for(const a of root.userData.rig.arms)a.shoulder.rotation.x*=Math.exp(-9*dt);
  }
- const targetY=1.20;
+ const targetY=1.05;
  camera.position.set(Math.sin(theta)*Math.cos(phi)*radius,targetY+Math.sin(phi)*radius,
  Math.cos(theta)*Math.cos(phi)*radius);
  camera.lookAt(0,targetY,0);renderer.render(scene,camera);
