@@ -150,5 +150,5 @@ export function installDioramaDetails({THREE,scene,meadowSites,shrubSites,
  inkWaves.name='diorama-ink-water-lines';inkWaves.castShadow=false;
  inkWaves.frustumCulled=false;inkWaves.renderOrder=waves.renderOrder-1;
  scene.add(inkWaves);
- return {shrubCount:sites.length,waterRipples:pos.length/22};
+ return {shrubCount:sites.length,waterRipples:pos.length/22,sites,shrubs};
 }
