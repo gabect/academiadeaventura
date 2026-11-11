@@ -50,7 +50,7 @@ function selector(site,i){
  return Math.floor(Math.abs(Math.sin(site.x*3.71+site.z*2.13+i*.61))*8)%8;
 }
 export function installExactUserSprites({THREE,scene,camera,world,oldStage,
- treeLocations,shrubSites}){
+ treeLocations,shrubSites,naturalSurfaceY}){
  // Replace the older procedural drawings only, leaving its mountain-stage
  // backdrops and original cabin façade in place.
  for(const mesh of oldStage.cards){
@@ -107,6 +107,7 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
    mesh.userData={isUserSprite:true,source:def[1],rect:def[2]};
    scene.add(mesh);batches.push({mesh,sites,def});
   }
+  status.orientation='fixed-stage-front';status.groundAnchored=true;
   status.ready=true;status.drawCalls=batches.length;
   status.sprites=batches.reduce((n,b)=>n+b.sites.length,0);
   status.usedVariants=batches.map(b=>b.def[0]);
@@ -116,20 +117,23 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
   status.failed=true;status.error=String(error);
   console.error('Failed to load original user PNG sprites',error);
  });
- let camX=NaN,camZ=NaN;
+ let matricesInitialized=false;
  function update(force=false){
-  if(!status.ready)return;
-  if(!force&&Math.hypot(camera.position.x-camX,camera.position.z-camZ)<.06)return;
-  camX=camera.position.x;camZ=camera.position.z;
+  if(!status.ready||(!force&&matricesInitialized))return;
+  matricesInitialized=true;
   const temp=new THREE.Object3D();
   for(const {mesh,sites,def} of batches){
    for(let i=0;i<sites.length;i++){
     const p=sites[i];
-    temp.position.set(p.x,p.y+.024,p.z);
-    temp.rotation.set(0,Math.atan2(camera.position.x-p.x,
-      camera.position.z-p.z),0);
+    // Bottom-centered plane: place the cutout foot directly at the terrain surface.
+    // Never billboard toward the player/camera: these are stationary stage flats.
+    const floor=Number.isFinite(naturalSurfaceY?.(p.x,p.z))?
+      naturalSurfaceY(p.x,p.z):p.y;
+    temp.position.set(p.x,floor-.045,p.z);
+    temp.rotation.set(0,0,0);
+    const variation=Math.abs(Math.sin(p.x*.67+p.z*.32));
     const scale=def[1]==='bushes'?
-      .75+.36*Math.abs(Math.sin(p.x*.67+p.z*.32)):
+      (def[0]==='bush-7'||def[0]==='bush-8'?.45+.18*variation:.55+.20*variation):
       Math.max(.67,Math.min(1.38,p.scale||1));
     temp.scale.setScalar(scale);temp.updateMatrix();
     mesh.setMatrixAt(i,temp.matrix);
