@@ -27,9 +27,9 @@ with zipfile.ZipFile(SOURCE) as bundle:
    if not bbox:raise RuntimeError('Empty tree: '+name)
    trimmed=original.crop(bbox)
    rgb=trimmed.convert('RGB')
-   rgb=rgb.point([int(255*((v/255)**.75)) for v in range(256)]*3)
-   rgb=ImageEnhance.Color(rgb).enhance(1.12)
-   rgb=ImageEnhance.Brightness(rgb).enhance(1.02)
+   rgb=rgb.point([int(255*((v/255)**.67)) for v in range(256)]*3)
+   rgb=ImageEnhance.Color(rgb).enhance(1.08)
+   rgb=ImageEnhance.Brightness(rgb).enhance(1.06)
    graded=rgb.convert('RGBA')
    graded.putalpha(trimmed.getchannel('A'))
    maxwidth=470 if family=='broadleaf' else 440
