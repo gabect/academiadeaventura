@@ -1,0 +1,39 @@
+name: Diorama phase 1 smoke
+on:
+  push:
+    branches:
+      - feature/diorama-isometric-phase1
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diorama:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Confirm original game unchanged
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main...HEAD | tee /tmp/diorama-files.txt
+          if grep -vE '^(diorama/|tests/diorama-phase1-browser.mjs$|\.github/workflows/diorama-phase1.yml$)' /tmp/diorama-files.txt; then
+            echo "UNEXPECTED change outside the isolated Diorama feature"
+            exit 1
+          fi
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Run independent Diorama browser smoke
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
+          node tests/diorama-phase1-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cardboard-diorama-phase1-screenshots
+          path: artifacts/diorama/*.png
+          if-no-files-found: warn
