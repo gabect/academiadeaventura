@@ -49,10 +49,10 @@ for(const conf of [
  page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  try{
   const res=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene='+conf.scene,
-   {waitUntil:'domcontentloaded',timeout:65000});
+   {waitUntil:'domcontentloaded',timeout:38000});
   assert.equal(res.status(),200);
   await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaWorld?.isDiorama===true,
-   null,{timeout:85000});
+   null,{timeout:24000});
   const state=await page.evaluate(()=>({
    world:window.__dioramaWorld,
    canvas:document.querySelector('canvas')?.getBoundingClientRect().toJSON(),
@@ -73,7 +73,7 @@ for(const conf of [
   assert(state.canvas.width>conf.width*.7);
   assert(state.framebuffer>0);
   assert.equal(errors.length,0,'Browser errors: '+errors.join(' || '));
-  await page.screenshot({path:'artifacts/diorama-full/'+conf.name+'.png',timeout:40000});
+  await page.screenshot({path:'artifacts/diorama-full/'+conf.name+'.png',timeout:20000});
   console.log('PASS',conf.name,JSON.stringify({
    trees:state.world.treeCounts,npcs:state.world.npcCount,
    world:state.world.bounds,camera:state.world.camera}));
