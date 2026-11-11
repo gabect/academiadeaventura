@@ -82,7 +82,8 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
  uniform sampler2D crayonShoreMap;
  uniform vec4 crayonShoreBounds;
  vec3 crayonTile(vec2 worldUV,vec2 cell){
-   vec2 local=fract(worldUV);
+   // Mirrored repeat joins the cropped artwork continuously at both axes.
+   vec2 local=1.0-abs(fract(worldUV*.5)*2.0-1.0);
    vec2 uv=cell*.5+(.013+local*.474);
    return texture2D(crayonAtlas,uv).rgb;
  }
@@ -165,7 +166,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v4';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v5';
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
