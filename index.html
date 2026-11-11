@@ -1621,9 +1621,11 @@ function tree(x,z){
   foliage.position.set(x,lift+2.39,z); // overlap the bark trunk: no capped wood stump
   // Each field tree is a full painted PNG, upright-facing the camera on the GPU.
   // Every field tree has a different aspect ratio and crown lean.
-  foliage.scale.set(1.14+.22*Math.abs(Math.sin(x*.47+z*.39)),
-   1.17+.23*Math.abs(Math.cos(x*.18-z*.63)),
-   1.10+.24*Math.abs(Math.sin(x*.79-z*.21)));
+  foliage.scale.set(.92+.15*Math.abs(Math.sin(x*.47+z*.39)),
+   .96+.15*Math.abs(Math.cos(x*.18-z*.63)),
+   1);
+  // A scaled impostor must be positioned using its SCALED foot, not an old trunk pivot.
+  foliage.position.y=lift+2.40*foliage.scale.y;
   foliage.rotation.set(.035*Math.sin(x*.34),x*.67+z*.29,.055*Math.cos(z*.37));
   foliage.castShadow=false;foliage.receiveShadow=false;
   foliage.userData.ignoreCameraRay=true;
@@ -1649,7 +1651,10 @@ for(const [x,z,height,radius] of [
    studioTreeVariant(x,z,studioOrganic.pineVariants.length)],studioLeafMaterial):
   new THREE.Mesh(new THREE.ConeGeometry(radius,height,6),summitCrownMat);
  crown.position.set(x,naturalSurfaceY(x,z)+height*(MOUNTAIN_STUDIO?.16:.40),z);
- if(MOUNTAIN_STUDIO)crown.scale.set(radius*.89,radius*.99,radius*(.81+.14*Math.abs(Math.sin(x))));
+ if(MOUNTAIN_STUDIO){
+   crown.scale.set(radius*.89,radius*.99,1);
+   crown.position.y=naturalSurfaceY(x,z)+2.40*crown.scale.y;
+  }
  crown.rotation.set(MOUNTAIN_STUDIO?.045*Math.sin(x):0,x*.37,MOUNTAIN_STUDIO?.04*Math.cos(z):0);
  crown.castShadow=!MOUNTAIN_STUDIO;
  crown.receiveShadow=!MOUNTAIN_STUDIO;scene.add(crown);
@@ -1959,7 +1964,7 @@ for(let i=0;i<720&&MOUNTAIN_TREES.length<48;i++){
  const zone=i%7===0?'summit':i%2===0?'foot':'crest';
  const p=candidateMountainPlant(zone);
  if(!p||naturalGradeAt(p.x,p.z)>.25)continue;
- const scale=.48+cliffRand()*1.55;
+ const scale=MOUNTAIN_STUDIO?(.64+cliffRand()*.74):(.48+cliffRand()*1.55);
  const radius=.22+scale*.19;
  const neighbors=[...FIELD_TREE_POSITIONS.map(([x,z])=>({x,z})),
   ...CLIFF_EDGE_TREE_SITES,...MOUNTAIN_TREES];
@@ -2172,7 +2177,7 @@ function drawMountainTreePart(sites,geometry,material,name,position,scale,tint=t
   instance=new THREE.Object3D();
  for(let i=0;i<sites.length;i++){
   const s=sites[i],p=position(s),k=scale(s);
-  instance.position.set(p[0],p[1],p[2]);
+  instance.position.set(p[0],geometry.userData?.impostor?s.y+2.40*k[1]:p[1],p[2]);
   if(MOUNTAIN_STUDIO&&name.startsWith('studio-')){
    instance.rotation.set(.040*Math.sin(s.x*.53+s.z*.19),
     s.color*Math.PI*2+.29*Math.sin(s.z*.71),
@@ -2253,7 +2258,8 @@ for(const v of cliffPines){
   const crown=new THREE.Mesh(studioOrganic.pineVariants[
    studioTreeVariant(v.x,v.z,studioOrganic.pineVariants.length)],studioLeafMaterial);
   crown.position.y=1.08;
-  crown.scale.set(.50+.07*Math.abs(Math.sin(v.x)),.56,.47+.08*Math.abs(Math.cos(v.z)));
+  crown.scale.set(.50+.07*Math.abs(Math.sin(v.x)),.56,1);
+   crown.position.y=2.40*crown.scale.y;
   crown.rotation.set(.035*Math.sin(v.x),v.x*.59+v.z*.33,.07*Math.cos(v.z));
   group.add(crown);
  }else{
