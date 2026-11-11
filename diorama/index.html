@@ -58,7 +58,7 @@ import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
-import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=5';
+import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=6';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -106,6 +106,7 @@ let cameraZoom=1,cameraReady=false;
 let cameraHeading=Math.PI,cameraPitch=.62;
 // Stationary elevation and view angle, with smooth X/Z ground-plane tracking.
 let cameraRailY=null;
+const cameraRailOffset=new THREE.Vector3();
 const CAMERA_MIN_PITCH=.51,CAMERA_MAX_PITCH=.79;
 const FOLLOW_FACING_SPEED=8.4;
 let lastCameraManualAt=-100000;
@@ -3528,18 +3529,14 @@ function followPlayerCamera(dt){
   WATER_STATE.mode==='swim'?
    (WATER_STATE.water?.surfaceY??WATER_SURFACE_Y)+.73:ground+head;
  if(cameraRailY===null)cameraRailY=centerY;
- // Follow both ground-plane axes (X/Z) while keeping the same pitch,
- // elevation rail and viewing direction; never orbit around the avatar.
+ // Explicit X/Z travel rails: horizontal camera translation follows both
+ // player coordinates but maintains a constant world-facing camera angle.
  cameraTarget.set(player.position.x,cameraRailY,player.position.z);
- // A closer following distance and wider FOV keep the character large
- // and recognizable on PC, with the horizon above shoulder height.
- const distance=10.7/cameraZoom; // wider Animal Crossing follow composition
+ const distance=10.7/cameraZoom;
  const horizontal=distance*Math.cos(cameraPitch);
- cameraDesired.set(
-  cameraTarget.x-Math.sin(cameraHeading)*horizontal,
-  cameraTarget.y+Math.sin(cameraPitch)*distance,
-  cameraTarget.z-Math.cos(cameraHeading)*horizontal
- );
+ cameraRailOffset.set(-Math.sin(cameraHeading)*horizontal,
+  Math.sin(cameraPitch)*distance,-Math.cos(cameraHeading)*horizontal);
+ cameraDesired.copy(cameraTarget).add(cameraRailOffset);
  // A theater rail does not dodge scenery by changing its depth or elevation.
  // Keep the camera on its fixed horizontal track.
  if(!cameraReady){
@@ -4491,7 +4488,7 @@ Object.assign(window.__dioramaWorld,{
 const originalPNGSprites=installExactUserSprites({
  THREE,scene,camera,world:window.__dioramaWorld,oldStage:handdrawnStage,
  treeLocations:dioramaArt.locations,shrubSites:dioramaDetails.sites,
- naturalSurfaceY
+ naturalSurfaceY,applyTerrainCurve:bendBuiltInMaterial
 });
 window.__dioramaWorld.assetStyle='user-uploaded-original-png-sprites';
 window.__dioramaWorld.outlinedWater=true;
