@@ -13,6 +13,8 @@
  * climbing, swimming, camera, NPC identities and world locations.
  */
 
+import {applyToonFinish} from './toon-finish.mjs?v=1';
+
 const PI=Math.PI, TAU=2*Math.PI;
 const PALETTES=[
  {hair:'#65402d',hairLight:'#8b5737',skin:'#f2b78f'},
@@ -53,27 +55,9 @@ export function installStylizedCharacter(THREE,character,options={}){
  // Replace only visuals, never parents of gameplay/IK joints.
  character.traverse(o=>{if(o.isMesh||o.isLine)o.visible=false;});
  function material(color,kind,number){
-  const canvas=document.createElement('canvas'),N=128;
-  canvas.width=canvas.height=N;
-  const ctx=canvas.getContext('2d');
-  ctx.fillStyle=color;ctx.fillRect(0,0,N,N);
-  let v=(number+1)*14513;
-  const rnd=()=>{v=(Math.imul(v,1664525)+1013904223)>>>0;return v/4294967296;};
-  const dots=kind==='hair'?1450:kind==='leather'?1800:3500;
-  for(let i=0;i<dots;i++){
-   const x=rnd()*N,y=rnd()*N;
-   const lit=rnd()>.5;
-   ctx.fillStyle=lit?'rgba(255,237,199,0.075)':'rgba(36,21,15,0.09)';
-   ctx.fillRect(x,y,kind==='fabric'?1:1.4,kind==='fabric'?2:1);
-  }
-  if(kind==='fabric'){
-   for(let y=0;y<N;y+=4){ctx.fillStyle='rgba(255,249,223,0.026)';ctx.fillRect(0,y,N,1);}
-  }else if(kind==='leather'){
-   for(let i=0;i<45;i++){ctx.strokeStyle='rgba(40,21,16,0.055)';ctx.beginPath();ctx.moveTo(rnd()*N,rnd()*N);ctx.lineTo(rnd()*N,rnd()*N);ctx.stroke();}
-  }
-  const tex=new THREE.CanvasTexture(canvas);tex.colorSpace=THREE.SRGBColorSpace;
-  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.anisotropy=4;
-  return new THREE.MeshStandardMaterial({map:tex,color:'#ffffff',roughness:kind==='leather'?.81:kind==='hair'?.91:.98,metalness:0});
+  // Solid color swatches replace noisy procedural fabric and leather textures.
+  const m=new THREE.MeshStandardMaterial({color,roughness:.94,metalness:0});
+  m.name='cel-'+kind+'-'+number;return m;
  }
  function add(parent,g,m,p=[0,0,0],s=null,shadow=true){
   const mesh=new THREE.Mesh(g,m);mesh.position.set(...p);
@@ -96,12 +80,12 @@ export function installStylizedCharacter(THREE,character,options={}){
  function garment(parent,m,rings,segments=20,rough=.014){
   const positions=[],uv=[],indices=[];
   for(let i=0;i<rings.length;i++){
-   const [h,rx,rz]=rings[i];
+   const [h,rx,rz,ox=0,oz=0]=rings[i];
    for(let j=0;j<=segments;j++){
-    const a=j/segments*TAU;const fold=1+.035*Math.sin(a*5+i*1.7);
-    positions.push(Math.sin(a)*rx*fold,
+    const a=j/segments*TAU;const fold=1+.014*Math.sin(a*5+i*1.7);
+    positions.push(ox+Math.sin(a)*rx*fold,
      h+(i===0?rough*Math.sin(a*9+seed):0),
-     Math.cos(a)*rz*fold);
+     oz+Math.cos(a)*rz*fold);
     uv.push(j/segments,i/Math.max(1,rings.length-1));
    }
   }
@@ -112,6 +96,8 @@ export function installStylizedCharacter(THREE,character,options={}){
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
   geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));geo.setIndex(indices);geo.computeVertexNormals();
+  geo.userData.characterGarment=true;
+  geo.userData.mainSilhouette=parent===rig.torso||rig.legs.some(l=>parent===l.hip||parent===l.knee);
   return add(parent,geo,m);
  }
  function roundedPanel(parent,w,h,d,m,x,y,z){
@@ -121,8 +107,10 @@ export function installStylizedCharacter(THREE,character,options={}){
   s.lineTo(x0+w,y0+h-r);s.quadraticCurveTo(x0+w,y0+h,x0+w-r,y0+h);
   s.lineTo(x0+r,y0+h);s.quadraticCurveTo(x0,y0+h,x0,y0+h-r);
   s.lineTo(x0,y0+r);s.quadraticCurveTo(x0,y0,x0+r,y0);
-  return add(parent,new THREE.ExtrudeGeometry(s,{depth:d,steps:1,bevelEnabled:true,
-   bevelThickness:.014,bevelSize:.014,bevelSegments:2,curveSegments:4}),m,[x,y,z]);
+  const geo=new THREE.ExtrudeGeometry(s,{depth:d,steps:1,bevelEnabled:true,
+   bevelThickness:.014,bevelSize:.014,bevelSegments:2,curveSegments:4});
+  geo.userData.characterBag=m===leather||m===leatherDark;
+  return add(parent,geo,m,[x,y,z]);
  }
  function seams(parent,x0,y0,z0,w,h){
   const verts=[];
@@ -294,8 +282,11 @@ export function installStylizedCharacter(THREE,character,options={}){
   line(head,[[-.30,.515,.08],[-.24,.625,.19],[-.08,.677,.236],
    [.12,.652,.21],[.28,.565,.04]],.012,capShade,17);
  }
+ const finish=applyToonFinish(THREE,character,{outlines:options.outlines!==false,
+  lowPower:options.lowPower===true});
  character.userData.characterArt={
-  installed:true,mode:'fully-volumetric-3d',reference:'rustic-fantasy-adventurer',
+  installed:true,mode:'fully-volumetric-3d',reference:'cel-shaded-adventurer',
+  shading:finish.style,shadeBands:finish.shadeBands,outlineMeshes:finish.outlineMeshes,
   role:options.role||'npc',hat:hasHat,articulated:true,
   noCardboardOnCharacters:true,skinnedByExistingRig:true
  };
