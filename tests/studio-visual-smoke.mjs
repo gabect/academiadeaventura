@@ -20,6 +20,7 @@ for(const [name,width,height,mode] of [
   await page.waitForFunction(()=>window.__studioCIReady===true,
     null,{timeout:120000,polling:500}).catch(()=>{});
   if(mode!=='normal'){
+   await page.waitForFunction(()=>window.__studioTreeImpostors?.loaded===2,null,{timeout:24000,polling:300});
    await page.waitForFunction(()=>window.__studioArtStatus?.grassReady===true
     &&window.__studioArtStatus?.rockReady===true,null,{timeout:22000,polling:500});
    await page.evaluate(()=>window.__studioCIRefresh?.());
@@ -31,7 +32,7 @@ for(const [name,width,height,mode] of [
   });
   console.log(name,JSON.stringify(result),'errors',JSON.stringify(errors.slice(0,10)));
   if(!result.webgl)fails.push(name+':no WebGL context');
-  if(!result.label?.includes('0.58.0'))fails.push(name+':old label');
+  if(!result.label?.includes('0.59.0'))fails.push(name+':old label');
   if(!result.label?.includes(mode==='normal'?'NORMAL':'STUDIO'))fails.push(name+':wrong mode');
   if(errors.length)fails.push(name+':'+errors.slice(0,4).join(' | '));
   if(mode!=='normal'){
@@ -41,9 +42,9 @@ for(const [name,width,height,mode] of [
    if(!(result.hd?.spriteCounts?.grass_tuft>500))fails.push(name+':grass sprites missing');
    if(!(result.hd?.spriteCounts?.grass_tuft>1000))fails.push(name+':lush 0.51 meadow missing');
    if(!(result.hd?.spriteCounts?.broadleaf>60))fails.push(name+':broadleaf sprouts missing');
-   if(result.painterly?.materialGroups!==2 || !result.painterly?.organicJoints || !result.painterly?.bark?.includes('256x512'))
+   if(result.painterly?.style!=='complete-png-tree-billboards'||result.painterly?.quadsPerTree!==1)
     fails.push(name+':painted bark and leaf material missing');
-   if(!(result.painterly?.foliageCards && result.painterly?.alphaCutout && result.painterly?.canopyAtlasTiles===8))
+   if(!(result.painterly?.paintedWholeTree && result.painterly?.loaded===2 && result.painterly?.errors?.length===0))
     fails.push(name+':cutout canopy atlas missing');
    if(!(result.trees?.pine===6&&result.trees?.broadleaf===5))
     fails.push(name+':variant families missing');
