@@ -31,7 +31,7 @@ function spriteGeometry(THREE,family,index){
   displayWidth:width,displayHeight:height,foliageStyle:'rendered-tree-png'};
  return geometry;
 }
-function createBillboardMaterial(THREE){
+function createBillboardMaterial(THREE,playerPosition){
  const material=new THREE.MeshBasicMaterial({
   color:'#ffffff',side:THREE.DoubleSide,alphaTest:.28,
   alphaToCoverage:true,transparent:false,depthWrite:true,
@@ -39,6 +39,11 @@ function createBillboardMaterial(THREE){
  });
  material.visible=false; // A late PNG must never appear as an opaque card.
  material.onBeforeCompile=shader=>{
+  shader.uniforms.academyTreePlayer={value:playerPosition};
+  shader.vertexShader='varying vec3 academyTreeOriginWorld;\\n'+shader.vertexShader;
+  shader.fragmentShader='uniform vec3 academyTreePlayer;\\nvarying vec3 academyTreeOriginWorld;\\n'+shader.fragmentShader;
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',
+   'diffuseColor.a*=smoothstep(1.10,2.90,distance(academyTreeOriginWorld.xz,academyTreePlayer.xz));\\n#include <alphatest_fragment>');
   shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',[
    '// GPU upright camera-facing full-tree sprite; also works with instancing.',
    'vec4 root=vec4(0.,0.,0.,1.);',
@@ -48,6 +53,7 @@ function createBillboardMaterial(THREE){
    'sx*=length(instanceMatrix[0].xyz);sy*=length(instanceMatrix[1].xyz);',
    '#endif',
    'vec4 origin=modelViewMatrix*root;',
+   'academyTreeOriginWorld=(modelMatrix*root).xyz;',
    'vec3 up=normalize((viewMatrix*vec4(0.,1.,0.,0.)).xyz);',
    'vec3 viewPoint=origin.xyz+vec3(position.x*sx,0.,0.)+up*(position.y*sy);',
    'vec4 mvPosition=vec4(viewPoint,1.);', // Fog and clipping chunks read mvPosition.
@@ -63,8 +69,9 @@ export function createStudioTreeImpostors(THREE,options={}){
   pine:6,broadleaf:5,quadsPerTree:1,paintedWholeTree:true,
   source:'klamtii.itch.io/tree-sprites',loaded:0,errors:[]};
  const loader=new THREE.TextureLoader();
+ const playerPosition=new THREE.Vector3(0,-1000,0);
  const material=family=>{
-  const mat=createBillboardMaterial(THREE);
+  const mat=createBillboardMaterial(THREE,playerPosition);
   loader.load(root+'tree-'+family+'-atlas.png',texture=>{
    texture.colorSpace=THREE.SRGBColorSpace;
    texture.wrapS=texture.wrapT=THREE.ClampToEdgeWrapping;
@@ -81,6 +88,7 @@ export function createStudioTreeImpostors(THREE,options={}){
  return {
   pineVariants:Array.from({length:6},(_,i)=>spriteGeometry(THREE,'pine',i)),
   broadleafVariants:Array.from({length:5},(_,i)=>spriteGeometry(THREE,'broadleaf',i)),
-  pineMaterial:material('pine'),broadleafMaterial:material('broadleaf'),info
+  pineMaterial:material('pine'),broadleafMaterial:material('broadleaf'),info,
+  setPlayerPosition(position){playerPosition.copy(position);}
  };
 }
