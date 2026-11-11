@@ -214,7 +214,8 @@ function character(jacket='#497e9e',x=0,z=0,isPlayer=false){
 const player=character('#517b97',0,9,true);
 const npc1=character('#bc8566',11,-4);
 const npc2=character('#79946f',-13,8);
-let yaw=Math.PI/4,zoom=1,viewSize=25;
+let yaw=Math.PI/4,zoom=window.innerWidth>1050?.82:1,viewSize=25;
+camera.zoom=zoom;
 const target=new THREE.Vector3(0,1,7),desired=new THREE.Vector3();
 const keys=new Set(),touch={x:0,y:0};
 const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
