@@ -12,13 +12,14 @@ class Geom{
  computeVertexNormals(){}computeBoundingSphere(){}
 }
 class Material{constructor(config){Object.assign(this,config);}}
+class Vector3{constructor(x,y,z){this.x=x;this.y=y;this.z=z;}copy(v){this.x=v.x;this.y=v.y;this.z=v.z;return this;}}
 class Texture{constructor(){this.repeat={set(){}};}}
 const paths=[];
 class TextureLoader{
  load(path,callback){paths.push(path);callback(new Texture());return new Texture();}
 }
 const THREE={
- BufferGeometry:Geom,Float32BufferAttribute:Attr,MeshBasicMaterial:Material,
+ BufferGeometry:Geom,Float32BufferAttribute:Attr,MeshBasicMaterial:Material,Vector3,
  TextureLoader,DoubleSide:2,SRGBColorSpace:'srgb',ClampToEdgeWrapping:1001,
  LinearMipmapLinearFilter:1008,LinearFilter:1006
 };
@@ -52,12 +53,17 @@ for(const [family,geos] of [['pine',forest.pineVariants],
  assert.equal(mat.transparent,false);
  assert.equal(mat.visible,true);
  assert(mat.map,'PNG must have loaded');
- const shader={vertexShader:'void main(){\n#include <project_vertex>\n}'};
+ const shader={vertexShader:'void main(){\n#include <project_vertex>\n}',fragmentShader:'void main(){\n#include <alphatest_fragment>\n}',uniforms:{}};
  mat.onBeforeCompile(shader);
  assert(shader.vertexShader.includes('#ifdef USE_INSTANCING'));
  assert(shader.vertexShader.includes('gl_Position=projectionMatrix'));
  assert(shader.vertexShader.includes('viewMatrix'),'Billboard must track camera upright');
  assert(!shader.vertexShader.includes('#include <project_vertex>'));
+ assert(shader.fragmentShader.includes('academyTreePlayer'));
+ assert(shader.fragmentShader.includes('smoothstep(1.10,2.90'));
+ assert(shader.uniforms.academyTreePlayer?.value);
+ forest.setPlayerPosition({x:5,y:6,z:7});
+ assert.equal(shader.uniforms.academyTreePlayer.value.x,5);
  const file='assets/studio_hd/trees/tree-'+family+'-atlas.png';
  const bytes=fs.readFileSync(file);
  assert(bytes.length>20000,file+': PNG too small');
