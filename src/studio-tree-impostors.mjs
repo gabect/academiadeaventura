@@ -38,6 +38,7 @@ function createBillboardMaterial(THREE,playerPosition){
   toneMapped:true,polygonOffset:false,fog:true
  });
  material.visible=false; // A late PNG must never appear as an opaque card.
+ material.userData ||= {};
  material.userData.academyTreeBillboard=true; // Apply the terrain's AC curvature at the tree root.
  material.onBeforeCompile=shader=>{
   shader.uniforms.academyTreePlayer={value:playerPosition};
