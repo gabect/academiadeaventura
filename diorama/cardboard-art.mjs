@@ -1,12 +1,32 @@
 /* Cardboard art on the REAL original-world coordinates. Visuals only. */
 export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  naturalSurfaceY,fieldTreeCrowns,mountainTreeSites,cliffPineSites,
- mountainShrubs,groundMesh,waterSurface,upperWaterSurface,waterfallPlane,
+ mountainShrubs,groundMesh,terrainMaterial,waterSurface,upperWaterSurface,waterfallPlane,
  waterBodies,terrainBounds}){
  const exempt=new Set([player,guardian,...ambientNPCs]);
  const waterMeshes=new Set([waterSurface,upperWaterSurface,waterfallPlane,groundMesh]);
  scene.background.set('#a9cad1');
  if(scene.fog){scene.fog.color.set('#a9cad1');scene.fog.near=56;scene.fog.far=145;}
+ // Cliff and terrain retain original geometry, surface functions and
+ // climbable trail slopes. Only the shader's PIGMENT changes to paper/corrugate.
+ const previousTerrainCompiler=terrainMaterial.onBeforeCompile;
+ terrainMaterial.onBeforeCompile=shader=>{
+  previousTerrainCompiler(shader);
+  shader.fragmentShader=shader.fragmentShader.replace('#include <alphamap_fragment>',String.raw\`
+   vec3 cardboardNormal=normalize(cross(dFdx(vAcademyRockWorld),dFdy(vAcademyRockWorld)));
+   float vertical=1.-smoothstep(.32,.84,abs(cardboardNormal.y));
+   float band=.5+.5*sin(vAcademyRockWorld.y*14.5+
+     sin(vAcademyRockWorld.x*.44+vAcademyRockWorld.z*.32)*.52);
+   float fibers=.018*sin(vAcademyRockWorld.x*22.+vAcademyRockWorld.z*18.);
+   vec3 edgeColor=mix(vec3(.61,.48,.32),vec3(.77,.64,.47),band)+fibers;
+   float brush=.5+.5*sin(vAcademyRockWorld.x*.32)*sin(vAcademyRockWorld.z*.43);
+   vec3 grassPigment=mix(vec3(.53,.68,.45),vec3(.71,.80,.55),brush);
+   float green=clamp(.13+vAcademyCover*.95-vertical*.93,0.,1.);
+   diffuseColor.rgb=mix(edgeColor,grassPigment,green);
+   #include <alphamap_fragment>
+  \`);
+ };
+ terrainMaterial.customProgramCacheKey=()=>'academy-cardboard-geography-strata-v1';
  const paper=new THREE.CanvasTexture((()=>{
   const c=document.createElement('canvas');c.width=c.height=128;
   const x=c.getContext('2d');x.fillStyle='#f7f2e7';x.fillRect(0,0,128,128);
