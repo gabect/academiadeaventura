@@ -227,60 +227,65 @@ export function installStylizedCharacter(THREE,character,options={}){
  }
  // Distinctly real, rounded head (front = local +Z), ears and cheeks.
  const head=rig.head;
- orb(head,skin,[0,.152,.019],[.286,.31,.267]);
+ orb(head,skin,[0,.152,.016],[.294,.300,.246]);
  for(const side of [-1,1]){
   orb(head,skin,[side*.278,.112,-.008],[.085,.105,.066]);
   orb(head,noseMat,[side*.287,.114,.047],[.033,.054,.023],false);
-  orb(head,cheek,[side*.162,.052,.252],[.094,.052,.016],false);
+  orb(head,cheek,[side*.174,.076,.215],[.072,.035,.007],false);
   // eye whites, separate corneas, brown irises, large catchlights
-  orb(head,eyesWhite,[side*.121,.221,.242],[.083,.108,.055]);
-  orb(head,iris,[side*.122,.214,.294],[.054,.073,.028],false);
-  orb(head,black,[side*.121,.209,.316],[.036,.052,.019],false);
-  orb(head,sparkle,[side*.137,.236,.332],[.018,.025,.010],false);
-  line(head,[[side*.057,.353,.263],[side*.121,.378,.282],
-   [side*.191,.341,.260]],.023,hair,7);
+  orb(head,eyesWhite,[side*.120,.222,.233],[.071,.091,.034]);
+  orb(head,iris,[side*.122,.214,.263],[.049,.061,.014],false);
+  orb(head,black,[side*.122,.210,.276],[.034,.046,.009],false);
+  orb(head,sparkle,[side*.136,.231,.287],[.014,.019,.005],false);
+  line(head,[[side*.061,.351,.222],[side*.121,.366,.247],
+   [side*.181,.340,.228]],.017,hair,7);
  }
- orb(head,noseMat,[0,.09,.306],[.061,.047,.067]);
- line(head,[[-.103,-.004,.267],[-.042,-.039,.302],
-  [.036,-.039,.300],[.112,-.002,.262]],.009,smiling);
+ orb(head,noseMat,[0,.104,.275],[.049,.036,.031]);
+ line(head,[[-.083,-.013,.225],[-.036,-.032,.251],
+  [.033,-.032,.248],[.086,-.011,.224]],.006,smiling);
  for(const side of [-1,1]){
   if(player||options.role==='guardian'){
    for(let i=0;i<7;i++){
     const dx=(i%4)*.027,dy=Math.floor(i/4)*.027;
-    orb(head,freckle,[side*(.113+dx),.073+dy,.277-.020*(i%3)],
-     [.008,.008,.003],false);
+    orb(head,freckle,[side*(.112+dx),.073+dy,.232-.010*(i%3)],
+     [.006,.006,.003],false);
    }
   }
  }
  // Hair is a shell plus curved, tapering sculpted clumps, never a sprite.
- orb(head,hair,[0,.295,-.063],[.330,.297,.296],false);
- const locks=player?19:11;
+ orb(head,hair,[0,.296,-.066],[.305,.258,.262],false);
+ const locks=player?13:10;
  for(let i=0;i<locks;i++){
   const a=(i+.45)/locks*TAU,xx=Math.sin(a),zz=Math.cos(a);
-  const back=zz<.55,sy=back?.325:.465;
-  const x=.286*xx,z=.25*zz-.067;
-  taperedLock(head,[[x*.92,sy,z],[x*1.03,sy-.095,z+.006],
-   [x*1.17,sy-.20,z+.025],[x*1.24,sy-.27+(i%3)*.025,z+.029]],
-   .064+(i%3)*.009,i%4===0?hairLit:hair);
+  const back=zz<.55,sy=back?.333:.424;
+  const x=.278*xx,z=.222*zz-.067;
+  taperedLock(head,[[x*.92,sy,z],[x*1.02,sy-.068,z+.009],
+   [x*1.12,sy-.137,z+.018],[x*1.18,sy-.169+(i%3)*.016,z+.022]],
+   .045+(i%3)*.006,i%4===0?hairLit:hair);
  }
  // Slightly asymmetric loose fringe dangling under the cap.
- for(let i=0;i<6;i++){
-  const x=-.24+i*.088;
-  taperedLock(head,[[x-.07,.435,.192],[x-.045,.371,.259],
-   [x+.035,.305,.289],[x+.064,.273+(i%3)*.027,.286]],
-   .062,i%3===0?hairLit:hair);
+ for(let i=0;i<5;i++){
+  const x=-.205+i*.099;
+  taperedLock(head,[[x-.035,.454,.149],[x-.033,.374,.217],
+   [x+.014,.317,.242],[x+.047,.289+(i%3)*.021,.239]],
+   .047,i%3===0?hairLit:hair);
  }
  // Soft folded beanie with slouching crown and dimensional fabric brim.
  const hasHat=player||options.role==='guardian'||seed%3!==1;
  if(hasHat){
-  orb(head,cap,[.035,.515,-.064],[.355,.205,.319]);
-  orb(head,cap,[.103,.649,-.145],[.315,.159,.279]);
-  orb(head,capShade,[.114,.593,-.137],[.327,.061,.295]);
-  ring(head,capShade,.006,.436,-.044,.351,.302,.062);
-  ring(head,cap,.006,.458,-.045,.361,.306,.043);
-  // hand-sewn fold (muted, realistic, not a thick cartoon outline)
-  line(head,[[-.30,.515,.08],[-.24,.625,.19],[-.08,.677,.236],
-   [.12,.652,.21],[.28,.565,.04]],.012,capShade,17);
+  const hat=garment(head,cap,[
+   [.399,.330,.278,.000,-.035],
+   [.468,.353,.300,.002,-.038],
+   [.551,.349,.285,.028,-.062],
+   [.646,.294,.231,.068,-.080],
+   [.716,.196,.148,.112,-.101],
+   [.746,.021,.020,.119,-.108]
+  ],24,.004);
+  hat.geometry.userData.mainSilhouette=true;
+  ring(head,capShade,.002,.426,-.029,.346,.298,.024);
+  ring(head,cap,.003,.455,-.033,.353,.303,.030);
+  line(head,[[-.30,.520,.047],[-.21,.596,.166],[-.03,.634,.205],
+   [.16,.595,.169],[.28,.532,-.007]],.008,capShade,17);
  }
  const finish=applyToonFinish(THREE,character,{outlines:options.outlines!==false,
   lowPower:options.lowPower===true});
