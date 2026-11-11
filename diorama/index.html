@@ -58,6 +58,7 @@ import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
+import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=3';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -4498,6 +4499,11 @@ Object.assign(window.__dioramaWorld,{
  flowers:handdrawnStage.status.flowers,
  mushrooms:handdrawnStage.status.mushrooms
 });
+const originalPNGSprites=installExactUserSprites({
+ THREE,scene,camera,world:window.__dioramaWorld,oldStage:handdrawnStage,
+ treeLocations:dioramaArt.locations,shrubSites:dioramaDetails.sites
+});
+window.__dioramaWorld.assetStyle='user-uploaded-original-png-sprites';
 window.__dioramaWorld.outlinedWater=true;
 window.__dioramaWorld.ramps=FIELD_RAMPS.map(v=>({id:v.id,x:v.x,z:v.z,rise:v.rise}));
 window.__dioramaWorld.cabin={...CABIN};
@@ -4636,7 +4642,7 @@ dioramaExit.textContent='Mundo original ↗';
 dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
 const dioramaTitle=document.createElement('div');
-dioramaTitle.textContent='DIORAMA ARTESANAL · RECORTES DIBUJADOS · MAPA ORIGINAL';
+dioramaTitle.textContent='DIORAMA · SPRITES PNG ORIGINALES · MAPA ORIGINAL';
 dioramaTitle.style.cssText='position:fixed;top:11px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:7px 10px;border:2px solid #202827;background:#ffda34f5;border-radius:11px;color:#212b27;font:800 11px system-ui;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaTitle);
 const DIORAMA_MOTION_TEST=new URLSearchParams(location.search).has('motion-test');
@@ -4677,7 +4683,8 @@ function animate(){
  updateSlopeStatus();
  updateRegionStatus();
  followPlayerCamera(dt);
- handdrawnStage.update(); // paper stage turns toward the camera, not the NPC rig
+ handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
+ originalPNGSprites.update(); // User's exact PNG trees/bushes, camera-facing
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
  // When the over-the-shoulder camera is inside a conifer crown, temporarily
  // hide that decorative crown rather than covering the entire player view.
