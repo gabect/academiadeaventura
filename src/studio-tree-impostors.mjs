@@ -40,10 +40,10 @@ function createBillboardMaterial(THREE,playerPosition){
  material.visible=false; // A late PNG must never appear as an opaque card.
  material.onBeforeCompile=shader=>{
   shader.uniforms.academyTreePlayer={value:playerPosition};
-  shader.vertexShader='varying vec3 academyTreeOriginWorld;\\n'+shader.vertexShader;
-  shader.fragmentShader='uniform vec3 academyTreePlayer;\\nvarying vec3 academyTreeOriginWorld;\\n'+shader.fragmentShader;
+  shader.vertexShader='varying vec3 academyTreeOriginWorld;\n'+shader.vertexShader;
+  shader.fragmentShader='uniform vec3 academyTreePlayer;\nvarying vec3 academyTreeOriginWorld;\n'+shader.fragmentShader;
   shader.fragmentShader=shader.fragmentShader.replace('#include <alphatest_fragment>',
-   'diffuseColor.a*=smoothstep(1.10,2.90,distance(academyTreeOriginWorld.xz,academyTreePlayer.xz));\\n#include <alphatest_fragment>');
+   'diffuseColor.a*=smoothstep(1.10,2.90,distance(academyTreeOriginWorld.xz,academyTreePlayer.xz));\n#include <alphatest_fragment>');
   shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',[
    '// GPU upright camera-facing full-tree sprite; also works with instancing.',
    'vec4 root=vec4(0.,0.,0.,1.);',
