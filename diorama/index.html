@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="es"><head><base href="../"><meta name="theme-color" content="#adcdb8"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Academia Aventura · Diorama de Cartón</title><style>
-html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#b7d4e4;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
+html,body{touch-action:manipulation;-webkit-touch-callout:none;margin:0;height:100%;overflow:hidden;background:#9dd9f2;font-family:system-ui,sans-serif}canvas{display:block}#hud{display:none!important}#hud h1{font-size:18px;margin:0 0 7px}#hud p{margin:5px 0;font-size:13px}#message{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#172b32ed;color:white;padding:12px 18px;border-radius:12px;text-align:center;max-width:85%;font-size:14px}#touch{position:fixed;left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));z-index:5;width:142px;height:142px;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;overscroll-behavior:contain}
 #stickBase{position:absolute;inset:0;border-radius:50%;background:#162c37a8;border:3px solid #ffffff85;box-shadow:inset 0 0 0 14px #ffffff12,0 8px 20px #0004;box-sizing:border-box}
 #stickKnob{position:absolute;width:64px;height:64px;left:39px;top:39px;border-radius:50%;background:linear-gradient(145deg,#fff,#aebfc3);border:3px solid #ffffffc7;box-sizing:border-box;box-shadow:0 3px 9px #0006;pointer-events:none;transform:translate(0,0)}
 /* Compact three-button touchscreen cluster, 42px+ touch targets. */
@@ -32,7 +32,20 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #challenge{position:fixed;inset:0;z-index:8;display:grid;place-items:center;background:#102533bb;padding:15px}
 #challenge[hidden]{display:none}#challenge article{width:min(430px,95%);background:#f8efd9;border:3px solid #a18b68;border-radius:16px;padding:20px;color:#273a3a;box-shadow:0 10px 40px #0006}
 #challenge h2{margin:0 0 10px}#answers{display:grid;gap:9px;margin:15px 0}#answers button,#exit{background:#3d695e;color:white;border:0;border-radius:9px;padding:13px;cursor:pointer;font-size:15px;text-align:left}#feedback{font-weight:600;min-height:20px}
-@media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}</style></head>
+@media(max-width:600px){#message{font-size:12px;bottom:12px;max-width:44%}}
+/* Primary-crayon costume for the Diorama UI; original game UI is untouched. */
+#skillPanel,#zoomControls,.diorama-badge{filter:drop-shadow(2px 3px 0 #1e24224a)}
+#skillPanel{border:2px solid #272b27!important;background:#fff3c1f0!important;border-radius:12px!important}
+#skillPanel button,#zoomControls button{border:2px solid #202827!important;box-shadow:2px 3px 0 #20282777!important}
+#zoomControls button{background:#ffe15e!important;color:#15262d!important}
+#zoomControls button:active{background:#f88c33!important}
+#actionCluster button{background:#2669d6!important;border:3px solid #20272a!important;box-shadow:2px 4px 0 #20272a96!important}
+#runButton{background:#ef4540!important}
+#message{background:#fff0bceb!important;color:#272827!important;border:3px solid #202827!important;border-radius:11px!important;box-shadow:3px 5px 0 #20282752!important;font-weight:700}
+#stickBase{border:3px solid #202827!important;background:#336dda70!important}
+#stickKnob{background:#ffe15e!important;border:3px solid #202827!important}
+#buildLabel{border:2px solid #222e2d!important;background:#ffdc4fef!important;color:#253029!important}
+</style></head>
 <body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.61.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse/arrows: camera · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.61.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">3ª persona · Clic para controlar mouse</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
@@ -4472,6 +4485,7 @@ const dioramaDetails=installDioramaDetails({
 });
 window.__dioramaWorld.papercraftShrubs=dioramaDetails.shrubCount;
 window.__dioramaWorld.waterRipples=dioramaDetails.waterRipples;
+window.__dioramaWorld.outlinedWater=true;
 window.__dioramaWorld.ramps=FIELD_RAMPS.map(v=>({id:v.id,x:v.x,z:v.z,rise:v.rise}));
 window.__dioramaWorld.cabin={...CABIN};
 window.__dioramaWorld.lakePlatform={...LAKE_PLATFORM};
@@ -4552,7 +4566,7 @@ const curvedDepthMaterial=new THREE.MeshDepthMaterial({
 });
 bendBuiltInMaterial(curvedDepthMaterial);
 scene.traverse(node=>{
- if(!node.isMesh)return; // Sky gets created after this traversal.
+ if(!node.isMesh&&!node.userData?.dioramaOutline)return; // Bend ink contours with the same terrain as their hosts.
  const mats=Array.isArray(node.material)?node.material:[node.material];
  for(const material of mats)bendBuiltInMaterial(material);
  if(node.castShadow)node.customDepthMaterial=curvedDepthMaterial;
@@ -4561,8 +4575,8 @@ scene.traverse(node=>{
 });
 // A real sky dome supplies the missing visual horizon and a soft cloud layer.
 // Unlike ground assets, the sky does NOT bend: it follows the camera.
-const HORIZON_SKY_TOP=new THREE.Color('#95c8d4');
-const HORIZON_SKY_BASE=new THREE.Color('#dfe7d2');
+const HORIZON_SKY_TOP=new THREE.Color('#6db4f1');
+const HORIZON_SKY_BASE=new THREE.Color('#d0edfb');
 const skyDome=new THREE.Mesh(new THREE.SphereGeometry(180,32,16),
  new THREE.ShaderMaterial({
  depthWrite:false,depthTest:false,side:THREE.BackSide,
@@ -4606,11 +4620,11 @@ document.title='Academia Aventura · Diorama de Cartón';
 const dioramaExit=document.createElement('a');
 dioramaExit.href='./index.html'; // base href goes to original root index
 dioramaExit.textContent='Mundo original ↗';
-dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:1px solid #dbc69a;background:#fff5ddef;border-radius:11px;color:#355847;font:750 12px system-ui;text-decoration:none;box-shadow:0 5px 15px #263b3032';
+dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
 const dioramaTitle=document.createElement('div');
-dioramaTitle.textContent='DIORAMA DE CARTÓN · MAPA ORIGINAL · CÁMARA 3/4';
-dioramaTitle.style.cssText='position:fixed;top:11px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:7px 10px;border:1px solid #e0cb9d;background:#fff5daef;border-radius:11px;color:#425c4b;font:750 11px system-ui;box-shadow:0 4px 14px #36544420';
+dioramaTitle.textContent='DIORAMA CRAYOLA · CARTÓN CORRUGADO · MAPA ORIGINAL';
+dioramaTitle.style.cssText='position:fixed;top:11px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:7px 10px;border:2px solid #202827;background:#ffda34f5;border-radius:11px;color:#212b27;font:800 11px system-ui;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaTitle);
 const DIORAMA_MOTION_TEST=new URLSearchParams(location.search).has('motion-test');
 if(DIORAMA_MOTION_TEST)window.__dioramaMotionQA={frames:0};
