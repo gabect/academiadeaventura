@@ -22,7 +22,7 @@ const bushRects=[
  [1084,360,1484,648],[1622,456,1967,647]
 ];
 const bushDefs=bushRects.map((r,i)=>[
- 'bush-'+(i+1),'bushes',r,2048,682,i<4?1.15:1.37
+ 'bush-'+(i+1),'bushes',r,2048,682,i<4?.68:.53
 ]);
 function spritePlane(THREE,def){
  const [name,source,rect,sw,sh,h]=def,[x0,y0,x1,y1]=rect;
@@ -108,6 +108,7 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
    scene.add(mesh);batches.push({mesh,sites,def});
   }
   status.orientation='fixed-stage-front';status.groundAnchored=true;
+  status.shrubHeightRange=[.44,.68];status.slopeFootprintGrounding=true;
   status.ready=true;status.drawCalls=batches.length;
   status.sprites=batches.reduce((n,b)=>n+b.sites.length,0);
   status.usedVariants=batches.map(b=>b.def[0]);
@@ -125,16 +126,24 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
   for(const {mesh,sites,def} of batches){
    for(let i=0;i<sites.length;i++){
     const p=sites[i];
-    // Bottom-centered plane: place the cutout foot directly at the terrain surface.
-    // Never billboard toward the player/camera: these are stationary stage flats.
-    const floor=Number.isFinite(naturalSurfaceY?.(p.x,p.z))?
-      naturalSurfaceY(p.x,p.z):p.y;
-    temp.position.set(p.x,floor-.045,p.z);
-    temp.rotation.set(0,0,0);
+    // Sample the support footprint: center-only anchoring leaves cutouts
+    // hovering on terrain that slopes beneath the standee.
+    const sample=(x,z)=>{
+      const y=naturalSurfaceY?.(x,z);
+      return Number.isFinite(y)?y:p.y;
+    };
+    const extent=def[1]==='bushes'?.26:.46;
+    const floor=Math.min(sample(p.x,p.z),
+      sample(p.x-extent,p.z),sample(p.x+extent,p.z),
+      sample(p.x,p.z-extent),sample(p.x,p.z+extent));
     const variation=Math.abs(Math.sin(p.x*.67+p.z*.32));
-    const scale=def[1]==='bushes'?
-      (def[0]==='bush-7'||def[0]==='bush-8'?.45+.18*variation:.55+.20*variation):
+    const scale=def[1]==='bushes'?.83+.17*variation:
       Math.max(.67,Math.min(1.38,p.scale||1));
+    // Embed the cropped bottom margin into the stage surface, without
+    // moving the authored X/Z coordinates or affecting collisions.
+    temp.position.set(p.x,floor-(def[1]==='bushes'?.12:.22),p.z);
+    // Flat theater scenery: static orientation, never billboarding.
+    temp.rotation.set(0,0,0);
     temp.scale.setScalar(scale);temp.updateMatrix();
     mesh.setMatrixAt(i,temp.matrix);
    }
