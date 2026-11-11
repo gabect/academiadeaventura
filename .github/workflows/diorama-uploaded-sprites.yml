@@ -1,0 +1,51 @@
+name: Exact uploaded PNG sprites — visual regression
+on:
+  push:
+    branches:
+      - feature/diorama-user-sprites-exact-png
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-sprites:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Original game isolation
+        run: |
+          git fetch origin main
+          git diff --name-only origin/main HEAD | tee /tmp/changed
+          if grep -vE '^(diorama/|tests/diorama-original-map-smoke.mjs$|\.github/workflows/diorama-uploaded-sprites.yml$)' /tmp/changed; then
+            echo 'Unexpected change outside the separate Diorama'
+            exit 1
+          fi
+      - name: Verify uploaded PNG files preserved byte-for-byte
+        shell: bash
+        run: |
+          test "$(git hash-object 'diorama/assets/handpainted-cardboard-tree.png')" = '2b4849ab524843c6aa48363f2053ece82c46d834'
+          test "$(git hash-object 'diorama/assets/handpainted-cardboard-bushes.png')" = '321c36df7b29400dc08b00f1b9f7df5931b7d969'
+          test "$(git hash-object 'diorama/assets/handpainted-cardboard-tree-collection.png')" = '56e4a8f7073e2dd2f728ad0e6223169dfc470d99'
+          file diorama/assets/*.png
+      - name: JavaScript and eight-way motion
+        run: |
+          node --check diorama/exact-user-sprites.mjs
+          node --check diorama/handdrawn-stage.mjs
+          node tests/diorama-directional-facing.mjs
+      - name: Install browser
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Original map and five PNG-rendered WebGL scenes
+        run: |
+          python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
+          node tests/diorama-original-map-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uploaded-original-PNG-diorama-five-screenshots
+          path: artifacts/diorama-full/*.png
+          if-no-files-found: warn
