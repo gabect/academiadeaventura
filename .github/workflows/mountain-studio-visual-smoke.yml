@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-full-tree-sprites-v0.59.0
+      - feature/mountain-grounded-real-tree-sprites-v0.60.0
   workflow_dispatch:
 permissions:
   contents: write
@@ -17,12 +17,14 @@ jobs:
           node-version: '22'
       - name: Install browser harness
         run: |
-          npm install --no-save --no-package-lock playwright three@0.170.0
+          npm install --no-save --no-package-lock playwright three@0.170.0 itchio-downloader
+          python3 -m pip install --break-system-packages pillow
           npx playwright install --with-deps chromium
-      - name: Bake full-tree PNG sprite atlases
+      - name: Download public, licensed tree images and bake PNG atlases
         run: |
+          node tools/download-licensed-trees.mjs
+          python3 tools/bake-licensed-trees.py /tmp/academia-trees.zip
           python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
-          node tools/export-studio-tree-png.mjs
       - name: CPU code invariants
         run: |
           node tests/mountain-studio-render-invariants.mjs
@@ -42,7 +44,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/studio_hd/trees/tree-pine-atlas.png assets/studio_hd/trees/tree-broadleaf-atlas.png
           if ! git diff --cached --quiet; then
-            git commit -m "assets(studio): bake full-tree transparent PNG impostors v0.59.0"
+            git commit -m "assets(studio): replace drawn trees with klamtii licensed sprites v0.60.0"
             git push
           fi
       - uses: actions/upload-artifact@v4
