@@ -6,8 +6,13 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
  waterBodies,terrainBounds}){
  const exempt=new Set([player,guardian,...ambientNPCs]);
  const waterMeshes=new Set([waterSurface,upperWaterSurface,waterfallPlane,groundMesh]);
- scene.background.set(CRAYON.sky);
- if(scene.fog){scene.fog.color.set(CRAYON.sky);scene.fog.near=56;scene.fog.far=145;}
+ // Match distant scenery to the paper-blue sky rather than cyan neon.
+ // Fog only affects rendering: placement, collisions and visibility flags stay intact.
+ scene.background.set('#d6eae2');
+ if(scene.fog){
+  scene.fog.color.set('#d6eae2');
+  scene.fog.near=45;scene.fog.far=124;
+ }
  // Cliff and terrain retain original geometry, surface functions and
  // climbable trail slopes. Only the shader's PIGMENT changes to paper/corrugate.
  const previousTerrainCompiler=terrainMaterial.onBeforeCompile;
