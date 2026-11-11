@@ -4675,6 +4675,15 @@ dioramaExit.href='./index.html'; // base href goes to original root index
 dioramaExit.textContent='Mundo original ↗';
 dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
+// Independent release indicator: the original v0.61.0 gameplay version remains
+// untouched, while the cardboard world now hosts articulated 3D inhabitants.
+const castReleaseLink=document.createElement('a');
+castReleaseLink.href='./diorama/personaje-3d.html';
+castReleaseLink.textContent='PERSONAJES 3D · NUEVO';
+castReleaseLink.title='Inspecciona al protagonista desde seis ángulos';
+castReleaseLink.setAttribute('aria-label','Ver el nuevo protagonista 3D en el visor');
+castReleaseLink.style.cssText='position:fixed;right:12px;bottom:145px;z-index:15;display:block;padding:9px 11px;border:2px solid #43301f;border-radius:11px;background:#f2ca72;color:#382c20;font:800 12px system-ui;text-decoration:none;box-shadow:2px 3px 0 #2b30264f';
+document.body.append(castReleaseLink);
 const dioramaTitle=document.createElement('div');
 dioramaTitle.textContent='ESCENARIO DE CARTÓN';
 dioramaTitle.style.cssText='position:fixed;top:9px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:5px 9px;border:1px solid #51645e;background:#f5ecd9e3;border-radius:8px;color:#31463c;font:700 10px system-ui;box-shadow:0 2px 4px #2028272a';
