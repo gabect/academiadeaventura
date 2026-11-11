@@ -12,7 +12,7 @@ for(const source of ["const WORLD={half:83,limit:78,plateauHeight:10","const FIE
 }
 for(const part of ["polyFor(kind,variant)","makeCorrugatedTexture",
  "handIllustrated:true","kind==='pine'","kind==='broad'","kind==='mushroom'",
- "kind==='flower'","kind==='mountain'","black marker",
+ "kind==='flower'","mountain:{n:2","black marker",
  "oldForest.forEach(m=>m.visible=false)","if(oldShrubs)oldShrubs.visible=false",
  "handmade-cabin-front","cardboard-folded-standing-tabs",
  "drawn-blue-paper-lake-cut-edge","return {status,update,cards}"])
