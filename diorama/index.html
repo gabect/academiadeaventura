@@ -59,7 +59,7 @@ import {installCardboardArt} from './diorama/cardboard-art.mjs?v=2';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
-import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=5';
+import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=6';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
@@ -1490,7 +1490,7 @@ const trailMat=new THREE.MeshStandardMaterial({
  transparent:MOUNTAIN_STUDIO,depthWrite:!MOUNTAIN_STUDIO
 });
 if(MOUNTAIN_STUDIO){
- // Feather only the dirt-ribbon visual edge; preserve the physical trail.
+ // Leave a minimal geometry-edge fade; the crayon shader applies the actual worn edge.
  trailMat.userData.studioTrail=true;
  trailMat.onBeforeCompile=shader=>{
   shader.vertexShader=shader.vertexShader.replace('#include <common>',
@@ -1505,8 +1505,8 @@ if(MOUNTAIN_STUDIO){
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',
    ['#include <color_fragment>',
     'float studioEdgeWave=sin(vStudioTrailWorld.x*3.91+sin(vStudioTrailWorld.z*2.11))*cos(vStudioTrailWorld.z*4.23);',
-    'float studioEdge=.80+.09*studioEdgeWave;',
-    'diffuseColor.a*=1.0-smoothstep(studioEdge-.13,studioEdge+.10,abs(vStudioLateral));',
+    'float studioEdge=.99+.005*studioEdgeWave;',
+    'diffuseColor.a*=1.0-smoothstep(studioEdge-.008,studioEdge+.012,abs(vStudioLateral));',
     'float studioGrain=.5+.5*sin(vStudioTrailWorld.x*9.1)*cos(vStudioTrailWorld.z*8.3);',
     'diffuseColor.rgb*=.86+.16*studioGrain;'].join(String.fromCharCode(10)));
  };
