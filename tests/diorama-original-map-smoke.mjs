@@ -51,7 +51,7 @@ for(const conf of [
   const res=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene='+conf.scene,
    {waitUntil:'domcontentloaded',timeout:38000});
   assert.equal(res.status(),200);
-  await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaWorld?.isDiorama===true,
+  await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaWorld?.isDiorama===true&&window.__dioramaWorld?.userSprites?.ready===true,
    null,{timeout:24000});
   const state=await page.evaluate(()=>({
    world:window.__dioramaWorld,
@@ -61,6 +61,13 @@ for(const conf of [
    studio:window.__studioArtStatus,
    framebuffer:document.querySelector('canvas')?.width||0
   }));
+  assert(state.world.userSprites?.ready,'Uploaded PNG textures did not load');
+  assert.equal(state.world.userSprites.variants,12,'Expected four original tree images and eight bush crops');
+  assert.equal(state.world.userSprites.redrawn,false,'Do not redraw user artwork');
+  assert.equal(state.world.userSprites.untouchedPixels,true);
+  assert(state.world.userSprites.drawCalls>=11,'Missing PNG sprite families');
+  assert(state.world.userSprites.sprites>100,'Sprites not instanced at authored locations');
+  assert(state.world.userSprites.usedVariants.includes('palm-tree'),'Uploaded palm variant not displayed');
   assert(state.world.terrainExact&&state.world.physicsReused);
   assert.equal(state.world.bounds.half,83);
   assert.equal(state.world.bounds.limit,78);
