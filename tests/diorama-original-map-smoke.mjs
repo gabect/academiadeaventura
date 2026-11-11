@@ -67,6 +67,15 @@ for(const conf of [
   assert.equal(state.world.bounds.plateauHeight,10);
   assert(state.world.treeCounts.pine>10);
   assert(state.world.treeCounts.broadleaf>10);
+  assert(state.world.stage?.style==='hand-painted-school-cardboard-standees',
+   'Handmade school scenery must replace the old extruded look');
+  assert(state.world.stage?.trees>20,'Original tree positions were lost');
+  assert(state.world.stage?.plants>50,'Original ground vegetation was lost');
+  assert(state.world.stage?.flowers>0&&state.world.stage?.mushrooms>0,
+   'Hand-painted flowers and mushrooms missing');
+  assert(state.world.stage?.mountainBackdrops>=3,'Mountains should have paper theater backdrops');
+  assert(state.world.stage?.cabinFacade,'Cardboard illustrated cabin missing');
+  assert(state.world.stage?.foldedSupports>0,'Cardboard scenery has no standing tabs');
   assert(state.world.papercraftShrubs>50,'Real shrub placement data must render as paper');
   assert(state.world.waterRipples>15,'Original water requires drawn ripples');
   assert.equal(state.world.npcCount,9);
