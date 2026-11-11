@@ -21,8 +21,8 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
        vAcademyRockWorld.z*11.2)*.04;
    crayonGrain+=sin(vAcademyRockWorld.x*31.0-
        vAcademyRockWorld.z*9.0+y*6.3)*.021;
-   vec3 grass=vec3(.18,.72,.24)+crayonGrain;
-   grass=mix(grass,vec3(.42,.86,.22),.36+
+   vec3 grass=vec3(.14,.57,.18)+crayonGrain*.52;
+   grass=mix(grass,vec3(.30,.72,.20),.36+
       .22*sin(vAcademyRockWorld.x*.39)*sin(vAcademyRockWorld.z*.37));
    float rib=sin(y*23.4+
        sin(vAcademyRockWorld.x*.52+vAcademyRockWorld.z*.31)*.65);
@@ -112,25 +112,31 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
    new THREE.Color(CRAYON.ink)
   ];
   // Every paper cut is imperfectly inset over a larger black ink outline.
-  const frame=new THREE.BoxGeometry(pine?.43:.57,2.24,.43);
+  const frame=new THREE.BoxGeometry(pine?.355:.475,2.22,.40);
   frame.translate(0,1.10,-.03);geos.push([frame,5]);
   const trunk=new THREE.BoxGeometry(pine?.29:.41,2.17,.36);
   trunk.translate(0,1.085,.025);geos.push([trunk,0]);
   const leaf=shape(pine);
   for(let i=0;i<3;i++){
-   for(const outline of [true,false]){
+   // Three layers: front paint, a thin black edge, and BACK paint.
+   // A 3D camera can see either side without ever showing a black slab.
+   for(const face of ['ink','front','back']){
+    const outlined=face==='ink';
     const geom=new THREE.ExtrudeGeometry(leaf,{
-     depth:outline?.11:.14,steps:1,
-     bevelEnabled:true,bevelThickness:outline?.04:.034,
-     bevelSize:outline?.073:.045,bevelSegments:1,curveSegments:6
+     depth:outlined?.085:.052,steps:1,
+     bevelEnabled:true,bevelThickness:outlined?.031:.022,
+     bevelSize:outlined?.042:.018,bevelSegments:1,curveSegments:6
     });
-    geom.scale((1-i*.095)*(outline?1.078:1),
-       (1-i*.07)*(outline?1.048:1),1);
-    geom.translate((i-1)*(pine?.07:.17)+(outline?-.018:.017),
-      (pine?1.17:1.94)+i*(pine?.29:.14)-(outline?.016:0),
-      -.10+i*.12+(outline?-.08:.02));
+    geom.scale((1-i*.095)*(outlined?1.040:1),
+       (1-i*.07)*(outlined?1.032:1),1);
+    const shift=face==='front'?.057:face==='back'?-.075:-.025;
+    geom.translate((i-1)*(pine?.07:.17)+
+       (outlined?-.010:.006),
+      (pine?1.17:1.94)+i*(pine?.29:.14)-
+       (outlined?.008:0),
+      -.10+i*.12+shift);
     geom.rotateY(i===1?Math.PI*.37:(i===2?-.16:.13));
-    geos.push([geom,outline?5:i+2]);
+    geos.push([geom,outlined?5:i+2]);
    }
   }
   const positions=[],normals=[],uvs=[],rgb=[],edgeValues=[];
