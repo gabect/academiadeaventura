@@ -1,10 +1,10 @@
 /**
- * Mountain Studio v0.59: whole-tree transparent PNG impostors.
+ * Mountain Studio v0.60: licensed full-tree transparent PNG impostors.
  * The complete trunk, limbs and canopy are painted together in each image.
  * One vertically constrained camera-facing GPU quad per tree, not crossed Xs.
  * PNGs are baked deterministically from this module by the CI exporter.
  */
-const TILE_W=320,TILE_H=512,COLS=3,ROWS=2,COUNTS={pine:6,broadleaf:5};
+const TILE_W=512,TILE_H=512,COLS=3,ROWS=2,COUNTS={pine:6,broadleaf:5};
 function rng(seed){let x=seed>>>0;return ()=>{x=(x+0x6D2B79F5)|0;
  let t=Math.imul(x^(x>>>15),1|x);t^=t+Math.imul(t^(t>>>7),61|t);return ((t^(t>>>14))>>>0)/4294967296;};}
 const between=(r,a,b)=>a+(b-a)*r(),mix=(a,b,t)=>a+(b-a)*t;
@@ -134,7 +134,7 @@ export function paintStudioTreeAtlasCanvas(family){
  canvas.width=TILE_W*COLS;canvas.height=TILE_H*ROWS;
  const ctx=canvas.getContext('2d',{alpha:true});if(!ctx)throw Error('2D canvas unavailable');
  for(let i=0;i<COUNTS[family];i++){
-  ctx.save();ctx.translate((i%COLS)*TILE_W,Math.floor(i/COLS)*TILE_H);
+  ctx.save();ctx.translate((i%COLS)*TILE_W+96,Math.floor(i/COLS)*TILE_H);
   ctx.beginPath();ctx.rect(7,5,TILE_W-14,TILE_H-10);ctx.clip();
   if(family==='pine')paintPine(ctx,i);else paintBroadleaf(ctx,i);
   ctx.restore();
@@ -146,22 +146,22 @@ function makeCard(THREE,family,index){
  const uPad=2/(TILE_W*COLS),vPad=2/(TILE_H*ROWS);
  const u0=col/COLS+uPad,u1=(col+1)/COLS-uPad;
  const v0=1-(row+1)/ROWS+vPad,v1=1-row/ROWS-vPad;
- const width=family==='pine'?[3.4,3.75,3.55,3.85,3.47,3.67][index]:
-  [4.72,3.9,4.58,4.86,4.37][index];
- const height=family==='pine'?[5.45,5.29,5.53,5.43,5.38,5.52][index]:
-  [5.31,5.48,5.48,5.40,5.26][index];
+ const width=family==='pine'?[3.05,3.34,3.18,3.35,3.07,3.28][index]:
+  [3.78,3.65,3.87,3.51,3.54][index];
+ const height=family==='pine'?[4.95,4.72,5.15,4.86,4.88,5.00][index]:
+  [4.65,4.77,4.73,4.55,4.48][index];
  g.setAttribute('position',new THREE.Float32BufferAttribute([
   -width*.5,-2.40,0,width*.5,-2.40,0,
   -width*.5,height-2.40,0,width*.5,height-2.40,0],3));
  g.setAttribute('uv',new THREE.Float32BufferAttribute([u0,v0,u1,v0,u0,v1,u1,v1],2));
  g.setIndex([0,1,2,1,3,2]);g.computeVertexNormals();g.computeBoundingSphere();
  g.userData={family,variant:index,impostor:true,quadCount:1,
-  displayWidth:width,displayHeight:height,foliageStyle:'complete-tree-png'};
+  displayWidth:width,displayHeight:height,foliageStyle:'licensed-botanical-png'};
  return g;
 }
 function billboard(THREE){
  const mat=new THREE.MeshBasicMaterial({
-  color:0xffffff,side:THREE.DoubleSide,alphaTest:.43,alphaToCoverage:true,
+  color:0xffffff,side:THREE.DoubleSide,alphaTest:.21,alphaToCoverage:true,
   transparent:false,depthWrite:true,toneMapped:true
  });
  mat.visible=false;
@@ -181,13 +181,13 @@ function billboard(THREE){
    'gl_Position=projectionMatrix*mvPosition;'
   ].join('\n'));
  };
- mat.customProgramCacheKey=()=> 'academy-upright-full-tree-impostor-v1';
+ mat.customProgramCacheKey=()=> 'academy-upright-full-tree-impostor-v2';
  return mat;
 }
 export function createStudioTreeImpostors(THREE,options={}){
  const root=options.root||'./assets/studio_hd/trees/';
- const info={version:'0.59.0',style:'complete-png-tree-billboards',
-  pine:6,broadleaf:5,quadsPerTree:1,paintedWholeTree:true,loaded:0,errors:[]};
+ const info={version:'0.60.0',style:'licensed-whole-tree-billboards',
+  pine:6,broadleaf:5,quadsPerTree:1,paintedWholeTree:true,licensedRealAssets:true,loaded:0,errors:[]};
  const loader=new THREE.TextureLoader();
  function material(family){
   const mat=billboard(THREE);
