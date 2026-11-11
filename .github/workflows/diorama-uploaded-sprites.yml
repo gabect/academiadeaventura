@@ -35,10 +35,13 @@ jobs:
           node --check diorama/exact-user-sprites.mjs
           node --check diorama/handdrawn-stage.mjs
           node tests/diorama-directional-facing.mjs
-      - name: Install browser
+      - name: Use system Chrome (avoid browser download)
         run: |
           npm install --no-save --no-package-lock playwright
-          npx playwright install --with-deps chromium
+          CHROME=$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)
+          test -n "$CHROME"
+          echo "PLAYWRIGHT_CHROME=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
       - name: Original map and five PNG-rendered WebGL scenes
         run: |
           python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
