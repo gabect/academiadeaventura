@@ -28,7 +28,7 @@ assert(paint.includes('export function createStudioTreeImpostors'));
 assert(!paint.includes('function crownBlob('));
 assert(!paint.includes('paintStudioTreeAtlasCanvas'));
 assert(paint.includes('licensed-rendered-tree-billboards'));
-assert(paint.includes('academy-upright-real-tree-impostor-v2'));
+assert(paint.includes('academy-upright-real-tree-impostor-v3'));
 assert(paint.includes('paintedWholeTree:true'));
 const procedural=fs.readFileSync(new URL('../src/studio-organic-geometry.mjs',import.meta.url),'utf8');
 for(const token of ['function curvedBranch(', 'function branchCollar(', 'function foliageClump(',
