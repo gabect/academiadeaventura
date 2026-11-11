@@ -46,7 +46,7 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #stickKnob{background:#ffe15e!important;border:3px solid #202827!important}
 #buildLabel{border:2px solid #222e2d!important;background:#ffdc4fef!important;color:#253029!important}
 </style></head>
-<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.61.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse wheel: zoom · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.61.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">Cámara fija · Rueda para zoom</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
+<body><div id="hud"><h1>⚔ Adventure Academy</h1><p id="demoBuildText">Demo 0.61.0 · Valle de la Cascada</p><p id="xp">XP: 0 · Quest: Talk to the guardian</p><p>WASD: move · Mouse wheel: zoom · Space: B · Caps Lock: A · Left Alt: C</p></div><div id="message">Busca las rutas señalizadas de 30° y 35° para subir al valle; la de 45° lleva a la cumbre.</div><div id="touch" aria-label="Movement joystick" role="application"><div id="stickBase"></div><div id="stickKnob"></div></div><div id="actionCluster" aria-label="Game actions"><button id="interactButton" type="button" aria-label="A: Interact and talk"><span>A</span><small>Action</small></button><button id="runButton" type="button" aria-label="B: Hold to run or tap to jump" aria-pressed="false"><span>B</span><small id="bHint">Run / Jump</small></button><button id="cancelButton" type="button" aria-label="C: tap to crouch or stand; hold to crawl"><span>C</span><small id="cHint">Crouch</small></button></div><div id="skillPanel"><span id="skillStatus">XP 0 · Agility Lv 1</span><span id="waterStatus" hidden></span><span id="slopeStatus" hidden></span><span id="regionStatus">Campo bajo</span><a id="archiveLink" href="./archive/campo-v0.31.1/index.html" target="_blank" rel="noopener" title="Mapa histórico jugable v0.31.1">Archivo v0.31</a><button id="balanceUpgrade" type="button" disabled>+ Agility</button></div><span id="buildLabel">Valle · v0.61.0</span><div id="zoomControls" aria-label="Camera zoom and view"><button id="zoomIn" type="button" aria-label="Zoom in" title="Zoom in">+</button><button id="zoomOut" type="button" aria-label="Zoom out" title="Zoom out">−</button><button id="cameraUndo" type="button" aria-label="Undo last zoom adjustment" title="Undo zoom (Ctrl+Z)" disabled>↶</button><button id="viewModeButton" type="button" aria-label="Alternar curvatura con la cámara en tercera persona" aria-pressed="true" title="Curvatura AC / terreno normal">AC</button></div><span id="cameraHint">Cámara: ↑↓ inclinar · Rueda zoom</span><div id="landscapePrompt"><strong>Adventure Academy</strong><p>This game works best in landscape mode.</p><button id="landscapeButton" type="button">Play in landscape</button><small>If the screen does not rotate, turn your device and enable auto-rotate.</small></div>
 <div id="challenge" hidden role="dialog" aria-modal="true" aria-labelledby="challengeTitle"><article><h2 id="challengeTitle">The Apprentice Trial</h2><p id="progress"></p><p id="question"></p><div id="answers"></div><p id="feedback" aria-live="polite"></p><button id="exit" type="button">Return to courtyard</button></article></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
@@ -104,21 +104,21 @@ const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
 let cameraHeading=Math.PI,cameraPitch=.62;
-// Fixed camera orientation with smooth 3D (X/Y/Z) follow and zoom.
+// Fixed camera heading, adjustable vertical pitch, smooth X/Y/Z follow and zoom.
 let cameraRailY=null;
 const cameraRailOffset=new THREE.Vector3();
-const CAMERA_MIN_PITCH=.51,CAMERA_MAX_PITCH=.79;
+const CAMERA_MIN_PITCH=-.28,CAMERA_MAX_PITCH=1.34;
 const FOLLOW_FACING_SPEED=8.4;
 let lastCameraManualAt=-100000;
-const MOUSE_SENSITIVITY=.00285,ARROW_YAW_SPEED=1.85,
- ARROW_PITCH_SPEED=1.30;
+const MOUSE_SENSITIVITY=.0032,ARROW_PITCH_SPEED=1.25;
 let rollingHorizon=true;
 const horizonViewButton=document.getElementById('viewModeButton');
 const cameraHint=document.getElementById('cameraHint');
 const isPointerLocked=()=>document.pointerLockElement===renderer.domElement;
 function updateCameraHint(){
  cameraHint.textContent=matchMedia('(pointer:coarse)').matches?
-  'Cámara fija · Pellizca: zoom':'Cámara fija · Rueda: zoom';
+  'Arrastra vertical: inclinar · Pellizca: zoom':
+  'Arrastre derecho vertical / ↑↓: inclinar · Rueda: zoom';
 }
 
 function setHorizonView(enabled){
@@ -134,7 +134,11 @@ horizonViewButton.addEventListener('click',()=>setHorizonView(!rollingHorizon));
 document.addEventListener('pointerlockchange',updateCameraHint);
 setHorizonView(true);
 function rotateThirdPersonCamera(deltaX,deltaY){
- // Camera orbit intentionally disabled for stationary theatrical scenery.
+ // Only tilt vertically. World heading and stage-flat orientation stay fixed.
+ if(!Number.isFinite(deltaY)||!deltaY)return;
+ lastCameraManualAt=performance.now();
+ cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*MOUSE_SENSITIVITY,
+  CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
 }
 
 const cameraHistory=[];
@@ -3532,7 +3536,7 @@ function followPlayerCamera(dt){
  // Follow the traversable surface elevation on ramps, hills and mountain
  // paths, using a damped vertical rail to avoid abrupt steps and jitter.
  cameraRailY=THREE.MathUtils.damp(cameraRailY,centerY,5.0,dt);
- // X/Y/Z translation only. Heading and pitch remain fixed, even on slopes.
+ // X/Y/Z tracking with fixed heading; vertical pitch is user-adjustable.
  cameraTarget.set(player.position.x,cameraRailY,player.position.z);
  const distance=10.7/cameraZoom;
  const horizontal=distance*Math.cos(cameraPitch);
@@ -4646,13 +4650,14 @@ function animate(){
  if(keys.has('KeyS'))forward-=1;
  if(keys.has('KeyA'))right-=1;
  if(keys.has('KeyD'))right+=1;
- // Arrow keys rotate/tilt camera, without interfering with WASD.
+ // Arrow up/down tilt. Left/right never rotate the fixed theater stage.
  if(!challengeOpen){
-  const yaw=(keys.has('ArrowRight')?1:0)-
-   (keys.has('ArrowLeft')?1:0);
-  const tilt=(keys.has('ArrowDown')?1:0)-
-   (keys.has('ArrowUp')?1:0);
-  // Arrow keys do not orbit or tilt the fixed camera.
+  const tilt=Number(keys.has('ArrowDown'))-Number(keys.has('ArrowUp'));
+  if(tilt){
+   lastCameraManualAt=performance.now();
+   cameraPitch=THREE.MathUtils.clamp(cameraPitch+tilt*ARROW_PITCH_SPEED*dt,
+    CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
+  }
  }
  if(ENABLE_RAGDOLL&&FALL.active){updateFall(dt);}
  else if(BALANCE.active){updateBalanceRecovery(dt);}
