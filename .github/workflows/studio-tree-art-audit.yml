@@ -1,0 +1,26 @@
+name: Studio licensed tree art audit
+on:
+  push:
+    branches: [feature/studio-tree-art-rebuild-v0.60.0]
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch CC0 reference trees
+        run: |
+          curl -fL --retry 3 --retry-delay 2 "https://opengameart.org/sites/default/files/wenrexatrees.zip" -o /tmp/trees.zip
+          ls -lh /tmp/trees.zip
+          unzip -Z1 /tmp/trees.zip | head -100
+      - name: Build indexed sprite contact sheet
+        run: |
+          python3 -m pip install --quiet Pillow
+          python3 tools/audit-cc0-tree-pack.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cc0-tree-art-audit
+          path: art-audit/
+          if-no-files-found: warn
