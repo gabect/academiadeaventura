@@ -43,6 +43,7 @@ import {createStudioFoliageGeometry} from './src/studio-organic-geometry.mjs?v=0
 import {createStudioTreeImpostors} from './src/studio-tree-impostors.mjs?v=0.61.0';
 import {installStudioArt} from './src/studio-art-runtime.mjs?v=0.61.0';
 import {installCardboardArt} from './diorama/cardboard-art.mjs?v=1';
+import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
@@ -4481,6 +4482,14 @@ const dioramaArt=installCardboardArt({
  waterfallPlane,waterBodies:WATER_BODIES,
  terrainBounds:{half:WORLD.half,limit:WORLD.limit,plateauHeight:WORLD.plateauHeight}
 });
+const dioramaDetails=installDioramaDetails({
+ THREE,scene,
+ meadowSites:meadowSites.concat(studioNatureSites.accents),
+ shrubSites:MOUNTAIN_SHRUB_SITES,waterAt,waterBodies:WATER_BODIES,
+ studioMeadowFallback,mountainShrubs
+});
+window.__dioramaWorld.papercraftShrubs=dioramaDetails.shrubCount;
+window.__dioramaWorld.waterRipples=dioramaDetails.waterRipples;
 window.__dioramaWorld.ramps=FIELD_RAMPS.map(v=>({id:v.id,x:v.x,z:v.z,rise:v.rise}));
 window.__dioramaWorld.cabin={...CABIN};
 window.__dioramaWorld.lakePlatform={...LAKE_PLATFORM};
