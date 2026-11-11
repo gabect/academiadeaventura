@@ -35,6 +35,9 @@ function inspect(role,seed,coat){
  assert.equal(result.installed,true);
  assert.equal(result.mode,'fully-volumetric-3d');
  assert.equal(result.articulated,true);
+ assert.equal(result.shading,'cel-shaded-vector-3d');
+ assert.equal(result.shadeBands,4);
+ assert(result.outlineMeshes>=6,'Expected visible ink silhouettes');
  assert.equal(legacy.visible,false,'The former skeleton must not remain visible');
  assert.equal(installStylizedCharacter(THREE,root,{role,coat,seed}),result,'Do not install twice');
  const meshes=[],errorMeshes=[];
@@ -47,7 +50,7 @@ function inspect(role,seed,coat){
    assert(p.count>0,'Empty character geometry');
    assert(node.geometry.attributes.normal,'Missing material surface normals');
    for(const value of p.array)assert(Number.isFinite(value),'Non-finite 3D vertex');
-   assert(node.material?.isMeshStandardMaterial||node.material?.isMeshBasicMaterial,
+   assert(node.material?.isMeshToonMaterial||node.material?.isMeshBasicMaterial,
     'Character requires physical 3D materials');
   }
  });
@@ -69,7 +72,7 @@ const guardian=inspect('guardian',1,'#a9634e');
 const npc=inspect('npc',3,'#6a9d96');
 const html=fs.readFileSync('diorama/index.html','utf8');
 for(const token of [
- "import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=1';",
+ "import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=2';",
  "installStylizedCharacter(THREE,player,{role:'player'",
  "installStylizedCharacter(THREE,guardian,{role:'guardian'",
  "installStylizedCharacter(THREE,npc,{role:'npc'",
