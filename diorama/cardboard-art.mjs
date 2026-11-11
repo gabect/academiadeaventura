@@ -104,46 +104,68 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   s.closePath();return s;
  }
  function template(pine){
-  const geos=[],base=[
-   new THREE.Color('#ad875f'),new THREE.Color('#d3b390'),
-   new THREE.Color(pine?'#4d8869':'#6f9f74'),
-   new THREE.Color(pine?'#68a080':'#8dbc80'),
-   new THREE.Color(pine?'#86b69a':'#b0cf98')
+  const geos=[],colors=[
+   new THREE.Color('#b98043'),new THREE.Color(CRAYON.yellow),
+   new THREE.Color(pine?'#13894c':'#1c9d56'),
+   new THREE.Color(pine?'#2ebf59':'#3cd550'),
+   new THREE.Color(pine?'#6be56e':'#a2ed62'),
+   new THREE.Color(CRAYON.ink)
   ];
-  const trunk=new THREE.BoxGeometry(pine?.31:.43,2.17,.34);
-  trunk.translate(0,1.085,0);geos.push([trunk,0]);
+  // Every paper cut is imperfectly inset over a larger black ink outline.
+  const frame=new THREE.BoxGeometry(pine?.43:.57,2.24,.43);
+  frame.translate(0,1.10,-.03);geos.push([frame,5]);
+  const trunk=new THREE.BoxGeometry(pine?.29:.41,2.17,.36);
+  trunk.translate(0,1.085,.025);geos.push([trunk,0]);
   const leaf=shape(pine);
   for(let i=0;i<3;i++){
-   const g=new THREE.ExtrudeGeometry(leaf,{depth:.13,steps:1,
-    bevelEnabled:true,bevelThickness:.035,bevelSize:.06,
-    bevelSegments:1,curveSegments:5});
-   g.scale(1-i*.10,1-i*.08,1);
-   g.translate((i-1)*(pine?.07:.17),
-    (pine?1.17:1.95)+i*(pine?.29:.14),-.10+i*.11);
-   g.rotateY(i===1?Math.PI*.37:(i===2?-.15:.12));
-   geos.push([g,i+2]);
+   for(const outline of [true,false]){
+    const geom=new THREE.ExtrudeGeometry(leaf,{
+     depth:outline?.11:.14,steps:1,
+     bevelEnabled:true,bevelThickness:outline?.04:.034,
+     bevelSize:outline?.073:.045,bevelSegments:1,curveSegments:6
+    });
+    geom.scale((1-i*.095)*(outline?1.078:1),
+       (1-i*.07)*(outline?1.048:1),1);
+    geom.translate((i-1)*(pine?.07:.17)+(outline?-.018:.017),
+      (pine?1.17:1.94)+i*(pine?.29:.14)-(outline?.016:0),
+      -.10+i*.12+(outline?-.08:.02));
+    geom.rotateY(i===1?Math.PI*.37:(i===2?-.16:.13));
+    geos.push([geom,outline?5:i+2]);
+   }
   }
-  let positions=[],normals=[],uvs=[],colors=[];
-  const edge=new THREE.Color('#c2a37c');
-  for(const [geom,idx] of geos){
+  const positions=[],normals=[],uvs=[],rgb=[],edgeValues=[];
+  const edgeColor=new THREE.Color('#dfb47d');
+  const shadedEdge=new THREE.Color('#85522e');
+  for(const [geom,index] of geos){
    const g=geom.index?geom.toNonIndexed():geom;
-   const p=g.getAttribute('position'),n=g.getAttribute('normal'),uv=g.getAttribute('uv');
+   const p=g.getAttribute('position'),n=g.getAttribute('normal'),
+    uv=g.getAttribute('uv');
    for(let i=0;i<p.count;i++){
     positions.push(p.getX(i),p.getY(i),p.getZ(i));
     normals.push(n.getX(i),n.getY(i),n.getZ(i));
-    uvs.push(uv?uv.getX(i):0,uv?uv.getY(i):0);
-    const side=g.groups.some(gr=>gr.materialIndex===1&&i>=gr.start&&i<gr.start+gr.count);
-    const c=side?edge:base[idx];
-    colors.push(c.r,c.g,c.b);
+    const u=uv?uv.getX(i):0,v=uv?uv.getY(i):0;
+    uvs.push(u,v);
+    const isEdge=index!==5&&g.groups.some(gr=>
+     gr.materialIndex===1&&i>=gr.start&&i<gr.start+gr.count);
+    const rib=.64+.36*(.5+.5*Math.sin(u*35+v*18));
+    const col=index===5?colors[5]:
+     isEdge?edgeColor.clone().lerp(shadedEdge,1-rib):colors[index];
+    rgb.push(col.r,col.g,col.b);
+    edgeValues.push(isEdge?1:0);
    }
    g.dispose();
   }
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
-  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
-  g.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
-  g.computeBoundingSphere();g.userData.cardboardTree=true;return g;
+  const result=new THREE.BufferGeometry();
+  result.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  result.setAttribute('normal',new THREE.Float32BufferAttribute(normals,3));
+  result.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  result.setAttribute('color',new THREE.Float32BufferAttribute(rgb,3));
+  result.setAttribute('cardboardEdge',new THREE.Float32BufferAttribute(edgeValues,1));
+  result.computeBoundingSphere();
+  result.userData.cardboardTree=true;
+  result.userData.blackInkCutout=true;
+  result.userData.corrugatedEdges=true;
+  return result;
  }
  const locations={pine:[],broadleaf:[]};
  const seen=new Set();
@@ -166,8 +188,21 @@ export function installCardboardArt({THREE,scene,player,guardian,ambientNPCs,
   [-58.35,-44.4,.75],[-59.3,-41.2,.90]])
   push(x,naturalSurfaceY(x,z),z,'pine',k*.84,x*.1);
  const material=new THREE.MeshStandardMaterial({
-  color:'#ffffff',vertexColors:true,roughness:1,
+  color:'#ffffff',map:paper,vertexColors:true,roughness:.68,
   metalness:0,flatShading:true,side:THREE.DoubleSide});
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.uCorrugated={value:corrugated};
+  shader.vertexShader=shader.vertexShader.replace('#include <common>',
+   '#include <common>\nattribute float cardboardEdge;\nvarying float vCardboardEdge;');
+  shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>',
+   '#include <begin_vertex>\nvCardboardEdge=cardboardEdge;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>',
+   '#include <common>\nuniform sampler2D uCorrugated;\nvarying float vCardboardEdge;');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <map_fragment>',
+   '#include <map_fragment>\nvec3 flute=texture2D(uCorrugated,vMapUv).rgb;'+
+   '\ndiffuseColor.rgb=mix(diffuseColor.rgb,flute,vCardboardEdge*.84);');
+ };
+ material.customProgramCacheKey=()=>'diorama-corrugated-ink-wax-v2';
  const forest=[];
  for(const kind of ['pine','broadleaf']){
   const entries=locations[kind];
