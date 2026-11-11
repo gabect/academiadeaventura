@@ -18,7 +18,7 @@ jobs:
       - name: Ensure original game untouched
         run: |
           git fetch origin main
-          git diff --name-only origin/main...HEAD | tee /tmp/changed.txt
+          git diff --name-only origin/main HEAD | tee /tmp/changed.txt
           if grep -vE '^(diorama/|tests/diorama-handmade-stage.mjs$|tests/diorama-original-map-smoke.mjs$|\.github/workflows/diorama-handmade-stage.yml$)' /tmp/changed.txt; then
             echo 'Unexpected edit outside Diorama'
             exit 1
