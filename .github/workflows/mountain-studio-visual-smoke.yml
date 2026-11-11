@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/studio-tree-art-rebuild-v0.60.0
+      - feature/studio-tree-curvature-grounding-v0.61.0
   workflow_dispatch:
 permissions:
   contents: write
@@ -38,13 +38,13 @@ jobs:
           python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
           node tests/studio-visual-smoke.mjs
       - name: Commit approved baked PNG sprites to the feature branch
-        if: success() && github.ref == 'refs/heads/feature/studio-tree-art-rebuild-v0.60.0'
+        if: success() && github.ref == 'refs/heads/feature/studio-tree-curvature-grounding-v0.61.0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/studio_hd/trees/tree-pine-atlas.png assets/studio_hd/trees/tree-broadleaf-atlas.png
           if ! git diff --cached --quiet; then
-            git commit -m "assets(studio): bake full-tree transparent PNG impostors v0.59.0"
+            git commit -m "assets(studio): verify tree atlas assets on v0.61.0"
             git push
           fi
       - uses: actions/upload-artifact@v4
