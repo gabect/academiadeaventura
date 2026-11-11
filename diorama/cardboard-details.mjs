@@ -52,7 +52,7 @@ export function installDioramaDetails({THREE,scene,meadowSites,shrubSites,
  const transform=new THREE.Object3D();
  for(let i=0;i<sites.length;i++){
   const s=sites[i],seed=Math.abs(Math.sin(s.x*19.33+s.z*57.9));
-  const scale=Math.min(1.65,Math.max(.35,Number(s.size??s.sy??.9)))*(.67+seed*.30);
+  const scale=Math.min(.78,Math.max(.22,Number(s.size??s.sy??.9)))*(.34+seed*.15);
   transform.position.set(s.x,s.y+.02,s.z);
   transform.rotation.set(0,seed*Math.PI*2,0);
   transform.scale.set(scale,scale,scale);
