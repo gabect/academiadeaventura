@@ -26,18 +26,20 @@ export function installDioramaDetails({THREE,scene,meadowSites,shrubSites,
  paperShape.lineTo(.72,.19);
  paperShape.bezierCurveTo(.18,-.14,-.51,-.12,-1.02,.13);
  for(let i=0;i<3;i++){
-  for(const outline of [true,false]){
-   const g=new THREE.ExtrudeGeometry(paperShape,{depth:outline?.09:.13,
-    bevelEnabled:true,bevelThickness:outline?.043:.035,
-    bevelSize:outline?.075:.04,bevelSegments:1,steps:1,curveSegments:6});
-   g.scale((.85-i*.10)*(outline?1.085:1),
-    (.76-i*.04)*(outline?1.065:1),1);
-   g.translate((i-1)*.14+(outline?-.014:.016),
-    .10+(i===1?.2:0)-(outline?.011:0),
-    (i-1)*.11+(outline?-.053:.018));
+  for(const face of ['ink','front','back']){
+   const outline=face==='ink';
+   const g=new THREE.ExtrudeGeometry(paperShape,{depth:outline?.068:.044,
+    bevelEnabled:true,bevelThickness:outline?.027:.018,
+    bevelSize:outline?.041:.017,bevelSegments:1,steps:1,curveSegments:6});
+   g.scale((.85-i*.10)*(outline?1.046:1),
+    (.76-i*.04)*(outline?1.035:1),1);
+   const layer=face==='front'?.062:face==='back'?-.073:-.022;
+   g.translate((i-1)*.14+(outline?-.008:.008),
+    .10+(i===1?.2:0)-(outline?.006:0),
+    (i-1)*.11+layer);
    g.rotateY(i*Math.PI/3);
    const c=new THREE.Color(outline?CRAYON.ink:colors[i]);
-   const edge=new THREE.Color('#c99c65');
+   const edge=new THREE.Color('#d3a372');
    const geom=g.index?g.toNonIndexed():g;
    const p=geom.getAttribute('position'),n=geom.getAttribute('normal'),
      uv=geom.getAttribute('uv');
