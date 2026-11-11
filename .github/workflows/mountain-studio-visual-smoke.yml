@@ -2,7 +2,7 @@ name: Mountain Studio visual smoke
 on:
   push:
     branches:
-      - feature/mountain-full-tree-sprites-v0.59.0
+      - feature/studio-tree-art-rebuild-v0.60.0
   workflow_dispatch:
 permissions:
   contents: write
@@ -19,10 +19,11 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright three@0.170.0
           npx playwright install --with-deps chromium
-      - name: Bake full-tree PNG sprite atlases
+      - name: Bake licensed high-detail PNG tree sprites
         run: |
-          python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
-          node tools/export-studio-tree-png.mjs
+          python3 -m pip install --quiet Pillow
+          node tools/fetch-licensed-tree-pngs.mjs
+          python3 tools/bake-licensed-tree-atlases.py
       - name: CPU code invariants
         run: |
           node tests/mountain-studio-render-invariants.mjs
@@ -34,9 +35,10 @@ jobs:
           THREE_MODULE="$GITHUB_WORKSPACE/node_modules/three/build/three.module.js" node tests/environment-smoke.mjs
       - name: Render app in SwiftShader WebGL
         run: |
+          python3 -m http.server 8765 >/tmp/studio-server.log 2>&1 &
           node tests/studio-visual-smoke.mjs
       - name: Commit approved baked PNG sprites to the feature branch
-        if: success() && github.ref == 'refs/heads/feature/mountain-full-tree-sprites-v0.59.0'
+        if: success() && github.ref == 'refs/heads/feature/studio-tree-art-rebuild-v0.60.0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -51,5 +53,6 @@ jobs:
           name: mountain-studio-webgl-screenshots
           path: |
             artifacts/*.png
+            artifacts/trees-*-art-preview.jpg
             assets/studio_hd/trees/*.png
           if-no-files-found: warn
