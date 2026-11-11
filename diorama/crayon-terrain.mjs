@@ -81,6 +81,13 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
  uniform sampler2D crayonGrass;
  uniform sampler2D crayonShoreMap;
  uniform vec4 crayonShoreBounds;
+ // Matte wax pigment grade applied to BOTH the field and the path verge.
+ // Preserve the uploaded drawing's strokes while taming neon highlights.
+ vec3 crayonGradeGrass(vec3 pigment){
+   float luma=dot(pigment,vec3(.23,.69,.08));
+   vec3 softened=mix(vec3(luma),pigment,.75);
+   return mix(softened,vec3(.29,.48,.20),.22);
+ }
  vec3 crayonTile(vec2 worldUV,vec2 cell){
    // Mirrored repeat joins the cropped artwork continuously at both axes.
    vec2 local=1.0-abs(fract(worldUV*.5)*2.0-1.0);
@@ -109,7 +116,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       // Compute weights locally: the old layer-scoped weights variable is
       // not guaranteed to remain in scope after shader patch composition.
       vec2 grassUV=vAcademyRockWorld.xz*.22;
-      vec3 handmadeGrass=texture2D(crayonGrass,grassUV).rgb;
+      vec3 handmadeGrass=crayonGradeGrass(texture2D(crayonGrass,grassUV).rgb);
       vec3 handmadeStoneTop=crayonTile(vAcademyRockWorld.xz*.19,vec2(0.0,0.0));
       vec3 handmadeStoneFront=crayonTile(vAcademyRockWorld.xy*.19,vec2(0.0,0.0));
       vec3 handmadeStoneSide=crayonTile(vAcademyRockWorld.zy*.19,vec2(0.0,0.0));
@@ -118,6 +125,8 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       crayonWeights/=max(dot(crayonWeights,vec3(1.0)),0.0001);
       vec3 handmadeStone=handmadeStoneFront*crayonWeights.z+
         handmadeStoneSide*crayonWeights.x+handmadeStoneTop*crayonWeights.y;
+      // Warm grey craft-paper glazing unifies cliffs with painted cutouts.
+      handmadeStone=mix(handmadeStone,vec3(.47,.50,.45),.21);
       float meadow=smoothstep(.12,.88,clamp(vAcademyCover,0.0,1.0));
       vec3 handmadeGround=mix(handmadeStone,handmadeGrass,meadow);
       // Sample the continuous shoreline following the original water shapes.
@@ -173,8 +182,8 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       // Wax-pigment gradient: dirt -> mixed earth/grass -> meadow.
       // Sample exactly the same world-space grass texture as the ground;
       // no fixed green swatch or visible border stripe.
-      vec3 edgeGrass=texture2D(crayonGrass,
-        vStudioTrailWorld.xz*.22).rgb;
+      vec3 edgeGrass=crayonGradeGrass(texture2D(crayonGrass,
+        vStudioTrailWorld.xz*.22).rgb);
       float fadeStart=edgeLimit-(.35+.035*wearBroad);
       float fadeEnd=edgeLimit-.025;
       float edgeGradient=smoothstep(fadeStart,fadeEnd,edge);
@@ -207,7 +216,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v7';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v8';
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
@@ -216,5 +225,6 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
  return {name:'continuous-frameless-handmade-crayon',atlas:'96-to-64-pixel source swatches',
    sourceArt:'user-supplied-seamless-crayon-grass',grassTexture:'crayon-grass-seamless.webp',grassCoverage:.98,physicalMapChanged:false,
    brownBorders:false,seamlessSampling:true,water:true,grass:true,stone:true,soil:true,
-   shoreline:true,shorelinePixels,shorelineMaskResolution:shoreSize};
+   shoreline:true,shorelinePixels,shorelineMaskResolution:shoreSize,
+   mattePigmentGrade:true,grassSaturationFactor:.75,stoneGlaze:.21};
 }
