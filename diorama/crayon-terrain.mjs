@@ -9,9 +9,11 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
   new URL('./assets/crayon-terrain-atlas.webp',import.meta.url).href);
  atlas.colorSpace=THREE.SRGBColorSpace;
  atlas.wrapS=atlas.wrapT=THREE.ClampToEdgeWrapping;
- atlas.minFilter=THREE.LinearMipmapLinearFilter;
+ // Cell edges cannot bleed into a neighboring atlas quadrant at low LOD.
+ atlas.generateMipmaps=false;
+ atlas.minFilter=THREE.LinearFilter;
  atlas.magFilter=THREE.LinearFilter;
- atlas.anisotropy=8;
+ atlas.anisotropy=1;
  const atlasUniform={value:atlas};
  // Four unframed, premade periodic paintings: grass, soil, stone and water.
  // Each cell is a quarter of the texture (top-left grass, top-right soil,
