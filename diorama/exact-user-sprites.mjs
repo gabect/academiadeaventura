@@ -60,12 +60,19 @@ export function installExactUserSprites({THREE,scene,camera,world,oldStage,
  const pines=treeLocations.pine||[],broad=treeLocations.broadleaf||[],
   shrubs=shrubSites||[];
  // Original tree locations are never shuffled; show every uploaded tree type.
+ const palmCandidates=broad.filter(s=>
+   (s.x-38)*(s.x-38)+(s.z-11)*(s.z-11)<40*40);
+ // Guarantee that the user-provided palm sprite appears without adding any
+ // new tree positions: replace up to two existing trees near the lakeshore.
+ const chosenPalmSites=(palmCandidates.length?palmCandidates:
+   pines.slice().sort((a,b)=>
+    ((a.x-38)**2+(a.z-11)**2)-((b.x-38)**2+(b.z-11)**2))).slice(0,2);
+ const replaced=new Set(chosenPalmSites);
  const groups=[
-  {def:treeDefs[0],sites:broad.filter((_,i)=>i%2===0)},
-  {def:treeDefs[1],sites:broad.filter((_,i)=>i%2!==0)},
-  {def:treeDefs[2],sites:broad.filter(s=>
-   (s.x-38)*(s.x-38)+(s.z-11)*(s.z-11)<40*40).slice(0,3)},
-  {def:treeDefs[3],sites:pines}
+  {def:treeDefs[0],sites:broad.filter((p,i)=>!replaced.has(p)&&i%2===0)},
+  {def:treeDefs[1],sites:broad.filter((p,i)=>!replaced.has(p)&&i%2!==0)},
+  {def:treeDefs[2],sites:chosenPalmSites},
+  {def:treeDefs[3],sites:pines.filter(p=>!replaced.has(p))}
  ];
  for(let j=0;j<bushDefs.length;j++){
   groups.push({def:bushDefs[j],sites:shrubs.filter((p,i)=>selector(p,i)===j)});
