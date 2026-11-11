@@ -107,7 +107,7 @@ export function installStylizedCharacter(THREE,character,options={}){
   }
   for(let i=0;i<rings.length-1;i++)for(let j=0;j<segments;j++){
    const k=i*(segments+1)+j;
-   indices.push(k,k+segments+1,k+1,k+1,k+segments+1,k+segments+2);
+   indices.push(k,k+1,k+segments+1,k+1,k+segments+2,k+segments+1);
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
