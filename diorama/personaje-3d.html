@@ -31,6 +31,7 @@ a{color:#355d74}#error{position:fixed;top:50%;left:50%;transform:translate(-50%,
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
 import {installStylizedCharacter} from './stylized-characters.mjs?v=1';
+const PI=Math.PI;
 const canvasHost=document.getElementById('viewport');
 const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
@@ -70,7 +71,18 @@ function makeRig(){
 }
 let root;
 const load=(role)=>{
- if(root)scene.remove(root);
+ if(root){
+  scene.remove(root);
+  const geometries=new Set(),materials=new Set(),textures=new Set();
+  root.traverse(o=>{
+   if(o.geometry)geometries.add(o.geometry);
+   if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){
+    materials.add(m);if(m.map)textures.add(m.map);
+   }
+  });
+  geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());
+  materials.forEach(m=>m.dispose());
+ }
  root=makeRig();
  const settings=role==='player'?{role:'player',coat:'#818052',seed:0}:
   role==='guardian'?{role:'guardian',coat:'#a9634e',seed:1}:
