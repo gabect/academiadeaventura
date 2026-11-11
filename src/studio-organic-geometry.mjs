@@ -2,7 +2,7 @@
  * All shapes are decorative BufferGeometry. Keep player physics and lowland
  * grass unrelated to these shapes. Each family has several real mesh variants.
  */
-export function createStudioFoliageGeometry(THREE){
+export function createStudioFoliageGeometry(THREE,{meadowOnly=false}={}){
  const make=()=>({positions:[],colors:[],uvs:[],indices:[],barkIndices:[],cardCount:0});
  const col=(h,s,l)=>new THREE.Color().setHSL(h,s,l);
  const v=(g,p,c,uv=[.5,.5])=>{
@@ -282,6 +282,7 @@ export function createStudioFoliageGeometry(THREE){
    maxReach,integratedTrunk:true,trunkBaseY:-2.40,
    branchOrders:orders,leaderCount:2,terminalClusters});
  }
+ if(meadowOnly)return {meadow:meadow()};
  const pineVariants=Array.from({length:6},(_,i)=>pine(i));
  const broadleafVariants=Array.from({length:5},(_,i)=>broadleaf(i));
  return {meadow:meadow(),pine:pineVariants[0],broadleaf:broadleafVariants[0],
