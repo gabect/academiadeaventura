@@ -31,7 +31,8 @@ assert(actual.includes('new THREE.PerspectiveCamera(42'));
 assert(actual.includes('let cameraHeading=Math.PI,cameraPitch=.62'));
 console.log('Map invariants: original dimensions, physics, routes, NPCs and water are exact.');
 fs.mkdirSync('artifacts/diorama-full',{recursive:true});
-const browser=await chromium.launch({headless:true,args:[
+const browser=await chromium.launch({headless:true,
+ executablePath:process.env.PLAYWRIGHT_CHROME||undefined,args:[
  '--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader',
  '--disable-dev-shm-usage','--no-sandbox']});
 const failures=[];
