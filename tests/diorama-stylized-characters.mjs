@@ -30,8 +30,11 @@ for(const required of [
  'const WORLD={half:83,limit:78,plateauHeight:10',
  'handdrawnStage.update()'
 ])assert(source.includes(required),'Missing original rig/game system: '+required);
-const originalPerson=source.match(/function person\(color,accent\)\{[\s\S]*?\n \}\n \/\/ Straight standing pose/);
-assert(originalPerson,'Original articulated person() should remain');
+const personStart=source.indexOf('function person(color,accent){');
+const personEnd=source.indexOf('// Straight standing pose',personStart);
+assert(personStart>=0&&personEnd>personStart,'Original articulated person() should remain');
+const originalPerson=source.slice(personStart,personEnd);
+assert(originalPerson.includes('root.userData.rig=rig;'),'Original rig metadata missing');
 for(const key of [
  'const WORLD={half:83,limit:78,plateauHeight:10',
  'const FIELD_TREE_POSITIONS=[',
