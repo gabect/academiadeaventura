@@ -11,7 +11,7 @@
 export const ILLUSTRATED_VIEWS = Object.freeze(['front','threeQuarter','side','back']);
 const VIEW_CELLS = {front:0,threeQuarter:1,side:2,back:3};
 const TAU = Math.PI * 2;
-export const ILLUSTRATION_ASSET_URL = new URL('./assets/vector-adventurer-turnaround.avif',import.meta.url).href;
+export const ILLUSTRATION_ASSET_URL = new URL('./assets/vector-adventurer-turnaround.avif?v=2',import.meta.url).href;
 
 function normalizeAngle(angle) {
  return Math.atan2(Math.sin(angle),Math.cos(angle));
