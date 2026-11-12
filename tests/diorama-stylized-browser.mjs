@@ -1,98 +1,62 @@
 import {chromium} from 'playwright';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-fs.mkdirSync('artifacts/diorama-3d-cast',{recursive:true});
+const output='artifacts/diorama-original-skeleton';
+fs.mkdirSync(output,{recursive:true});
 const browser=await chromium.launch({headless:true,args:[
  '--enable-webgl','--use-angle=swiftshader','--enable-unsafe-swiftshader',
  '--disable-dev-shm-usage','--no-sandbox'
 ]});
 try{
- for(const view of [{name:'desktop',w:1280,h:720},{name:'mobile-landscape',w:900,h:440}]){
-  const context=await browser.newContext({viewport:{width:view.w,height:view.h},deviceScaleFactor:1});
+ for(const view of [{name:'desktop',width:1280,height:720},
+  {name:'mobile-landscape',width:900,height:440}]){
+  const context=await browser.newContext({
+   viewport:{width:view.width,height:view.height},deviceScaleFactor:1
+  });
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
   try{
-   const response=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene=meadow',
+   const res=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene=meadow',
     {waitUntil:'domcontentloaded',timeout:45000});
-   assert.equal(response.status(),200);
-   await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaCharacters?.npcCount===8&&window.__dioramaCharacters?.illustrationReady===true,
-    null,{timeout:65000});
+   assert.equal(res.status(),200);
+   await page.waitForFunction(()=>window.__studioCIReady===true&&
+    window.__dioramaCharacters?.restored===true&&
+    window.__dioramaWorld?.isDiorama===true,null,{timeout:65000});
    const state=await page.evaluate(()=>({
-    art:{
-    renderMode:window.__dioramaCharacters.renderMode,
-    illustrationReady:window.__dioramaCharacters.illustrationReady,
-    illustrationView:window.__dioramaCharacters.illustrationView,
-    player:window.__dioramaCharacters.player,
-    guardian:window.__dioramaCharacters.guardian,
-    npcCount:window.__dioramaCharacters.npcCount,
-    cardboardOnlyForEnvironment:window.__dioramaCharacters.cardboardOnlyForEnvironment
-   },world:window.__dioramaWorld,
-    frame:document.querySelector('canvas')?.width,
-    title:document.title
+    rig:window.__dioramaCharacters,
+    world:window.__dioramaWorld,
+    canvas:document.querySelector('canvas')?.width,
+    status:document.body.textContent.includes('ESQUELETO ORIGINAL · RESTAURADO')
    }));
-   assert.equal(state.art.renderMode,'illustrated-vector-2.5d');
-   assert.equal(state.art.illustrationReady,true);
-   assert.equal(state.art.player.mode,'illustrated-vector-2.5d');
-   assert.equal(state.art.player.frameCount,4);
-   assert.equal(state.art.guardian.shading,'cel-shaded-vector-3d');
-   assert.equal(state.art.player.installed,true);
-   assert.equal(state.art.player.originalRigIntact,true);
-   assert.equal(state.art.player.animationMode,'separate-skeletal-illustration');
-   assert.equal(state.art.player.boneCount,11);
-   assert.equal(state.art.player.partCount,44);
-   assert.equal(state.art.player.facingSectors,8);
-   assert.equal(state.art.guardian.installed,true);
-   assert.equal(state.art.npcCount,8);
-   assert.equal(state.world.npcCount,9,'Guardian and eight NPCs must remain');
-   assert.equal(state.world.bounds.half,83,'The original map must not shrink');
-   assert.equal(state.art.cardboardOnlyForEnvironment,true);
-   assert(state.frame>100,'No WebGL output');
-   assert.equal(errors.length,0,errors.join(' | '));
-   await page.screenshot({path:'artifacts/diorama-3d-cast/'+view.name+'.png',timeout:35000});
-   console.log('PASS',view.name,state.art.renderMode,'NPCs',state.art.npcCount);
+   assert.equal(state.rig.renderMode,'original-articulated-skeleton');
+   assert.equal(state.rig.player.mode,'original-articulated-skeleton');
+   assert.equal(state.rig.guardian.mode,'original-articulated-skeleton');
+   assert.equal(state.rig.player.armJoints,2);
+   assert.equal(state.rig.player.legJoints,2);
+   assert(state.rig.player.visibleMeshes>20,'Player skeleton not visible');
+   assert(state.rig.guardian.visibleMeshes>20,'Guardian skeleton not visible');
+   assert.equal(state.rig.npcCount,8);
+   assert.equal(state.rig.npcVisuals.length,8);
+   assert(state.rig.npcVisuals.every(n=>n.visibleMeshes>20&&n.armJoints===2&&n.legJoints===2));
+   assert.equal(state.world.npcCount,9,'NPC locations should remain unchanged');
+   assert.equal(state.world.bounds.half,83,'Map bounds were changed');
+   assert.equal(state.rig.originalMapPreserved,true);
+   assert.equal(state.rig.cardboardOnlyForEnvironment,true);
+   assert(state.canvas>100,'Three.js canvas missing');
+   assert(state.status,'No visible skeleton restoration status');
+   assert.equal(errors.length,0,'Browser errors: '+errors.join(' | '));
+   await page.screenshot({path:output+'/'+view.name+'.png',timeout:35000});
+   console.log('PASS',view.name,'original visible skeletons:',state.rig.player.visibleMeshes,
+    'NPCs:',state.rig.npcCount);
   }finally{await context.close();}
  }
- // Independent real 3D orbit review: all reference angles and cast variants.
- const context=await browser.newContext({viewport:{width:980,height:750},deviceScaleFactor:1});
- const page=await context.newPage(),errors=[];
- page.on('pageerror',e=>errors.push(e.message));
- page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
- try{
-  const response=await page.goto('http://127.0.0.1:8765/diorama/personaje-3d.html',
-   {waitUntil:'domcontentloaded',timeout:40000});
-  assert.equal(response.status(),200);
-  await page.waitForFunction(()=>window.__characterPreviewReady?.ready===true,
-   null,{timeout:40000});
-  const info=await page.evaluate(()=>window.__characterPreviewReady);
-  assert.equal(info.role,'player');
-  assert.equal(info.mode,'illustrated-vector-2.5d');
-  assert.equal(info.imageLoaded,true);
-  assert.equal(info.frames,4);
-  await page.screenshot({path:'artifacts/diorama-3d-cast/character-front.png',timeout:25000});
-  await page.getByRole('button',{name:'Espalda'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='back'&&
-   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
-  await page.screenshot({path:'artifacts/diorama-3d-cast/character-back.png',timeout:25000});
-  await page.getByRole('button',{name:'Derecha'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='side'&&
-   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
-  await page.screenshot({path:'artifacts/diorama-3d-cast/character-side.png',timeout:25000});
-  await page.getByRole('button',{name:'Frente'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front'&&
-   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
-  await page.getByRole('button',{name:'Caminar'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.pose==='walk'&&
-   window.__characterPreviewReady?.boneCount===11,null,{timeout:5000});
-  await page.waitForTimeout(250);
-  const joints=await page.evaluate(()=>window.__characterPreviewReady?.boneAngles);
-  assert(joints&&Number.isFinite(joints.leftArm)&&Number.isFinite(joints.rightLeg),
-   'Articulated limbs must expose independent, finite hinge angles');
-  assert(Math.abs(joints.leftArm-joints.rightArm)>.005,
-   'Separate arm bones must not swing together');
-  await page.screenshot({path:'artifacts/diorama-3d-cast/character-walking.png',timeout:25000});
-  await page.getByRole('button',{name:'Caminar'}).click();
-  assert.equal(errors.length,0,errors.join(' | '));
-  console.log('PASS: illustrated four-view turnaround, original player map and preserved 3D NPCs');
- }finally{await context.close();}
+ const page=await browser.newPage();
+ const res=await page.goto('http://127.0.0.1:8765/diorama/personaje-3d.html',
+  {waitUntil:'domcontentloaded'});
+ assert.equal(res.status(),200);
+ assert(await page.getByText('Experimento archivado').isVisible());
+ assert(await page.getByRole('link',{name:'Volver al juego'}).isVisible());
+ console.log('PASS: previous illustrated preview explicitly archived');
+ await page.close();
 }finally{await browser.close();}

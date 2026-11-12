@@ -1,17 +1,10 @@
-name: Diorama 3D cast geometry and WebGL QA
+name: Diorama original skeleton and WebGL QA
 on:
   push:
     branches: [main]
     paths:
       - 'diorama/index.html'
       - 'diorama/personaje-3d.html'
-      - 'diorama/stylized-characters.mjs'
-      - 'diorama/vector-character.mjs'
-      - 'diorama/articulated-vector-puppet.mjs'
-      - 'diorama/assets/vector-bone-atlas.webp'
-      - 'diorama/assets/vector-bone-manifest.mjs'
-      - 'diorama/illustrated-puppet-motion.mjs'
-      - 'diorama/assets/vector-adventurer-turnaround.avif'
       - 'tests/diorama-stylized-characters.mjs'
       - 'tests/diorama-stylized-browser.mjs'
       - '.github/workflows/diorama-3d-cast.yml'
@@ -27,27 +20,23 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install Three.js and Playwright
+      - name: Install browser test requirements
         run: |
           npm install --no-save --no-package-lock three@0.170.0 playwright
           npx playwright install --with-deps chromium
-      - name: Validate all new character geometry and legacy animation
+      - name: Check preserved original map and skeleton rig
         run: |
-          node --check diorama/stylized-characters.mjs
-          node --check diorama/vector-character.mjs
-          node --check diorama/articulated-vector-puppet.mjs
-          node --check diorama/assets/vector-bone-manifest.mjs
-          node --check diorama/illustrated-puppet-motion.mjs
           node --check tests/diorama-stylized-characters.mjs
+          node --check tests/diorama-stylized-browser.mjs
           node tests/diorama-stylized-characters.mjs
           node tests/diorama-directional-facing.mjs
-      - name: Browser checks on original map with screenshots
+      - name: Verify original skeleton in desktop and mobile browsers
         run: |
           python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
           node tests/diorama-stylized-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: volumetric-3d-cast-before-after-QA
-          path: artifacts/diorama-3d-cast/*.png
+          name: restored-skeleton-browser-screenshots
+          path: artifacts/diorama-original-skeleton/*.png
           if-no-files-found: warn

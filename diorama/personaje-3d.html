@@ -1,118 +1,20 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Academia de Aventura · Protagonista ilustrado</title>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Academia de Aventura · Experimento archivado</title>
 <style>
-:root{font-family:system-ui,-apple-system,sans-serif;background:#f3eee5;color:#302921}
-*{box-sizing:border-box}body{margin:0;overflow:hidden}
-#viewport{position:absolute;inset:0;touch-action:none;cursor:grab}
-#viewport:active{cursor:grabbing}
-header{position:fixed;top:12px;left:12px;z-index:3;background:#fffcf5eb;padding:12px 15px;border-radius:12px;border:1px solid #d7bd9d;max-width:min(365px,82vw);box-shadow:0 5px 16px #483e3226}
-h1{font:800 15px/1.2 system-ui;margin:0 0 7px}p{font:12px/1.45 system-ui;margin:0;color:#564d42}header a{display:inline-block;margin-top:6px;color:#725037}
-nav{position:fixed;z-index:4;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;width:min(95vw,620px);padding:9px;background:#fffcf5ed;border:1px solid #d9c7b2;border-radius:14px;box-shadow:0 4px 22px #43301d30}
-button{font:700 12px system-ui;border:1px solid #a99a87;border-radius:8px;background:#fff8eb;color:#503a2c;padding:8px 10px;cursor:pointer}
-button[aria-pressed=true]{background:#725136;border-color:#725136;color:#fff}
-#status{position:fixed;top:12px;right:12px;background:#384435df;color:white;font:700 10px system-ui;padding:7px 9px;border-radius:8px;z-index:3}
-#error{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:none;background:#fff;padding:16px;color:#933}
-@media(max-width:600px){header{top:6px;left:6px;max-width:78vw;padding:8px 10px}#status{right:6px;top:6px;font-size:9px;max-width:110px}nav{bottom:6px;padding:6px;gap:4px}button{font-size:11px;padding:7px 8px}}
-</style></head><body>
-<div id="viewport" aria-label="Visor del protagonista ilustrado"></div>
-<header><h1>Academia de Aventura · Protagonista ilustrado</h1>
-<p>Ilustración original articulada: cabeza, manos, mangas, pantalones, botas y bolso se mueven por articulaciones independientes. Arrastra para girar o pulsa Caminar.</p>
-<p><a href="./">Volver al mundo de cartón</a></p></header>
-<div id="status">ESQUELETO 2D · 44 PIEZAS ILUSTRADAS</div>
-<nav aria-label="Vistas del personaje">
-<button data-view="front" aria-pressed="true">Frente</button>
-<button data-view="threeQuarter">3/4</button>
-<button data-view="right">Derecha</button>
-<button data-view="left">Izquierda</button>
-<button data-view="back">Espalda</button>
-<button id="walk" aria-pressed="false">Caminar</button>
-</nav>
-<div id="error" role="alert"></div>
-<script type="module">
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installIllustratedCharacter} from './vector-character.mjs?v=7';
-const host=document.getElementById('viewport');
-let renderer;
-try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}
-catch(e){document.getElementById('error').textContent='Este navegador no pudo iniciar WebGL.';document.getElementById('error').style.display='block';throw e;}
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
-renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
-host.appendChild(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color('#f1ebe1');
-const floor=new THREE.Mesh(new THREE.CircleGeometry(1.45,48),
- new THREE.MeshBasicMaterial({color:'#e6d8c4',transparent:true,opacity:.67}));
-floor.rotation.x=-Math.PI/2;floor.position.y=-.10;scene.add(floor);
-const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.05,35);
-const character=new THREE.Group(),torso=new THREE.Group();
-torso.position.y=.90;character.add(torso);
-const head=new THREE.Group();torso.add(head);head.position.y=.83;
-const legs=[],arms=[];
-for(const sign of [-1,1]){
- const hip=new THREE.Group();hip.position.set(sign*.24,.90,0);character.add(hip);
- const knee=new THREE.Group();hip.add(knee);const ankle=new THREE.Group();knee.add(ankle);legs.push({hip,knee,ankle});
- const shoulder=new THREE.Group();torso.add(shoulder);const elbow=new THREE.Group();shoulder.add(elbow);
- const wrist=new THREE.Group();elbow.add(wrist);arms.push({shoulder,elbow,wrist});
-}
-character.userData.rig={torso,head,legs,arms};
-scene.add(character);
-const art=installIllustratedCharacter(THREE,character,{role:'player',defaultView:'front',height:2.48});
-let theta=0,phi=.11,radius=5.05,walking=false;
-const views={front:0,threeQuarter:-Math.PI*.27,right:-Math.PI/2,left:Math.PI/2,back:Math.PI};
-const buttons=[...document.querySelectorAll('[data-view]')];
-const mark=(current)=>buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===current)));
-buttons.forEach(b=>b.addEventListener('click',()=>{theta=views[b.dataset.view];mark(b.dataset.view);}));
-document.getElementById('walk').addEventListener('click',e=>{
- walking=!walking;e.currentTarget.setAttribute('aria-pressed',String(walking));
-});
-let pointer=null,pinch=0;
-const active=new Map();
-host.addEventListener('pointerdown',e=>{
- active.set(e.pointerId,{x:e.clientX,y:e.clientY});
- host.setPointerCapture(e.pointerId);pointer={x:e.clientX,y:e.clientY};
-});
-host.addEventListener('pointermove',e=>{
- if(!active.has(e.pointerId))return;active.set(e.pointerId,{x:e.clientX,y:e.clientY});
- if(active.size===2){
-  const [a,b]=[...active.values()],d=Math.hypot(a.x-b.x,a.y-b.y);
-  if(pinch)radius=THREE.MathUtils.clamp(radius*pinch/d,3.8,8.2);
-  pinch=d;return;
- }
- if(pointer){
-  theta-=(e.clientX-pointer.x)*.009;
-  phi=THREE.MathUtils.clamp(phi+(e.clientY-pointer.y)*.007,-.40,.68);
-  pointer={x:e.clientX,y:e.clientY};mark('');
- }
-});
-function release(e){active.delete(e.pointerId);pointer=null;pinch=0}
-host.addEventListener('pointerup',release);host.addEventListener('pointercancel',release);
-host.addEventListener('wheel',e=>{e.preventDefault();
- radius=THREE.MathUtils.clamp(radius*(e.deltaY>0?1.09:.91),3.8,8.2);
-},{passive:false});
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;
- camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-window.__characterPreviewReady={ready:false,role:'player',mode:art.style,frames:4};
-art.loaded.then(state=>{
- window.__characterPreviewReady={ready:state.ready,error:state.error,role:'player',
-  mode:state.style,frames:4,source:state.source,imageLoaded:state.ready};
-});
-const clock=new THREE.Clock();let rendered=0;
-function render(){
- requestAnimationFrame(render);const dt=Math.min(clock.getDelta(),.05);
- camera.position.set(Math.sin(theta)*Math.cos(phi)*radius,
-  1.13+Math.sin(phi)*radius,Math.cos(theta)*Math.cos(phi)*radius);
- camera.lookAt(0,1.13,0);
- art.update(camera,dt,{moving:walking});
- if(window.__characterPreviewReady?.ready){
-  window.__characterPreviewReady.frame=art.frame;
-  window.__characterPreviewReady.pose=art.pose;
-  window.__characterPreviewReady.sector=art.sector;
-  window.__characterPreviewReady.meshVertices=art.deformationVertices;
-  window.__characterPreviewReady.boneCount=art.boneCount;
-  window.__characterPreviewReady.boneAngles=art.boneRotations;
-  window.__characterPreviewReady.turnProgress=art.puppet.facingTransition;
- }
- renderer.render(scene,camera);rendered++;
-}
-render();
-</script></body></html>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;
+background:#f4ecdf;color:#332f29;font:16px/1.55 system-ui,sans-serif;padding:18px}
+main{max-width:550px;background:#fffdf8;border:1px solid #dbcdb8;border-radius:18px;padding:28px;
+box-shadow:0 10px 32px #55473619}
+h1{font-size:25px;margin:0 0 8px}p{margin:0 0 16px}
+a{display:inline-block;background:#355846;color:white;padding:11px 17px;border-radius:10px;
+text-decoration:none;font-weight:700}
+small{display:block;margin-top:16px;color:#665c50}
+</style></head><body><main>
+<h1>Experimento archivado</h1>
+<p>El personaje ilustrado 2.5D se retiró del juego. Hemos restaurado el esqueleto
+original del protagonista, con sus movimientos, articulaciones y colisiones.</p>
+<a href="./">Volver al juego</a>
+<small>El experimento anterior permanece en el historial de GitHub, pero ya no se carga en el juego activo.</small>
+</main></body></html>

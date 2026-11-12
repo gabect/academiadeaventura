@@ -61,8 +61,6 @@ import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
 import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
-import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=3';
-import {installIllustratedCharacter} from './diorama/vector-character.mjs?v=7';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
@@ -3466,7 +3464,6 @@ function stepLocomotion(dt,right,forward,runEnabled){
  }
 }
 const player=person(blue,mat('#eac7a1'));
-const protagonistIllustration=installIllustratedCharacter(THREE,player,{role:'player',height:2.48});
 scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
 // Headless screenshot-only mountain-facing vantage. Normal users never teleport.
 if(STUDIO_CI){
@@ -3493,7 +3490,6 @@ if(STUDIO_CI){
  player.rotation.y=Math.PI;
 }
 const guardian=person(red,gold);
-installStylizedCharacter(THREE,guardian,{role:'guardian',coat:'#a9634e',seed:1});
 guardian.position.set(3,0,-3);scene.add(guardian);
 // Scenic NPCs do not initiate missions or block the existing guardian.
 const NPC_MARKERS=[
@@ -3509,26 +3505,29 @@ const NPC_MARKERS=[
 const AMBIENT_NPCS=[];
 for(const def of NPC_MARKERS){
  const npc=person(mat(def.coat),mat('#ebc7a5'));
- installStylizedCharacter(THREE,npc,{role:'npc',coat:def.coat,seed:AMBIENT_NPCS.length+2});
  npc.position.set(def.x,groundTopAt(def.x,def.z)-TERRAIN.floorTop,def.z);
  npc.rotation.y=def.facing;
  scene.add(npc);AMBIENT_NPCS.push(npc);
 }
 prepareFeet(player);
+// Original playable skeleton visual, with native IK, ragdoll and movement.
+const originalRigInfo=character=>{
+ let visibleMeshes=0;
+ character.traverse(node=>{if(node.isMesh&&node.visible)visibleMeshes++;});
+ const rig=character.userData.rig;
+ return {mode:'original-articulated-skeleton',articulated:true,
+  visibleMeshes,legJoints:rig.legs.length,armJoints:rig.arms.length,
+  originalRigIntact:true};
+};
 window.__dioramaCharacters={
- renderMode:'illustrated-vector-2.5d',reference:'approved-vector-turnaround',
- player:player.userData.characterArt,guardian:guardian.userData.characterArt,
- illustration:protagonistIllustration,illustrationReady:false,
- npcCount:AMBIENT_NPCS.length,articulated:true,originalMapPreserved:true,
+ renderMode:'original-articulated-skeleton',
+ reference:'original-person-rig',
+ player:originalRigInfo(player),guardian:originalRigInfo(guardian),
+ npcCount:AMBIENT_NPCS.length,
+ npcVisuals:AMBIENT_NPCS.map(originalRigInfo),
+ articulated:true,restored:true,originalMapPreserved:true,
  cardboardOnlyForEnvironment:true
 };
-protagonistIllustration.loaded.then(state=>{
- if(window.__dioramaCharacters){
-  window.__dioramaCharacters.illustrationReady=state.ready;
-  window.__dioramaCharacters.illustrationError=state.error;
- }
- window.__studioCIRefresh?.();
-});
 function thirdPersonCameraClearance(target,desired){
  // Third-person chase view must not disappear behind a solid ridge,
  // the lookout tower or the closed cabin. Sample physical topography,
@@ -4684,15 +4683,11 @@ dioramaExit.href='./index.html'; // base href goes to original root index
 dioramaExit.textContent='Mundo original ↗';
 dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
-// Independent release indicator: the original v0.61.0 gameplay version remains
-// untouched, while the cardboard world now hosts articulated 3D inhabitants.
-const castReleaseLink=document.createElement('a');
-castReleaseLink.href='./diorama/personaje-3d.html';
-castReleaseLink.textContent='PROTAGONISTA · ESQUELETO ILUSTRADO';
-castReleaseLink.title='Inspecciona las cuatro vistas ilustradas del protagonista';
-castReleaseLink.setAttribute('aria-label','Ver el protagonista ilustrado en el visor');
-castReleaseLink.style.cssText='position:fixed;right:12px;bottom:145px;z-index:15;display:block;padding:9px 11px;border:2px solid #43301f;border-radius:11px;background:#f2ca72;color:#382c20;font:800 12px system-ui;text-decoration:none;box-shadow:2px 3px 0 #2b30264f';
-document.body.append(castReleaseLink);
+// Confirmation of the restored original rig. Not a link to archived artwork.
+const rigRestoredStatus=document.createElement('span');
+rigRestoredStatus.textContent='ESQUELETO ORIGINAL · RESTAURADO';
+rigRestoredStatus.style.cssText='position:fixed;right:12px;bottom:145px;z-index:15;pointer-events:none;padding:8px 11px;border:1px solid #6d7b6c;border-radius:10px;background:#edf3e9dd;color:#2b4330;font:700 11px system-ui';
+document.body.append(rigRestoredStatus);
 const dioramaTitle=document.createElement('div');
 dioramaTitle.textContent='ESCENARIO DE CARTÓN';
 dioramaTitle.style.cssText='position:fixed;top:9px;left:50%;transform:translateX(-50%);z-index:8;pointer-events:none;padding:5px 9px;border:1px solid #51645e;background:#f5ecd9e3;border-radius:8px;color:#31463c;font:700 10px system-ui;box-shadow:0 2px 4px #2028272a';
@@ -4732,15 +4727,6 @@ function animate(){
  updateSlopeStatus();
  updateRegionStatus();
  followPlayerCamera(dt);
- protagonistIllustration.update(camera,dt,{
-  moving:LOCOMOTION.moveBlend>.12,
-  running:LOCOMOTION.runBlend>.35,
-  crouching:crouched,crawling,swimming:WATER_STATE.mode==='swim',
-  climbing:LADDER_STATE.active,climbMoving:LADDER_STATE.active&&Math.abs(forward)>.08,
-  jumping:JUMP.active,falling:FALL.active
- });
- window.__dioramaCharacters.illustrationReady=protagonistIllustration.ready;
- window.__dioramaCharacters.illustrationView=protagonistIllustration.frame;
  handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
  originalPNGSprites.update(); // Stationary front-facing cardboard stage props
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
