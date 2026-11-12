@@ -202,7 +202,8 @@ export function createIllustratedPuppet(THREE,root,options={}){
    layers[1-state.active].mesh.visible=false;
    state.frame=layers[state.active].frame;state.sector=sector;
   }
-  const moving=!!animation.moving||!!animation.climbing||!!animation.swimming;
+  const moving=!!animation.moving||!!animation.swimming||
+   !!(animation.climbing&&animation.climbMoving);
   const target=Number(moving);
   state.motionBlend=damp(state.motionBlend,target,9,dt);
   state.runBlend=damp(state.runBlend,Number(!!animation.running),8,dt);
@@ -214,7 +215,8 @@ export function createIllustratedPuppet(THREE,root,options={}){
    animation.crawling?3.3:animation.running?12.4:7.3)*
    state.motionBlend;
   for(const layer of layers)if(layer.mesh.visible)pose(layer,animation,dt,sector);
-  shadow.visible=!animation.swimming&&!animation.climbing&&!animation.jumping;
+  pivot.visible=!animation.falling;
+  shadow.visible=!animation.swimming&&!animation.climbing&&!animation.jumping&&!animation.falling;
   shadow.material.opacity=damp(shadow.material.opacity,moving?.48:.68,5,dt);
   shadow.scale.x=damp(shadow.scale.x,animation.crouching?.9:.78,7,dt);
  };
