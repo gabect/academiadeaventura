@@ -16,19 +16,28 @@ try{
    const response=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene=meadow',
     {waitUntil:'domcontentloaded',timeout:45000});
    assert.equal(response.status(),200);
-   await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaCharacters?.npcCount===8,
+   await page.waitForFunction(()=>window.__studioCIReady===true&&window.__dioramaCharacters?.npcCount===8&&window.__dioramaCharacters?.illustrationReady===true,
     null,{timeout:65000});
    const state=await page.evaluate(()=>({
-    art:window.__dioramaCharacters,world:window.__dioramaWorld,
+    art:{
+    renderMode:window.__dioramaCharacters.renderMode,
+    illustrationReady:window.__dioramaCharacters.illustrationReady,
+    illustrationView:window.__dioramaCharacters.illustrationView,
+    player:window.__dioramaCharacters.player,
+    guardian:window.__dioramaCharacters.guardian,
+    npcCount:window.__dioramaCharacters.npcCount,
+    cardboardOnlyForEnvironment:window.__dioramaCharacters.cardboardOnlyForEnvironment
+   },world:window.__dioramaWorld,
     frame:document.querySelector('canvas')?.width,
     title:document.title
    }));
-   assert.equal(state.art.renderMode,'fully-volumetric-3d');
-   assert.equal(state.art.player.shading,'cel-shaded-vector-3d');
-   assert(state.art.player.outlineMeshes>=6,'Missing player outlines');
+   assert.equal(state.art.renderMode,'illustrated-vector-2.5d');
+   assert.equal(state.art.illustrationReady,true);
+   assert.equal(state.art.player.mode,'illustrated-vector-2.5d');
+   assert.equal(state.art.player.frameCount,4);
    assert.equal(state.art.guardian.shading,'cel-shaded-vector-3d');
    assert.equal(state.art.player.installed,true);
-   assert.equal(state.art.player.articulated,true);
+   assert.equal(state.art.player.originalRigIntact,true);
    assert.equal(state.art.guardian.installed,true);
    assert.equal(state.art.npcCount,8);
    assert.equal(state.world.npcCount,9,'Guardian and eight NPCs must remain');
@@ -53,16 +62,19 @@ try{
    null,{timeout:40000});
   const info=await page.evaluate(()=>window.__characterPreviewReady);
   assert.equal(info.role,'player');
-  assert.equal(info.full3D,true);
-  assert(info.meshCount>65);
+  assert.equal(info.mode,'illustrated-vector-2.5d');
+  assert.equal(info.imageLoaded,true);
+  assert.equal(info.frames,4);
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-front.png',timeout:25000});
   await page.getByRole('button',{name:'Espalda'}).click();
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='back',null,{timeout:5000});
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-back.png',timeout:25000});
   await page.getByRole('button',{name:'Derecha'}).click();
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='side',null,{timeout:5000});
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-side.png',timeout:25000});
-  await page.locator('#role').selectOption('npc');
-  await page.waitForFunction(()=>window.__characterPreviewReady?.role==='npc');
+  await page.getByRole('button',{name:'Frente'}).click();
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front',null,{timeout:5000});
   assert.equal(errors.length,0,errors.join(' | '));
-  console.log('PASS: 360° character preview and NPC variation');
+  console.log('PASS: illustrated four-view turnaround, original player map and preserved 3D NPCs');
  }finally{await context.close();}
 }finally{await browser.close();}
