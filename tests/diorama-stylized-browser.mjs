@@ -38,7 +38,9 @@ try{
    assert.equal(state.art.guardian.shading,'cel-shaded-vector-3d');
    assert.equal(state.art.player.installed,true);
    assert.equal(state.art.player.originalRigIntact,true);
-   assert.equal(state.art.player.animationMode,'weighted-illustrated-puppet');
+   assert.equal(state.art.player.animationMode,'separate-skeletal-illustration');
+   assert.equal(state.art.player.boneCount,11);
+   assert.equal(state.art.player.partCount,44);
    assert.equal(state.art.player.facingSectors,8);
    assert.equal(state.art.guardian.installed,true);
    assert.equal(state.art.npcCount,8);
@@ -78,8 +80,13 @@ try{
   await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front',null,{timeout:5000});
   await page.getByRole('button',{name:'Caminar'}).click();
   await page.waitForFunction(()=>window.__characterPreviewReady?.pose==='walk'&&
-   window.__characterPreviewReady?.meshVertices>1000,null,{timeout:5000});
+   window.__characterPreviewReady?.boneCount===11,null,{timeout:5000});
   await page.waitForTimeout(250);
+  const joints=await page.evaluate(()=>window.__characterPreviewReady?.boneAngles);
+  assert(joints&&Number.isFinite(joints.leftArm)&&Number.isFinite(joints.rightLeg),
+   'Articulated limbs must expose independent, finite hinge angles');
+  assert(Math.abs(joints.leftArm-joints.rightArm)>.005,
+   'Separate arm bones must not swing together');
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-walking.png',timeout:25000});
   await page.getByRole('button',{name:'Caminar'}).click();
   assert.equal(errors.length,0,errors.join(' | '));
