@@ -31,7 +31,7 @@ button[aria-pressed=true]{background:#725136;border-color:#725136;color:#fff}
 <div id="error" role="alert"></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installIllustratedCharacter} from './vector-character.mjs?v=5';
+import {installIllustratedCharacter} from './vector-character.mjs?v=6';
 const host=document.getElementById('viewport');
 let renderer;
 try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}
@@ -110,6 +110,7 @@ function render(){
   window.__characterPreviewReady.meshVertices=art.deformationVertices;
   window.__characterPreviewReady.boneCount=art.boneCount;
   window.__characterPreviewReady.boneAngles=art.boneRotations;
+  window.__characterPreviewReady.turnProgress=art.puppet.facingTransition;
  }
  renderer.render(scene,camera);rendered++;
 }
