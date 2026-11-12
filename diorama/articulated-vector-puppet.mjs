@@ -15,8 +15,8 @@ const PI=Math.PI;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const smooth=(t)=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 const damping=(x,target,speed,dt)=>x+(target-x)*(1-Math.exp(-speed*dt));
-const BONE_ORDER=['legLU','legLL','legRU','legRL','torso',
- 'armLU','armLL','armRU','armRL','bag','head'];
+const BONE_ORDER=['legLL','legLU','legRL','legRU','torso',
+ 'armLL','armLU','armRL','armRU','bag','head'];
 const VIEW_NAME={front:'front',threeQuarter:'hero',side:'side',back:'back'};
 export const ARTICULATED_BONE_COUNT=11;
 export const ARTICULATED_VIEW_COUNT=4;
@@ -113,17 +113,17 @@ function animateBones(view,phase,t,move,run,anim,dt,pose){
  bone.armLU.rotation.z=damping(bone.armLU.rotation.z,armLeft,12,dt);
  bone.armRU.rotation.z=damping(bone.armRU.rotation.z,armRight,12,dt);
  bone.armLL.rotation.z=damping(bone.armLL.rotation.z,
-  -.045*wave*effort+(pose==='climb'?.08:0),13,dt);
+  -.012*wave*effort+(pose==='climb'?.08:0),13,dt);
  bone.armRL.rotation.z=damping(bone.armRL.rotation.z,
-  -.045*opposite*effort-(pose==='climb'?.08:0),13,dt);
+  -.012*opposite*effort-(pose==='climb'?.08:0),13,dt);
  bone.legLU.rotation.z=damping(bone.legLU.rotation.z,-legAmp*wave,14,dt);
  bone.legRU.rotation.z=damping(bone.legRU.rotation.z,-legAmp*opposite,14,dt);
  const bend=pose==='crouch'?.15:pose==='crawl'?.21:
    pose==='jump'?.16:pose==='swim'?.13:0;
  bone.legLL.rotation.z=damping(bone.legLL.rotation.z,
-  legAmp*.36*Math.max(0,-wave)+bend,13,dt);
+  legAmp*.16*Math.max(0,-wave)+bend,13,dt);
  bone.legRL.rotation.z=damping(bone.legRL.rotation.z,
-  -legAmp*.36*Math.max(0,-opposite)-bend,13,dt);
+  -legAmp*.16*Math.max(0,-opposite)-bend,13,dt);
  bone.torso.rotation.z=damping(bone.torso.rotation.z,
   Math.sin(phase)*.013*move+Math.sin(t*1.4)*.004,7,dt);
  bone.head.rotation.z=damping(bone.head.rotation.z,
