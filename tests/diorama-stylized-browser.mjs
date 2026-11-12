@@ -71,13 +71,16 @@ try{
   assert.equal(info.frames,4);
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-front.png',timeout:25000});
   await page.getByRole('button',{name:'Espalda'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='back',null,{timeout:5000});
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='back'&&
+   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-back.png',timeout:25000});
   await page.getByRole('button',{name:'Derecha'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='side',null,{timeout:5000});
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='side'&&
+   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-side.png',timeout:25000});
   await page.getByRole('button',{name:'Frente'}).click();
-  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front',null,{timeout:5000});
+  await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front'&&
+   window.__characterPreviewReady?.turnProgress>=.99,null,{timeout:5000});
   await page.getByRole('button',{name:'Caminar'}).click();
   await page.waitForFunction(()=>window.__characterPreviewReady?.pose==='walk'&&
    window.__characterPreviewReady?.boneCount===11,null,{timeout:5000});
