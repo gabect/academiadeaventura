@@ -17,9 +17,9 @@ button[aria-pressed=true]{background:#725136;border-color:#725136;color:#fff}
 </style></head><body>
 <div id="viewport" aria-label="Visor del protagonista ilustrado"></div>
 <header><h1>Academia de Aventura · Protagonista ilustrado</h1>
-<p>Ilustración original animada: pasos, brazos, cabello y giros suaves. Selecciona una vista, arrastra para girar o pulsa Caminar.</p>
+<p>Ilustración original articulada: cabeza, manos, mangas, pantalones, botas y bolso se mueven por articulaciones independientes. Arrastra para girar o pulsa Caminar.</p>
 <p><a href="./">Volver al mundo de cartón</a></p></header>
-<div id="status">ARTE ILUSTRADO · MOVIMIENTO ARTICULADO</div>
+<div id="status">ESQUELETO 2D · 44 PIEZAS ILUSTRADAS</div>
 <nav aria-label="Vistas del personaje">
 <button data-view="front" aria-pressed="true">Frente</button>
 <button data-view="threeQuarter">3/4</button>
@@ -31,7 +31,7 @@ button[aria-pressed=true]{background:#725136;border-color:#725136;color:#fff}
 <div id="error" role="alert"></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installIllustratedCharacter} from './vector-character.mjs?v=4';
+import {installIllustratedCharacter} from './vector-character.mjs?v=5';
 const host=document.getElementById('viewport');
 let renderer;
 try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}
@@ -108,6 +108,8 @@ function render(){
   window.__characterPreviewReady.pose=art.pose;
   window.__characterPreviewReady.sector=art.sector;
   window.__characterPreviewReady.meshVertices=art.deformationVertices;
+  window.__characterPreviewReady.boneCount=art.boneCount;
+  window.__characterPreviewReady.boneAngles=art.boneRotations;
  }
  renderer.render(scene,camera);rendered++;
 }
