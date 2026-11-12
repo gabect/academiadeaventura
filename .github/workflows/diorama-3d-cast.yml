@@ -7,6 +7,9 @@ on:
       - 'diorama/personaje-3d.html'
       - 'diorama/stylized-characters.mjs'
       - 'diorama/vector-character.mjs'
+      - 'diorama/articulated-vector-puppet.mjs'
+      - 'diorama/assets/vector-bone-atlas.webp'
+      - 'diorama/assets/vector-bone-manifest.mjs'
       - 'diorama/illustrated-puppet-motion.mjs'
       - 'diorama/assets/vector-adventurer-turnaround.avif'
       - 'tests/diorama-stylized-characters.mjs'
@@ -32,6 +35,8 @@ jobs:
         run: |
           node --check diorama/stylized-characters.mjs
           node --check diorama/vector-character.mjs
+          node --check diorama/articulated-vector-puppet.mjs
+          node --check diorama/assets/vector-bone-manifest.mjs
           node --check diorama/illustrated-puppet-motion.mjs
           node --check tests/diorama-stylized-characters.mjs
           node tests/diorama-stylized-characters.mjs
