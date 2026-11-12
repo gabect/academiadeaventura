@@ -81,16 +81,16 @@ function animatedGeometry(grid,info,phase,t,move,run,pose,slope,style){
  grid.geometry.computeBoundingSphere();
 }
 function softShadow(THREE){
- const size=96,canvas=document.createElement('canvas');canvas.width=canvas.height=size;
- const ctx=canvas.getContext('2d');
- const gradient=ctx.createRadialGradient(48,48,8,48,48,46);
- gradient.addColorStop(0,'rgba(30,23,18,.34)');
- gradient.addColorStop(.45,'rgba(30,23,18,.24)');
- gradient.addColorStop(1,'rgba(30,23,18,0)');
- ctx.fillStyle=gradient;ctx.fillRect(0,0,size,size);
- const texture=new THREE.CanvasTexture(canvas);
- texture.magFilter=THREE.LinearFilter;texture.minFilter=THREE.LinearFilter;
- return texture;
+ // Pixel data avoids canvas allocations, works in WebGL and Node QA alike.
+ const size=96,data=new Uint8Array(size*size*4);
+ for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+  const d=Math.hypot((x+0.5-size/2)/(size/2),(y+0.5-size/2)/(size/2));
+  const a=1-smooth(.12,.98,d),i=(y*size+x)*4;
+  data[i]=30;data[i+1]=23;data[i+2]=18;data[i+3]=Math.round(185*a);
+ }
+ const texture=new THREE.DataTexture(data,size,size,THREE.RGBAFormat);
+ texture.needsUpdate=true;texture.magFilter=THREE.LinearFilter;
+ texture.minFilter=THREE.LinearFilter;return texture;
 }
 export function createIllustratedPuppet(THREE,root,options={}){
  const height=options.height||2.48,width=options.width||height*.5;
