@@ -7,7 +7,7 @@
  * World collision, ground IK and camera remain in the existing game root.
  * The art rig only consumes their animation state.
  */
-import { BONE_ATLAS } from './assets/vector-bone-manifest.mjs?v=1';
+import { BONE_ATLAS } from './assets/vector-bone-manifest.mjs?v=2';
 import {directionSector,sourceFrameForSector,mirrorForSector}
   from './illustrated-puppet-motion.mjs?v=2';
 
@@ -113,9 +113,9 @@ function animateBones(view,phase,t,move,run,anim,dt,pose){
  bone.armLU.rotation.z=damping(bone.armLU.rotation.z,armLeft,12,dt);
  bone.armRU.rotation.z=damping(bone.armRU.rotation.z,armRight,12,dt);
  bone.armLL.rotation.z=damping(bone.armLL.rotation.z,
-  -.012*wave*effort+(pose==='climb'?.08:0),13,dt);
+  0*wave*effort+(pose==='climb'?.08:0),13,dt);
  bone.armRL.rotation.z=damping(bone.armRL.rotation.z,
-  -.012*opposite*effort-(pose==='climb'?.08:0),13,dt);
+  0*opposite*effort-(pose==='climb'?.08:0),13,dt);
  bone.legLU.rotation.z=damping(bone.legLU.rotation.z,-legAmp*wave,14,dt);
  bone.legRU.rotation.z=damping(bone.legRU.rotation.z,-legAmp*opposite,14,dt);
  const bend=pose==='crouch'?.15:pose==='crawl'?.21:

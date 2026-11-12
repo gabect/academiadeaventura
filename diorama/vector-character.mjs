@@ -4,12 +4,12 @@
  * (11 jointed parts x 4 approved angles). No full-image vertex deformation.
  * The underlying game camera, physics and invisible IK rig remain intact.
  */
-import {createBoneCharacter} from './articulated-vector-puppet.mjs?v=2';
+import {createBoneCharacter} from './articulated-vector-puppet.mjs?v=3';
 import {directionSector,sourceFrameForSector,mirrorForSector}
  from './illustrated-puppet-motion.mjs?v=2';
 export const ILLUSTRATED_VIEWS=Object.freeze(['front','threeQuarter','side','back']);
 export const ILLUSTRATION_ASSET_URL=
- new URL('./assets/vector-bone-atlas.webp?v=1',import.meta.url).href;
+ new URL('./assets/vector-bone-atlas.webp?v=2',import.meta.url).href;
 export function illustratedViewForAngle(angle){
  return sourceFrameForSector(directionSector(angle));
 }
