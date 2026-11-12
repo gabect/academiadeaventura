@@ -3522,6 +3522,13 @@ window.__dioramaCharacters={
  npcCount:AMBIENT_NPCS.length,articulated:true,originalMapPreserved:true,
  cardboardOnlyForEnvironment:true
 };
+protagonistIllustration.loaded.then(state=>{
+ if(window.__dioramaCharacters){
+  window.__dioramaCharacters.illustrationReady=state.ready;
+  window.__dioramaCharacters.illustrationError=state.error;
+ }
+ window.__studioCIRefresh?.();
+});
 function thirdPersonCameraClearance(target,desired){
  // Third-person chase view must not disappear behind a solid ridge,
  // the lookout tower or the closed cabin. Sample physical topography,
@@ -4732,6 +4739,7 @@ function animate(){
   climbing:LADDER_STATE.active
  });
  window.__dioramaCharacters.illustrationReady=protagonistIllustration.ready;
+ window.__dioramaCharacters.illustrationView=protagonistIllustration.frame;
  handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
  originalPNGSprites.update(); // Stationary front-facing cardboard stage props
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
