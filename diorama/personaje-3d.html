@@ -103,6 +103,7 @@ function render(){
   1.13+Math.sin(phi)*radius,Math.cos(theta)*Math.cos(phi)*radius);
  camera.lookAt(0,1.13,0);
  art.update(camera,dt,{moving:walking});
+ if(window.__characterPreviewReady?.ready)window.__characterPreviewReady.frame=art.frame;
  renderer.render(scene,camera);rendered++;
 }
 render();
