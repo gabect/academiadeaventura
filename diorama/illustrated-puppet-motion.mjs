@@ -57,18 +57,18 @@ function animatedGeometry(grid,info,phase,t,move,run,pose,slope,style){
   const stride=Math.sin(hipPhase)*effort;
   const raised=Math.max(0,Math.sin(hipPhase))*effort;
   // Leg articulation: hips act as pivots, ankles lift on the swing phase.
-  const legShift=(.075*height*stride+pitch*.018*height)*leg*
+  const legShift=(.026*height*stride+pitch*.018*height)*leg*
     (sideView?.60:1);
-  const kneeBend=.028*height*raised*leg*smooth(.05,.21,ny);
-  const ankleLift=.046*height*raised*shoe;
+  const kneeBend=.013*height*raised*leg*smooth(.05,.21,ny);
+  const ankleLift=.021*height*raised*shoe;
   // Sleeve swings have a soft shoulder anchor and trailing hands.
   const sleevePhase=Math.sin(step+(side<0?PI:0));
   const handDown=smooth(.34,.55,ny)*(1-smooth(.63,.77,ny));
-  const armShift=.043*height*effort*sleevePhase*arm*(sideView?.65:1);
-  const handLift=.016*height*effort*Math.sin(step*2)*arm*handDown;
+  const armShift=.026*height*effort*sleevePhase*arm*(sideView?.65:1);
+  const handLift=.010*height*effort*Math.sin(step*2)*arm*handDown;
   // Head/hat are not rubber: low-amplitude neck turn/settle.
-  const headSway=(.009*height*Math.sin(t*1.45)+
-    .010*height*Math.sin(step)*move)*head;
+  const headSway=(.006*height*Math.sin(t*1.45)+
+    .007*height*Math.sin(step)*move)*head;
   const fabricFollow=.007*height*Math.sin(step-.55)*effort*
     smooth(.30,.56,ny)*(1-smooth(.57,.77,ny));
   // Reduce foot sliding during stance and raise only the swing foot.
