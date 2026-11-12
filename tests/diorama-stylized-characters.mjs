@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import * as THREE from 'three';
 import {installStylizedCharacter} from '../diorama/stylized-characters.mjs';
+import {installIllustratedCharacter,illustratedViewForAngle,illustratedMirrorForAngle}
+ from '../diorama/vector-character.mjs';
 
 // Three.js geometry can be validated in Node without a browser/GPU.
 globalThis.document={createElement(tag){
@@ -67,17 +69,48 @@ function inspect(role,seed,coat){
  assert(root.userData.rig.head.children.some(node=>node.isMesh&&node.visible));
  return {meshes:meshes.length};
 }
-const player=inspect('player',0,'#818052');
+// The hero now wears the authored illustration instead of geometry.
+const {root:hero,legacy}=makeRig();
+const texture=new THREE.Texture();
+const art=installIllustratedCharacter(THREE,hero,{
+ role:'player',defaultView:'back',texture
+});
+await art.loaded;
+assert.equal(art.style,'illustrated-vector-2.5d');
+assert.equal(art.ready,true);
+assert.equal(legacy.visible,false,'Hide the former geometric skin');
+assert(art.sprite.visible,'Artwork quad must be visible when texture loads');
+assert.equal(hero.userData.rig.legs.length,2,'Keep legacy movement rig');
+assert.equal(art.sprite.geometry.type,'PlaneGeometry');
+assert.equal(art.views.length,4);
+assert.equal(illustratedViewForAngle(0),'front');
+assert.equal(illustratedViewForAngle(Math.PI*.30),'threeQuarter');
+assert.equal(illustratedViewForAngle(Math.PI*.52),'side');
+assert.equal(illustratedViewForAngle(Math.PI),'back');
+assert(illustratedMirrorForAngle(Math.PI/2,'side'));
+assert(!illustratedMirrorForAngle(-Math.PI/2,'side'));
+art.setFrame('front');
+assert.equal(art.sprite.geometry.attributes.uv.getX(0),0);
+art.setFrame('back');
+assert.equal(art.sprite.geometry.attributes.uv.getX(0),.75);
+hero.rotation.y=Math.PI;
+hero.updateMatrixWorld(true);
+const mockCamera=new THREE.PerspectiveCamera();mockCamera.position.set(0,4,10);
+art.update(mockCamera,1/60,{moving:true});
+assert.equal(art.frame,'back');
+const src=fs.readFileSync('diorama/assets/vector-adventurer-turnaround.avif');
+assert(src.length>20000);
+assert.equal(src.toString('ascii',4,12),'ftypavif');
 const guardian=inspect('guardian',1,'#a9634e');
 const npc=inspect('npc',3,'#6a9d96');
 const html=fs.readFileSync('diorama/index.html','utf8');
 for(const token of [
  "import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=3';",
- "installStylizedCharacter(THREE,player,{role:'player'",
+ "installIllustratedCharacter(THREE,player,{role:'player'",
  "installStylizedCharacter(THREE,guardian,{role:'guardian'",
  "installStylizedCharacter(THREE,npc,{role:'npc'",
  'window.__dioramaCharacters=',
  'const WORLD={half:83,limit:78,plateauHeight:10',
  'const NPC_MARKERS=['
 ])assert(html.includes(token),'Missing game integration: '+token);
-console.log('PASS: articulated fully volumetric 3D boy, guardian, NPC',player,guardian,npc);
+console.log('PASS: illustrated avatar keeps rig, four correct views and AVIF asset; guardian/NPC remain 3D',guardian,npc);
