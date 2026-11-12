@@ -6,7 +6,7 @@
  * not spheres/cylinders. Original 3D rig, terrain, NPCs and physics persist.
  */
 import {createIllustratedPuppet,directionSector,sourceFrameForSector,mirrorForSector}
- from './illustrated-puppet-motion.mjs?v=1';
+ from './illustrated-puppet-motion.mjs?v=2';
 export const ILLUSTRATED_VIEWS=Object.freeze(['front','threeQuarter','side','back']);
 const PI=Math.PI;
 export const ILLUSTRATION_ASSET_URL=
