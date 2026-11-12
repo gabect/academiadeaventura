@@ -62,6 +62,7 @@ import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
 import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 import {installStylizedCharacter} from './diorama/stylized-characters.mjs?v=3';
+import {installIllustratedCharacter} from './diorama/vector-character.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
@@ -3465,7 +3466,7 @@ function stepLocomotion(dt,right,forward,runEnabled){
  }
 }
 const player=person(blue,mat('#eac7a1'));
-installStylizedCharacter(THREE,player,{role:'player',coat:'#818052',seed:0});
+const protagonistIllustration=installIllustratedCharacter(THREE,player,{role:'player',height:2.48});
 scene.add(player);player.position.set(0,0,5);player.rotation.y=Math.PI;
 // Headless screenshot-only mountain-facing vantage. Normal users never teleport.
 if(STUDIO_CI){
@@ -3515,8 +3516,9 @@ for(const def of NPC_MARKERS){
 }
 prepareFeet(player);
 window.__dioramaCharacters={
- renderMode:'fully-volumetric-3d',reference:'rustic-fantasy-adventurer',
+ renderMode:'illustrated-vector-2.5d',reference:'approved-vector-turnaround',
  player:player.userData.characterArt,guardian:guardian.userData.characterArt,
+ illustration:protagonistIllustration,illustrationReady:false,
  npcCount:AMBIENT_NPCS.length,articulated:true,originalMapPreserved:true,
  cardboardOnlyForEnvironment:true
 };
@@ -4679,9 +4681,9 @@ document.body.append(dioramaExit);
 // untouched, while the cardboard world now hosts articulated 3D inhabitants.
 const castReleaseLink=document.createElement('a');
 castReleaseLink.href='./diorama/personaje-3d.html';
-castReleaseLink.textContent='PERSONAJES 3D · CEL SHADING';
-castReleaseLink.title='Inspecciona el nuevo protagonista 3D con contornos de tinta y sombras toon';
-castReleaseLink.setAttribute('aria-label','Ver el nuevo protagonista 3D en el visor');
+castReleaseLink.textContent='PROTAGONISTA ILUSTRADO · NUEVO';
+castReleaseLink.title='Inspecciona las cuatro vistas ilustradas del protagonista';
+castReleaseLink.setAttribute('aria-label','Ver el protagonista ilustrado en el visor');
 castReleaseLink.style.cssText='position:fixed;right:12px;bottom:145px;z-index:15;display:block;padding:9px 11px;border:2px solid #43301f;border-radius:11px;background:#f2ca72;color:#382c20;font:800 12px system-ui;text-decoration:none;box-shadow:2px 3px 0 #2b30264f';
 document.body.append(castReleaseLink);
 const dioramaTitle=document.createElement('div');
@@ -4723,6 +4725,13 @@ function animate(){
  updateSlopeStatus();
  updateRegionStatus();
  followPlayerCamera(dt);
+ protagonistIllustration.update(camera,dt,{
+  moving:Math.hypot(LOCOMOTION.vx,LOCOMOTION.vz)>.15,
+  running:LOCOMOTION.runBlend>.35,
+  crouching:crouched,crawling,swimming:WATER_STATE.mode==='swim',
+  climbing:LADDER_STATE.active
+ });
+ window.__dioramaCharacters.illustrationReady=protagonistIllustration.ready;
  handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
  originalPNGSprites.update(); // Stationary front-facing cardboard stage props
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
