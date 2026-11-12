@@ -38,6 +38,8 @@ try{
    assert.equal(state.art.guardian.shading,'cel-shaded-vector-3d');
    assert.equal(state.art.player.installed,true);
    assert.equal(state.art.player.originalRigIntact,true);
+   assert.equal(state.art.player.animationMode,'weighted-illustrated-puppet');
+   assert.equal(state.art.player.facingSectors,8);
    assert.equal(state.art.guardian.installed,true);
    assert.equal(state.art.npcCount,8);
    assert.equal(state.world.npcCount,9,'Guardian and eight NPCs must remain');
@@ -74,6 +76,12 @@ try{
   await page.screenshot({path:'artifacts/diorama-3d-cast/character-side.png',timeout:25000});
   await page.getByRole('button',{name:'Frente'}).click();
   await page.waitForFunction(()=>window.__characterPreviewReady?.frame==='front',null,{timeout:5000});
+  await page.getByRole('button',{name:'Caminar'}).click();
+  await page.waitForFunction(()=>window.__characterPreviewReady?.pose==='walk'&&
+   window.__characterPreviewReady?.meshVertices>1000,null,{timeout:5000});
+  await page.waitForTimeout(250);
+  await page.screenshot({path:'artifacts/diorama-3d-cast/character-walking.png',timeout:25000});
+  await page.getByRole('button',{name:'Caminar'}).click();
   assert.equal(errors.length,0,errors.join(' | '));
   console.log('PASS: illustrated four-view turnaround, original player map and preserved 3D NPCs');
  }finally{await context.close();}
