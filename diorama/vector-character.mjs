@@ -4,7 +4,7 @@
  * (11 jointed parts x 4 approved angles). No full-image vertex deformation.
  * The underlying game camera, physics and invisible IK rig remain intact.
  */
-import {createBoneCharacter} from './articulated-vector-puppet.mjs?v=1';
+import {createBoneCharacter} from './articulated-vector-puppet.mjs?v=2';
 import {directionSector,sourceFrameForSector,mirrorForSector}
  from './illustrated-puppet-motion.mjs?v=2';
 export const ILLUSTRATED_VIEWS=Object.freeze(['front','threeQuarter','side','back']);
@@ -78,9 +78,9 @@ export function installIllustratedCharacter(THREE,character,options={}){
  state.loaded=loadAtlas(THREE,options).then(texture=>{
   texture.colorSpace=THREE.SRGBColorSpace;
   texture.magFilter=THREE.LinearFilter;
-  texture.minFilter=THREE.LinearMipmapLinearFilter;
-  texture.anisotropy=4;
-  texture.generateMipmaps=true;texture.needsUpdate=true;
+  texture.minFilter=THREE.LinearFilter;
+  texture.anisotropy=1;
+  texture.generateMipmaps=false;texture.needsUpdate=true;
   puppet.setTexture(texture);
   puppet.show();
   state.ready=true;
