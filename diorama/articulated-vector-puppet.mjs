@@ -158,6 +158,7 @@ export function createBoneCharacter(THREE,root,options={}){
   get sprites(){return Object.values(views[active].meshes);},
   get viewMeshes(){return views[active].meshes;},
   get deformationVertices(){return 0;},
+  get postureScale(){return views[active].group.scale.y;},
   get boneRotations(){const b=views[active].bones;return {
     leftArm:b.armLU.rotation.z,rightArm:b.armRU.rotation.z,
     leftLeg:b.legLU.rotation.z,rightLeg:b.legRU.rotation.z,
