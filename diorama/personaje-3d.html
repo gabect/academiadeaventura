@@ -1,158 +1,109 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Academia de Aventura · Personaje 3D</title>
+<title>Academia de Aventura · Protagonista ilustrado</title>
 <style>
-:root{font-family:system-ui,-apple-system,sans-serif;color:#21302b;background:#e7e4d9}
+:root{font-family:system-ui,-apple-system,sans-serif;background:#f3eee5;color:#302921}
 *{box-sizing:border-box}body{margin:0;overflow:hidden}
 #viewport{position:absolute;inset:0;touch-action:none;cursor:grab}
 #viewport:active{cursor:grabbing}
-header{position:fixed;top:14px;left:14px;z-index:3;background:#fffffff0;padding:13px 16px;border-radius:13px;border:1px solid #c5c6b6;max-width:370px;box-shadow:0 9px 25px #00000017}
-h1{font-size:16px;margin:0 0 4px}p{font-size:12px;line-height:1.5;margin:0;color:#536258}
-nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);z-index:3;display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:min(96%,650px);padding:9px;background:#fffdf7e8;border:1px solid #d6d2c8;border-radius:15px;box-shadow:0 8px 35px #0002}
-button,select{font:600 12px system-ui;border:1px solid #b0b7a9;border-radius:8px;background:#fff;padding:9px 12px;color:#34443b;cursor:pointer}
-button[aria-pressed=true]{background:#456d57;color:white;border-color:#456d57}
-select{max-width:180px}#hint{position:fixed;right:14px;top:14px;color:#fff;background:#34483fca;font:11px system-ui;padding:7px 10px;border-radius:8px}
-a{color:#355d74}#error{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);color:#a00;background:#fff;padding:25px;display:none}
-@media(max-width:570px){header{top:7px;left:7px;right:7px;max-width:none;padding:9px}#hint{display:none}nav{bottom:7px;gap:4px;padding:6px}button,select{padding:7px;font-size:11px}}
+header{position:fixed;top:12px;left:12px;z-index:3;background:#fffcf5eb;padding:12px 15px;border-radius:12px;border:1px solid #d7bd9d;max-width:min(365px,82vw);box-shadow:0 5px 16px #483e3226}
+h1{font:800 15px/1.2 system-ui;margin:0 0 7px}p{font:12px/1.45 system-ui;margin:0;color:#564d42}header a{display:inline-block;margin-top:6px;color:#725037}
+nav{position:fixed;z-index:4;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;width:min(95vw,620px);padding:9px;background:#fffcf5ed;border:1px solid #d9c7b2;border-radius:14px;box-shadow:0 4px 22px #43301d30}
+button{font:700 12px system-ui;border:1px solid #a99a87;border-radius:8px;background:#fff8eb;color:#503a2c;padding:8px 10px;cursor:pointer}
+button[aria-pressed=true]{background:#725136;border-color:#725136;color:#fff}
+#status{position:fixed;top:12px;right:12px;background:#384435df;color:white;font:700 10px system-ui;padding:7px 9px;border-radius:8px;z-index:3}
+#error{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);display:none;background:#fff;padding:16px;color:#933}
+@media(max-width:600px){header{top:6px;left:6px;max-width:78vw;padding:8px 10px}#status{right:6px;top:6px;font-size:9px;max-width:110px}nav{bottom:6px;padding:6px;gap:4px}button{font-size:11px;padding:7px 8px}}
 </style></head><body>
-<div id="viewport"></div>
-<header><h1>Academia de Aventura · Personaje 3D</h1>
-<p>Nuevo diseño 3D con cel shading, contornos de tinta y colores limpios. Arrastra para girar; pellizca para acercar.</p>
+<div id="viewport" aria-label="Visor del protagonista ilustrado"></div>
+<header><h1>Academia de Aventura · Protagonista ilustrado</h1>
+<p>La ilustración original, integrada como personaje 2.5D en el escenario. Gira para ver frente, tres cuartos, perfil y espalda. Arrastra o pellizca para explorar.</p>
 <p><a href="./">Volver al mundo de cartón</a></p></header>
-<div id="hint">CEL SHADING · 3D ARTICULADO · SIN SPRITES</div>
+<div id="status">ILUSTRACIÓN 2.5D · ARTE ORIGINAL</div>
 <nav aria-label="Vistas del personaje">
-<select id="role" aria-label="Personaje"><option value="player">Protagonista</option><option value="guardian">Guardián</option><option value="npc">NPC</option></select>
 <button data-view="front" aria-pressed="true">Frente</button>
-<button data-view="back">Espalda</button><button data-view="left">Izquierda</button>
-<button data-view="right">Derecha</button><button data-view="top">Arriba</button>
-<button data-view="bottom">Abajo</button>
+<button data-view="threeQuarter">3/4</button>
+<button data-view="right">Derecha</button>
+<button data-view="left">Izquierda</button>
+<button data-view="back">Espalda</button>
 <button id="walk" aria-pressed="false">Caminar</button>
-</nav><div id="error"></div>
+</nav>
+<div id="error" role="alert"></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-import {installStylizedCharacter} from './stylized-characters.mjs?v=3';
-const PI=Math.PI;
-const canvasHost=document.getElementById('viewport');
-const renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});
+import {installIllustratedCharacter} from './vector-character.mjs?v=1';
+const host=document.getElementById('viewport');
+let renderer;
+try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});}
+catch(e){document.getElementById('error').textContent='Este navegador no pudo iniciar WebGL.';document.getElementById('error').style.display='block';throw e;}
 renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.7));
-renderer.setSize(innerWidth,innerHeight);
-renderer.outputColorSpace=THREE.SRGBColorSpace;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.3;
-renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-canvasHost.append(renderer.domElement);
-const scene=new THREE.Scene();scene.background=new THREE.Color('#e1e5df');
-scene.fog=new THREE.Fog('#e1e5df',9,22);
-scene.add(new THREE.HemisphereLight('#fff6e8','#899286',2.1));
-const key=new THREE.DirectionalLight('#fff4e5',3.15);key.position.set(-3,7,5);
-key.castShadow=true;key.shadow.mapSize.set(1024,1024);
-key.shadow.camera.left=-4;key.shadow.camera.right=4;
-key.shadow.camera.top=5;key.shadow.camera.bottom=-4;key.shadow.bias=-.00015;
-scene.add(key,key.target);
-const rim=new THREE.DirectionalLight('#c8e1ff',1.35);rim.position.set(3,5,-5);scene.add(rim);
-const floor=new THREE.Mesh(new THREE.CircleGeometry(2.1,64),
- new THREE.MeshStandardMaterial({color:'#ddd9ca',roughness:1}));
-floor.rotation.x=-Math.PI/2;floor.position.y=-.12;floor.receiveShadow=true;scene.add(floor);
-const camera=new THREE.PerspectiveCamera(37,innerWidth/innerHeight,.02,75);
-function makeRig(){
- const root=new THREE.Group(),torso=new THREE.Group();torso.position.y=.90;root.add(torso);
- const head=new THREE.Group();head.position.y=.83;torso.add(head);
- const arms=[],legs=[];
- for(const side of [-1,1]){
-  const shoulder=new THREE.Group();shoulder.position.set(side*.44,.66,0);torso.add(shoulder);
-  const elbow=new THREE.Group();elbow.position.y=-.41;shoulder.add(elbow);
-  const wrist=new THREE.Group();wrist.position.y=-.40;elbow.add(wrist);
-  arms.push({shoulder,elbow,wrist});
-  const hip=new THREE.Group();hip.position.set(side*.24,.90,0);root.add(hip);
-  const knee=new THREE.Group();knee.position.y=-.43;hip.add(knee);
-  const ankle=new THREE.Group();ankle.position.y=-.42;knee.add(ankle);
-  legs.push({hip,knee,ankle});
- }
- root.userData.rig={torso,head,arms,legs};return root;
+renderer.setSize(innerWidth,innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;
+host.appendChild(renderer.domElement);
+const scene=new THREE.Scene();scene.background=new THREE.Color('#f1ebe1');
+const floor=new THREE.Mesh(new THREE.CircleGeometry(1.45,48),
+ new THREE.MeshBasicMaterial({color:'#e6d8c4',transparent:true,opacity:.67}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-.10;scene.add(floor);
+const camera=new THREE.PerspectiveCamera(36,innerWidth/innerHeight,.05,35);
+const character=new THREE.Group(),torso=new THREE.Group();
+torso.position.y=.90;character.add(torso);
+const head=new THREE.Group();torso.add(head);head.position.y=.83;
+const legs=[],arms=[];
+for(const sign of [-1,1]){
+ const hip=new THREE.Group();hip.position.set(sign*.24,.90,0);character.add(hip);
+ const knee=new THREE.Group();hip.add(knee);const ankle=new THREE.Group();knee.add(ankle);legs.push({hip,knee,ankle});
+ const shoulder=new THREE.Group();torso.add(shoulder);const elbow=new THREE.Group();shoulder.add(elbow);
+ const wrist=new THREE.Group();elbow.add(wrist);arms.push({shoulder,elbow,wrist});
 }
-let root;
-const load=(role)=>{
- if(root){
-  scene.remove(root);
-  const geometries=new Set(),materials=new Set(),textures=new Set();
-  root.traverse(o=>{
-   if(o.geometry)geometries.add(o.geometry);
-   if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){
-    materials.add(m);if(m.map)textures.add(m.map);if(m.gradientMap)textures.add(m.gradientMap);
-   }
-  });
-  geometries.forEach(g=>g.dispose());textures.forEach(t=>t.dispose());
-  materials.forEach(m=>m.dispose());
- }
- root=makeRig();
- const settings=role==='player'?{role:'player',coat:'#818052',seed:0}:
-  role==='guardian'?{role:'guardian',coat:'#a9634e',seed:1}:
-   {role:'npc',coat:'#6a9d96',seed:3};
- installStylizedCharacter(THREE,root,settings);scene.add(root);
- let count=0;root.traverse(o=>{if(o.isMesh)count++});
- window.__characterPreviewReady={ready:true,role,meshCount:count,
-  shading:root.userData.characterArt.shading,
-  outlineMeshes:root.userData.characterArt.outlineMeshes,
-  full3D:root.userData.characterArt.mode==='fully-volumetric-3d'};
-};
-document.getElementById('role').addEventListener('change',e=>load(e.target.value));
-load('player');
-const views={front:[0,0],back:[Math.PI,0],left:[-Math.PI/2,0],
- right:[Math.PI/2,0],top:[0,1.32],bottom:[0,-.90]};
-let theta=0,phi=.08,radius=5.5,walking=false;
+character.userData.rig={torso,head,legs,arms};
+scene.add(character);
+const art=installIllustratedCharacter(THREE,character,{role:'player',defaultView:'front',height:2.48});
+let theta=0,phi=.11,radius=5.05,walking=false;
+const views={front:0,threeQuarter:-Math.PI*.27,right:-Math.PI/2,left:Math.PI/2,back:Math.PI};
 const buttons=[...document.querySelectorAll('[data-view]')];
-const mark=(name)=>buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===name)));
-buttons.forEach(b=>b.addEventListener('click',()=>{
- const [a,h]=views[b.dataset.view];theta=a;phi=h;mark(b.dataset.view);
-}));
+const mark=(current)=>buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===current)));
+buttons.forEach(b=>b.addEventListener('click',()=>{theta=views[b.dataset.view];mark(b.dataset.view);}));
 document.getElementById('walk').addEventListener('click',e=>{
  walking=!walking;e.currentTarget.setAttribute('aria-pressed',String(walking));
 });
 let pointer=null,pinch=0;
 const active=new Map();
-canvasHost.addEventListener('pointerdown',e=>{
+host.addEventListener('pointerdown',e=>{
  active.set(e.pointerId,{x:e.clientX,y:e.clientY});
- canvasHost.setPointerCapture(e.pointerId);pointer={x:e.clientX,y:e.clientY};
+ host.setPointerCapture(e.pointerId);pointer={x:e.clientX,y:e.clientY};
 });
-canvasHost.addEventListener('pointermove',e=>{
- if(!active.has(e.pointerId))return;
- active.set(e.pointerId,{x:e.clientX,y:e.clientY});
+host.addEventListener('pointermove',e=>{
+ if(!active.has(e.pointerId))return;active.set(e.pointerId,{x:e.clientX,y:e.clientY});
  if(active.size===2){
-  const [a,b]=[...active.values()],distance=Math.hypot(a.x-b.x,a.y-b.y);
-  if(pinch)radius=THREE.MathUtils.clamp(radius*pinch/distance,2.6,8.2);
-  pinch=distance;return;
+  const [a,b]=[...active.values()],d=Math.hypot(a.x-b.x,a.y-b.y);
+  if(pinch)radius=THREE.MathUtils.clamp(radius*pinch/d,3.8,8.2);
+  pinch=d;return;
  }
- if(pointer){theta-=(e.clientX-pointer.x)*.009;
-  phi=THREE.MathUtils.clamp(phi+(e.clientY-pointer.y)*.007,-1.1,1.37);
-  pointer={x:e.clientX,y:e.clientY};mark('');}
+ if(pointer){
+  theta-=(e.clientX-pointer.x)*.009;
+  phi=THREE.MathUtils.clamp(phi+(e.clientY-pointer.y)*.007,-.40,.68);
+  pointer={x:e.clientX,y:e.clientY};mark('');
+ }
 });
-const release=e=>{active.delete(e.pointerId);pointer=null;pinch=0;};
-canvasHost.addEventListener('pointerup',release);
-canvasHost.addEventListener('pointercancel',release);
-canvasHost.addEventListener('wheel',e=>{
- e.preventDefault();radius=THREE.MathUtils.clamp(radius*(e.deltaY>0?1.09:.91),4.05,8.2);
+function release(e){active.delete(e.pointerId);pointer=null;pinch=0}
+host.addEventListener('pointerup',release);host.addEventListener('pointercancel',release);
+host.addEventListener('wheel',e=>{e.preventDefault();
+ radius=THREE.MathUtils.clamp(radius*(e.deltaY>0?1.09:.91),3.8,8.2);
 },{passive:false});
-addEventListener('resize',()=>{
- camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
- renderer.setSize(innerWidth,innerHeight);
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
+window.__characterPreviewReady={ready:false,role:'player',mode:art.style,frames:4};
+art.loaded.then(state=>{
+ window.__characterPreviewReady={ready:state.ready,error:state.error,role:'player',
+  mode:state.style,frames:4,source:state.source,imageLoaded:state.ready};
 });
-const clock=new THREE.Clock();let step=0;
+const clock=new THREE.Clock();let rendered=0;
 function render(){
  requestAnimationFrame(render);const dt=Math.min(clock.getDelta(),.05);
- if(walking){step+=dt*7.4;
-  for(let i=0;i<2;i++){
-   root.userData.rig.legs[i].hip.rotation.x=Math.sin(step+i*PI)*.39;
-   root.userData.rig.arms[i].shoulder.rotation.x=-Math.sin(step+i*PI)*.18;
-  }
- }else{
-  for(const l of root.userData.rig.legs)l.hip.rotation.x*=Math.exp(-9*dt);
-  for(const a of root.userData.rig.arms)a.shoulder.rotation.x*=Math.exp(-9*dt);
- }
- const targetY=1.05;
- camera.position.set(Math.sin(theta)*Math.cos(phi)*radius,targetY+Math.sin(phi)*radius,
- Math.cos(theta)*Math.cos(phi)*radius);
- camera.lookAt(0,targetY,0);renderer.render(scene,camera);
+ camera.position.set(Math.sin(theta)*Math.cos(phi)*radius,
+  1.13+Math.sin(phi)*radius,Math.cos(theta)*Math.cos(phi)*radius);
+ camera.lookAt(0,1.13,0);
+ art.update(camera,dt,{moving:walking});
+ renderer.render(scene,camera);rendered++;
 }
-try{render()}catch(error){
- const el=document.getElementById('error');el.style.display='block';el.textContent=error.message;throw error;
-}
+render();
 </script></body></html>
