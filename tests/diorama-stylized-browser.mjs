@@ -27,7 +27,9 @@ try{
     rig:window.__dioramaCharacters,
     world:window.__dioramaWorld,
     canvas:document.querySelector('canvas')?.width,
-    status:document.body.textContent.includes('ESQUELETO ORIGINAL · RESTAURADO')
+    status:document.body.textContent.includes('ESQUELETO ORIGINAL · RESTAURADO'),
+    camera:window.__classicCamera,
+    viewButton:document.getElementById('viewModeButton')?.textContent
    }));
    assert.equal(state.rig.renderMode,'original-articulated-skeleton');
    assert.equal(state.rig.player.mode,'original-articulated-skeleton');
@@ -45,12 +47,33 @@ try{
    assert.equal(state.rig.cardboardOnlyForEnvironment,true);
    assert(state.canvas>100,'Three.js canvas missing');
    assert(state.status,'No visible skeleton restoration status');
+   assert.equal(state.camera.enabled,true,'Classic camera should be the default');
+   assert.equal(state.camera.projection,'orthographic');
+   assert.equal(state.camera.originalMapPreserved,true);
+   assert.equal(state.camera.originalSkeletonPreserved,true);
+   assert.equal(state.viewButton,'3P','The prior camera should remain accessible');
    assert.equal(errors.length,0,'Browser errors: '+errors.join(' | '));
    await page.screenshot({path:output+'/'+view.name+'.png',timeout:35000});
    console.log('PASS',view.name,'original visible skeletons:',state.rig.player.visibleMeshes,
     'NPCs:',state.rig.npcCount);
   }finally{await context.close();}
  }
+ // Legacy 3P mode must still be available with the same world, unchanged physics.
+ const legacy=await browser.newPage({viewport:{width:1100,height:690}});
+ try{
+  const response=await legacy.goto(
+   'http://127.0.0.1:8765/diorama/?ci-smoke&scene=meadow&camera=third-person',
+   {waitUntil:'domcontentloaded',timeout:45000});
+  assert.equal(response.status(),200);
+  await legacy.waitForFunction(()=>window.__studioCIReady===true&&
+   window.__dioramaCharacters?.restored===true,null,{timeout:65000});
+  const mode=await legacy.evaluate(()=>window.__classicCamera);
+  assert.equal(mode.enabled,false);
+  assert.equal(mode.projection,'perspective');
+  assert.equal(await legacy.locator('#viewModeButton').textContent(),'CL');
+  await legacy.screenshot({path:output+'/legacy-third-person.png',timeout:35000});
+  console.log('PASS: camera=third-person preserves original camera and skeletons');
+ }finally{await legacy.close();}
  const page=await browser.newPage();
  const res=await page.goto('http://127.0.0.1:8765/diorama/personaje-3d.html',
   {waitUntil:'domcontentloaded'});
