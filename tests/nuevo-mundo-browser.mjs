@@ -25,15 +25,22 @@ try{
     {waitUntil:'domcontentloaded',timeout:45000});
    assert.equal(res.status(),200,'New world route unavailable');
    await page.waitForFunction(()=>window.__newWorld?.ready&&
-    window.__newWorld?.assetState==='loaded',null,{timeout:30000});
+    window.__newWorld?.assetState==='loaded'&&
+    window.__newWorld?.villageAssetState==='loaded',null,{timeout:30000});
    const state=await page.evaluate(()=>({
     mode:window.__newWorld.mode,model:window.__newWorld.models,
-    assets:window.__newWorld.assetState,player:window.__newWorld.player,
+    assets:window.__newWorld.assetState,pack:window.__newWorld.villageAssetState,
+    player:window.__newWorld.player,riverWidth:window.__newWorld.riverWaterWidth,
+    bridgeSizes:window.__newWorld.bridges,houses:window.__newWorld.houses,
     props:window.__newWorld.totalProps,canvas:document.getElementById('game').width,
     legacyLink:!!document.querySelector('a[href="./"]')
    }));
    assert.equal(state.mode,'canvas-2d');
    assert.equal(state.assets,'loaded','Embedded Tiny Swords forest image missing');
+   assert.equal(state.pack,'loaded','Tiny Swords real houses and bridge atlas not loaded');
+   assert.equal(state.riverWidth,164);
+   assert(state.bridgeSizes.every(b=>b.w>=300&&b.h>=90));
+   assert(state.houses.every(h=>h.scale>=1.85&&h.sprite.startsWith('house')));
    assert(state.props>=350,'Four-region vegetation missing');
    assert.equal(state.model.shallowSouthPx,8);
    assert.equal(state.model.landmarks,7);
