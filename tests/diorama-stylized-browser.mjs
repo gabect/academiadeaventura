@@ -20,10 +20,24 @@ try{
    const res=await page.goto('http://127.0.0.1:8765/diorama/?ci-smoke&scene=meadow',
     {waitUntil:'domcontentloaded',timeout:45000});
    assert.equal(res.status(),200);
-   await page.waitForFunction(()=>window.__studioCIReady===true&&
-    window.__dioramaCharacters?.restored===true&&
-    window.__dioramaWorld?.isDiorama===true&&
-    window.__dioramaWorld?.tinySwords?.ready===true,null,{timeout:65000});
+   try{
+    await page.waitForFunction(()=>window.__studioCIReady===true&&
+     window.__dioramaCharacters?.restored===true&&
+     window.__dioramaWorld?.isDiorama===true&&
+     window.__dioramaWorld?.tinySwords?.ready===true,null,{timeout:18000});
+   }catch(error){
+    const debug=await page.evaluate(()=>({
+     studio:window.__studioCIReady,
+     world:!!window.__dioramaWorld,
+     camera:window.__classicCamera,
+     tiny:window.__dioramaWorld?.tinySwords,
+     render:document.querySelector('canvas')?.width,
+     network:performance.getEntriesByType('resource').filter(
+      a=>/tiny|.mjs/.test(a.name)).map(a=>({url:a.name,status:a.responseStatus}))
+    }));
+    console.error('TINY_SWORDS_DIAGNOSTIC',JSON.stringify({view:view.name,debug,errors}));
+    throw error;
+   }
    const state=await page.evaluate(()=>({
     rig:window.__dioramaCharacters,
     world:window.__dioramaWorld,
