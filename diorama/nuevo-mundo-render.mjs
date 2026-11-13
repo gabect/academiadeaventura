@@ -555,7 +555,10 @@ export function createOverworldRenderer(canvas,model){
   const cameraX=overview?WORLD.width/2:camera.x;
   const cameraY=overview?WORLD.height/2:camera.y;
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,w,h);
+  // Paint a continuous ocean beyond the world bitmap at coastal edges;
+  // alpha:false canvases otherwise reveal a black strip on wide screens.
+  ctx.fillStyle='#207f94';
+  ctx.fillRect(0,0,w,h);
   ctx.save();
   ctx.translate(w/2,h/2);
   ctx.scale(zoom,zoom);
