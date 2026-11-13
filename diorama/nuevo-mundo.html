@@ -96,7 +96,7 @@ background:#dfecdf96;box-shadow:inset 0 0 0 9px #406e6260;pointer-events:auto;to
 <script type="module">
 import {
  WORLD,ZONES,createWorld,regionAt,movePlayer,blockedReason,
- nearestLandmark,nearSouthernShallows,terrainAt
+ nearestLandmark,nearSouthernShallows,terrainAt,nearCottageDoor,VILLAGE_BUILDINGS
 } from './nuevo-mundo-model.mjs?v=1';
 import {createOverworldRenderer} from './nuevo-mundo-render.mjs?v=1';
 const model=createWorld();
@@ -122,6 +122,11 @@ function showMap(value){
  document.getElementById('miniCard').style.visibility=value?'hidden':'visible';
 }
 function interact(){
+ const house=nearCottageDoor(player.x,player.y);
+ if(house){
+  message(house.name+' · Estás frente a la puerta. Las casas podrán tener interiores en una etapa posterior.',5200);
+  return;
+ }
  const near=nearestLandmark(player.x,player.y,110);
  if(near){message(near.name+' · '+near.message,5500);return;}
  const type=terrainAt(player.x,player.y);
@@ -196,7 +201,8 @@ const mapReady={
  get assetState(){return painter.assetState},
  get totalProps(){return model.objects.length},
  get models(){return {width:WORLD.width,height:WORLD.height,shallowSouthPx:WORLD.shallowSouthPx,landmarks:model.landmarks.length,
-  bridges:model.bridges.length,boardwalks:model.boardwalks.length,trees:painter.treeCount}},
+  bridges:model.bridges.length,boardwalks:model.boardwalks.length,trees:painter.treeCount,
+  houses:VILLAGE_BUILDINGS.length}},
  get overview(){return overview},
  get zoom(){return camera.zoom},
  teleport(x,y){
