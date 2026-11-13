@@ -52,7 +52,7 @@ try{
    // Screenshot a completed still frame; continuous canvas redraw otherwise
    // competes with Playwright's capture on CI software rendering.
    await page.waitForTimeout(240);
-   await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+   await page.evaluate(()=>{window.__newWorld.pauseRendering(true);window.__newWorld.renderNow();});
    const capture=await page.evaluate(()=>window.__newWorld.screenshot());
    assert(capture.startsWith('data:image/png;base64,'),'Invalid gameplay frame');
    fs.writeFileSync(out+'/'+view.name+'.png',
@@ -69,7 +69,7 @@ try{
     const overview=await page.evaluate(()=>window.__newWorld.overview);
     assert.equal(overview,true);
     await page.waitForTimeout(180);
-    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    await page.evaluate(()=>{window.__newWorld.pauseRendering(true);window.__newWorld.renderNow();});
     const overviewPNG=await page.evaluate(()=>window.__newWorld.screenshot());
     assert(overviewPNG.startsWith('data:image/png;base64,'));
     fs.writeFileSync(out+'/map-overview.png',
@@ -81,7 +81,7 @@ try{
     const reachedVillage=await page.evaluate(()=>window.__newWorld.teleport(1810,1365));
     assert.equal(reachedVillage,true,'Village square should be walkable');
     await page.waitForTimeout(150);
-    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    await page.evaluate(()=>{window.__newWorld.pauseRendering(true);window.__newWorld.renderNow();});
     const villagePNG=await page.evaluate(()=>window.__newWorld.screenshot());
     fs.writeFileSync(out+'/village-scale.png',
      Buffer.from(villagePNG.slice('data:image/png;base64,'.length),'base64'));
@@ -89,7 +89,7 @@ try{
     const reachedBridge=await page.evaluate(()=>window.__newWorld.teleport(1184,813));
     assert.equal(reachedBridge,true,'Physical bridge deck must be walkable');
     await page.waitForTimeout(120);
-    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    await page.evaluate(()=>{window.__newWorld.pauseRendering(true);window.__newWorld.renderNow();});
     const bridgePNG=await page.evaluate(()=>window.__newWorld.screenshot());
     fs.writeFileSync(out+'/bridge-scale.png',
      Buffer.from(bridgePNG.slice('data:image/png;base64,'.length),'base64'));
