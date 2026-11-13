@@ -1,0 +1,42 @@
+name: Academia new 2D overworld — four-region gameplay QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'diorama/nuevo-mundo*.mjs'
+      - 'diorama/nuevo-mundo.html'
+      - 'tests/nuevo-mundo*.mjs'
+      - '.github/workflows/nuevo-mundo.yml'
+      - 'diorama/index.html'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate deterministic terrain and physical boundaries
+        run: |
+          node --check diorama/nuevo-mundo-model.mjs
+          node --check diorama/nuevo-mundo-render.mjs
+          node --check tests/nuevo-mundo.test.mjs
+          node tests/nuevo-mundo.test.mjs
+      - name: Install browser tools
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Explore world in desktop and mobile browsers
+        run: |
+          python3 -m http.server 8765 >/tmp/newworld-http.log 2>&1 &
+          node tests/nuevo-mundo-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: new-overworld-browser-captures
+          path: artifacts/new-overworld/*.png
+          if-no-files-found: warn
