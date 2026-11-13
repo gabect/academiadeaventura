@@ -96,9 +96,9 @@ background:#dfecdf96;box-shadow:inset 0 0 0 9px #406e6260;pointer-events:auto;to
 <script type="module">
 import {
  WORLD,ZONES,createWorld,regionAt,movePlayer,blockedReason,
- nearestLandmark,nearSouthernShallows,terrainAt,nearCottageDoor,VILLAGE_BUILDINGS
-} from './nuevo-mundo-model.mjs?v=1';
-import {createOverworldRenderer} from './nuevo-mundo-render.mjs?v=1';
+ nearestLandmark,nearSouthernShallows,terrainAt,nearCottageDoor,VILLAGE_BUILDINGS,RIVER_HALF_WIDTH
+} from './nuevo-mundo-model.mjs?v=2';
+import {createOverworldRenderer} from './nuevo-mundo-render.mjs?v=2';
 const model=createWorld();
 const canvas=document.getElementById('game');
 const painter=createOverworldRenderer(canvas,model);
@@ -194,15 +194,19 @@ const getMovement=()=>{
  {x:0,y:0,moving:false};
 };
 const mapReady={
- ready:false,map:'new-independent-overworld',mode:'canvas-2d',version:'0.1.0',
+ ready:false,map:'new-independent-overworld',mode:'canvas-2d',version:'0.2.0',
  get player(){return {x:player.x,y:player.y}},
  get biome(){return regionAt(player.x,player.y)},
  get terrain(){return terrainAt(player.x,player.y)},
  get assetState(){return painter.assetState},
+ get villageAssetState(){return painter.assetPackState},
+ get riverWaterWidth(){return RIVER_HALF_WIDTH*2},
+ get bridges(){return model.bridges.map(b=>({id:b.id,w:b.w,h:b.h}))},
+ get houses(){return VILLAGE_BUILDINGS.map(h=>({id:h.id,scale:h.scale,sprite:h.sprite}))}, 
  get totalProps(){return model.objects.length},
  get models(){return {width:WORLD.width,height:WORLD.height,shallowSouthPx:WORLD.shallowSouthPx,landmarks:model.landmarks.length,
   bridges:model.bridges.length,boardwalks:model.boardwalks.length,trees:painter.treeCount,
-  houses:VILLAGE_BUILDINGS.length}},
+  houses:VILLAGE_BUILDINGS.length,riverWidth:RIVER_HALF_WIDTH*2}},
  get overview(){return overview},
  get zoom(){return camera.zoom},
  teleport(x,y){
