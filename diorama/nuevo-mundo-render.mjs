@@ -7,7 +7,7 @@
 import {
  WORLD,boundaries,terrainAt,regionAt,RIVER,BRIDGES,BOARDWALKS,
  PATHS,LANDMARKS,SWAMP_POOLS,VILLAGE_BUILDINGS,HERO_VISUAL,RIVER_HALF_WIDTH
-} from './nuevo-mundo-model.mjs';
+} from './nuevo-mundo-model.mjs?v=2';
 import {loadTinyVillageArt,drawTinyHouse,drawTinyBridge,drawTinyRock,tilePattern}
  from './tiny-village-assets.mjs?v=1';
 const PI=Math.PI,TAU=2*PI;
