@@ -45,7 +45,10 @@ try{
    // competes with Playwright's capture on CI software rendering.
    await page.waitForTimeout(240);
    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
-   await page.screenshot({path:out+'/'+view.name+'.png',timeout:45000});
+   const capture=await page.evaluate(()=>window.__newWorld.screenshot());
+   assert(capture.startsWith('data:image/png;base64,'),'Invalid gameplay frame');
+   fs.writeFileSync(out+'/'+view.name+'.png',
+    Buffer.from(capture.slice('data:image/png;base64,'.length),'base64'));
    await page.evaluate(()=>window.__newWorld.pauseRendering(false));
    if(!view.touch){
     const origin=state.player;
@@ -59,7 +62,10 @@ try{
     assert.equal(overview,true);
     await page.waitForTimeout(180);
     await page.evaluate(()=>window.__newWorld.pauseRendering(true));
-    await page.screenshot({path:out+'/map-overview.png',timeout:45000});
+    const overviewPNG=await page.evaluate(()=>window.__newWorld.screenshot());
+    assert(overviewPNG.startsWith('data:image/png;base64,'));
+    fs.writeFileSync(out+'/map-overview.png',
+     Buffer.from(overviewPNG.slice('data:image/png;base64,'.length),'base64'));
     await page.evaluate(()=>window.__newWorld.pauseRendering(false));
     await page.keyboard.press('m');
     assert.equal(await page.evaluate(()=>window.__newWorld.overview),false);
