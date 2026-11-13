@@ -39,6 +39,7 @@ try{
    assert.equal(state.model.landmarks,7);
    assert(state.model.bridges>=3);
    assert(state.model.boardwalks>=2);
+   assert.equal(state.model.houses,5,'Village must consist of five accessible cottages');
    assert(state.canvas>500);
    assert.equal(state.legacyLink,true,'Legacy map must remain available');
    // Screenshot a completed still frame; continuous canvas redraw otherwise
@@ -69,6 +70,23 @@ try{
     await page.evaluate(()=>window.__newWorld.pauseRendering(false));
     await page.keyboard.press('m');
     assert.equal(await page.evaluate(()=>window.__newWorld.overview),false);
+    // Visually confirm the village is a place, not a miniature landmark.
+    const reachedVillage=await page.evaluate(()=>window.__newWorld.teleport(1810,1365));
+    assert.equal(reachedVillage,true,'Village square should be walkable');
+    await page.waitForTimeout(150);
+    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    const villagePNG=await page.evaluate(()=>window.__newWorld.screenshot());
+    fs.writeFileSync(out+'/village-scale.png',
+     Buffer.from(villagePNG.slice('data:image/png;base64,'.length),'base64'));
+    await page.evaluate(()=>window.__newWorld.pauseRendering(false));
+    const reachedBridge=await page.evaluate(()=>window.__newWorld.teleport(1184,813));
+    assert.equal(reachedBridge,true,'Physical bridge deck must be walkable');
+    await page.waitForTimeout(120);
+    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    const bridgePNG=await page.evaluate(()=>window.__newWorld.screenshot());
+    fs.writeFileSync(out+'/bridge-scale.png',
+     Buffer.from(bridgePNG.slice('data:image/png;base64,'.length),'base64'));
+    await page.evaluate(()=>window.__newWorld.pauseRendering(false));
     const reached=await page.evaluate(()=>window.__newWorld.teleport(750,1550));
     assert.equal(typeof reached,'boolean');
    }else{
