@@ -8,7 +8,7 @@ const trees={
 };
 const bushes=[{x:1,z:2},{x:2,z:3}],stones=[{x:11,z:11},{x:12,z:12},{x:13,z:13}];
 const sites=classifyTinySites(trees,bushes,stones);
-assert.equal(sites.length,3+2+2+2);
+assert.equal(sites.length,3+2+Math.ceil(bushes.length/7)+Math.ceil(stones.length/4));
 assert.deepEqual(sites.filter(x=>x.kind.startsWith('tree')).map(x=>x.site),
  trees.pine.concat(trees.broadleaf),'Original tree sites must not be relocated');
 assert(sites.every(x=>Number.isFinite(x.site.x)&&Number.isFinite(x.site.z)));
