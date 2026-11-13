@@ -21,10 +21,12 @@ export function classifyTinySites(locations={},shrubSites=[],stoneSites=[]){
  const groups=[];
  for(let i=0;i<pines.length;i++)groups.push({kind:i%2?'tree1':'tree2',site:pines[i]});
  for(let i=0;i<broad.length;i++)groups.push({kind:i%2?'tree4':'tree3',site:broad[i]});
- for(let i=0;i<shrubSites.length;i++)groups.push({
+ // The original papercraft stage scattered thousands of bushes. Only
+ // show every seventh EXISTING site for clear top-down Zelda-like navigation.
+ for(let i=0;i<shrubSites.length;i+=7)groups.push({
   kind:'bush'+(1+i%4),site:shrubSites[i]
  });
- for(let i=0;i<stoneSites.length;i+=2)groups.push({
+ for(let i=0;i<stoneSites.length;i+=4)groups.push({
   kind:'rock'+(1+i%4),site:stoneSites[i]
  });
  return groups;
@@ -151,12 +153,16 @@ export function installTinySwordsOverworld({THREE,scene,camera,world,
   const hideOld=()=>{for(const batch of baseSprites?.batches||[]){
    batch.mesh.visible=false;batch.shadow.visible=false;
   }};
-  hideOld();baseSprites?.ready?.then(hideOld);
-  status.ready=true;status.batches=batches.length;
-  status.variants=Object.keys(REGIONS).length;
-  world.assetStyle='tiny-swords-2d-sprites';
-  window.__studioCIRefresh?.();
-  return status;
+  // Wait for the predecessor atlas to finish creating its instanced
+  // meshes before hiding them; this prevents brief duplicate tree silhouettes.
+  return Promise.resolve(baseSprites?.ready).catch(()=>null).then(()=>{
+   hideOld();
+   status.ready=true;status.batches=batches.length;
+   status.variants=Object.keys(REGIONS).length;
+   world.assetStyle='tiny-swords-2d-sprites';
+   window.__studioCIRefresh?.();
+   return status;
+  });
  }).catch(err=>{
   status.failed=true;status.error=String(err);
   console.error('Tiny Swords scenery did not load; original art remains',err);
