@@ -39,6 +39,11 @@ body.dialog-open #interactButton,body.dialog-open #runButton{opacity:.35;pointer
 #skillPanel button,#zoomControls button{border:2px solid #202827!important;box-shadow:2px 3px 0 #20282777!important}
 #zoomControls button{background:#f5d86b!important;color:#15262d!important}
 #zoomControls button:active{background:#f88c33!important}
+body.classic-camera #rigRestoredStatus{display:none!important}
+body.classic-camera #cameraHint{max-width:245px;text-align:right;right:11px;top:235px}
+body.classic-camera #message{max-width:min(54vw,530px);padding:9px 13px;font-size:13px}
+@media(max-width:920px){body.classic-camera #cameraHint{max-width:155px;font-size:9px;top:242px}
+body.classic-camera #message{max-width:47vw;padding:7px 9px;font-size:11px}}
 #actionCluster button{background:#3973c9!important;border:3px solid #20272a!important;box-shadow:2px 4px 0 #20272a96!important}
 #runButton{background:#de554a!important}
 #message{background:#fff0bceb!important;color:#272827!important;border:3px solid #202827!important;border-radius:11px!important;box-shadow:3px 5px 0 #20282752!important;font-weight:700}
@@ -273,7 +278,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
   if(cameraPointers.size<2){pinchDistance=0;pinchRecorded=false;}
  });
 }
-setCameraZoom(CLASSIC_VIEW?1:.94);
+setCameraZoom(CLASSIC_VIEW?1.27:.94);
 // Matte paper illumination, not overexposed studio lights.
 scene.add(new THREE.HemisphereLight(0xf4f3e7,0x858d70,1.55));
 const sun=new THREE.DirectionalLight(0xffeedc,1.75);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);scene.add(sun.target);
@@ -4725,6 +4730,7 @@ dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padd
 document.body.append(dioramaExit);
 // Confirmation of the restored original rig. Not a link to archived artwork.
 const rigRestoredStatus=document.createElement('span');
+rigRestoredStatus.id='rigRestoredStatus';
 rigRestoredStatus.textContent='ESQUELETO ORIGINAL · RESTAURADO';
 rigRestoredStatus.style.cssText='position:fixed;right:12px;bottom:145px;z-index:15;pointer-events:none;padding:8px 11px;border:1px solid #6d7b6c;border-radius:10px;background:#edf3e9dd;color:#2b4330;font:700 11px system-ui';
 document.body.append(rigRestoredStatus);
