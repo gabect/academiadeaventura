@@ -206,6 +206,8 @@ const mapReady={
  testMove(dx,dy){const p=movePlayer(player,dx,dy,model);player.x=p.x;player.y=p.y;return p;},
  classify:(x,y)=>terrainAt(x,y),
  screenshot:()=>canvas.toDataURL('image/png'),
+ paused:false,
+ pauseRendering(value){this.paused=!!value;},
  showMap
 };
 window.__newWorld=mapReady;
@@ -234,7 +236,7 @@ function frame(t){
    triggerAt=t;message('Aguas poco profundas: no avances más de 8 píxeles mar adentro.',2100);
   }
  }
- painter.draw({camera,player,time:now,overview});
+ if(!mapReady.paused)painter.draw({camera,player,time:now,overview});
  if(t-lastMini>300){lastMini=t;painter.drawMiniMap(document.getElementById('mini'),
   matchMedia('(pointer:coarse)').matches?118:170,
   matchMedia('(pointer:coarse)').matches?81:116,player);}
