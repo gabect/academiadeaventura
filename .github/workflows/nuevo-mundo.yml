@@ -5,6 +5,8 @@ on:
     paths:
       - 'diorama/nuevo-mundo*.mjs'
       - 'diorama/nuevo-mundo.html'
+      - 'diorama/tiny-village-assets.mjs'
+      - 'diorama/assets/tiny-village-terrain.webp'
       - 'tests/nuevo-mundo*.mjs'
       - '.github/workflows/nuevo-mundo.yml'
       - 'diorama/index.html'
@@ -24,6 +26,7 @@ jobs:
         run: |
           node --check diorama/nuevo-mundo-model.mjs
           node --check diorama/nuevo-mundo-render.mjs
+          node --check diorama/tiny-village-assets.mjs
           node --check tests/nuevo-mundo.test.mjs
           node tests/nuevo-mundo.test.mjs
       - name: Install browser tools
