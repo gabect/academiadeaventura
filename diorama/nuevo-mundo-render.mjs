@@ -245,12 +245,17 @@ function drawSwamp(c){
   }
  }
 }
-function drawPathNetwork(c){
+function drawPathNetwork(c,pack){
+ const sand=tilePattern(c,pack,'sandTile');
  for(const p of PATHS){
-  strokePolyline(c,p,'#64734b80',41);
-  strokePolyline(c,p,'#c3a76e',32);
-  strokePolyline(c,p,'#e1cb94',27);
-  strokePolyline(c,p,'#f2dda466',13);
+  strokePolyline(c,p,'#64734b80',55);
+  strokePolyline(c,p,'#ad9463',45);
+  strokePolyline(c,p,'#e2ce95',38);
+  if(sand){
+   c.save();c.strokeStyle=sand;c.globalAlpha=.26;
+   c.lineWidth=34;c.lineCap='round';c.lineJoin='round';
+   smoothPath(c,p);c.stroke();c.restore();
+  }else strokePolyline(c,p,'#f2dda466',20);
  }
 }
 function drawRiver(c,pack){
@@ -330,7 +335,7 @@ function drawGrassDetail(c){
 function drawStatic(c,pack){
  drawSea(c,pack);drawBiomeGround(c,pack);drawMountains(c);
  drawWesternCliffs(c);drawEasternShore(c);drawSouthernBeach(c,pack);
- drawSwamp(c);drawPathNetwork(c);drawRiver(c,pack);
+ drawSwamp(c);drawPathNetwork(c,pack);drawRiver(c,pack);
  for(const b of BRIDGES)drawBridge(c,b,pack);
  for(const b of BOARDWALKS)drawBoardwalk(c,b);
  drawGrassDetail(c);
@@ -618,7 +623,7 @@ export function createOverworldRenderer(canvas,model){
    // Roofs/walls obscure a hero walking behind a house, as in classic
    // top-down games. In front of the door, the hero remains visible.
    for(const hut of VILLAGE_BUILDINGS){
-    if(player.y>=hut.y||player.y<hut.y-100*hut.scale)continue;
+    if(player.y>=hut.y||player.y<hut.y-150*hut.scale)continue;
     if(Math.abs(player.x-hut.x)<55*hut.scale)
      if(!drawTinyHouse(ctx,pack,hut))
       drawHouse(ctx,hut.x,hut.y,hut.scale,hut.roof);
