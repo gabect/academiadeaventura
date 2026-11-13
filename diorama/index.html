@@ -4737,6 +4737,14 @@ dioramaExit.href='./index.html'; // base href goes to original root index
 dioramaExit.textContent='Mundo original ↗';
 dioramaExit.style.cssText='position:fixed;right:12px;bottom:93px;z-index:15;padding:10px 13px;border:2px solid #202827;background:#fdea77;border-radius:11px;color:#23342b;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #20282755';
 document.body.append(dioramaExit);
+// New independent 2D world; this legacy 3D map remains unchanged.
+const newWorldLink=document.createElement('a');
+newWorldLink.href='./nuevo-mundo.html';
+newWorldLink.textContent='NUEVO MUNDO 2D ↗';
+newWorldLink.title='Explorar el mapa nuevo con bosque, marismas, costa y montañas';
+newWorldLink.setAttribute('aria-label','Abrir nuevo mundo 2D');
+newWorldLink.style.cssText='position:fixed;right:12px;bottom:193px;z-index:19;padding:10px 13px;border:2px solid #294f45;background:#d5eab0;border-radius:11px;color:#233e32;font:800 12px system-ui;text-decoration:none;box-shadow:3px 4px 0 #203c2b66';
+document.body.append(newWorldLink);
 // Confirmation of the restored original rig. Not a link to archived artwork.
 const rigRestoredStatus=document.createElement('span');
 rigRestoredStatus.id='rigRestoredStatus';
