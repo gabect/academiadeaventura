@@ -6,7 +6,7 @@
 export const WORLD = Object.freeze({
  width:2400,height:1680,seed:29471,
  shallowSouthPx:8,playerRadius:10,
- spawn:Object.freeze({x:1060,y:995}),
+ spawn:Object.freeze({x:985,y:980}),
  spawnLabel:'Cruce del Valle'
 });
 export const ZONES = Object.freeze([
@@ -48,29 +48,38 @@ export function terrainAt(x,y){
  if(x<boundaries.west(y)+65)return 'western-cliffs';
  return regionAt(x,y);
 }
+export const RIVER_HALF_WIDTH=82; // water spans 164 logical pixels
 export const RIVER = Object.freeze([
  [1330,220],[1336,340],[1274,475],[1260,620],[1194,784],
  [1154,940],[1090,1105],[1080,1245],[1140,1382],[1135,1556]
 ]);
 export const BRIDGES=Object.freeze([
- {id:'puente-bosque',x:1268,y:604,w:132,h:38},
- {id:'puente-central',x:1184,y:813,w:156,h:46},
- {id:'puente-sur',x:1093,y:1110,w:146,h:46}
+ {id:'puente-bosque',x:1268,y:604,w:306,h:98},
+ {id:'puente-central',x:1184,y:813,w:320,h:106},
+ {id:'puente-sur',x:1093,y:1110,w:308,h:100}
 ]);
 export const BOARDWALKS=Object.freeze([
  {id:'pasarela-marismas',points:[[1535,732],[1685,732],[1685,632],[1812,632],[1910,590]],width:37},
  {id:'pasarela-este',points:[[1840,860],[1930,860],[1930,745],[2070,745]],width:35}
 ]);
+// Every long route reaches the river via a full bridge rather than crossing
+// through water. The central junction lies west of the river.
 export const PATHS=Object.freeze([
- [[1060,995],[1130,920],[1184,813],[1280,748],[1395,720],[1535,732],[1660,760],[1800,760],[2050,750]],
- [[1184,813],[1060,750],[945,658],[780,583],[610,520],[450,470]],
- [[1060,995],[920,1090],[760,1198],[545,1315],[392,1390]],
- [[1060,995],[1100,1105],[1120,1190],[1295,1320],[1525,1400],[1790,1370]],
- [[1400,720],[1450,615],[1430,500],[1390,360],[1320,265]],
- [[1010,780],[1028,675],[1110,604],[1268,604],[1405,575]],
- [[1800,760],[1890,860],[1990,975],[1970,1100],[1830,1245],[1790,1370]],
+ [[985,980],[994,900],[1012,813],[1184,813],[1360,813],[1442,760],[1535,732],[1660,760],[1800,760],[2050,750]],
+ [[1012,813],[1005,730],[945,658],[780,583],[610,520],[450,470]],
+ [[985,980],[920,1090],[760,1198],[545,1315],[392,1390]],
+ [[985,980],[955,1050],[927,1110],[1093,1110],[1264,1110],[1350,1220],[1475,1348],[1810,1365],[2115,1365]],
+ [[1440,760],[1430,615],[1430,500],[1390,360],[1320,265]],
+ [[1012,813],[1028,675],[1105,604],[1268,604],[1428,604],[1440,760]],
+ [[1800,760],[1890,860],[1990,975],[1970,1100],[1830,1210],[1810,1365]],
  [[610,520],[625,720],[755,910],[920,1090]],
- [[1525,1400],[1710,1490],[1950,1470],[2115,1380]],
+ [[1264,1110],[1350,1220],[1475,1348],[1570,1355],[1810,1365],[2085,1365]],
+ [[1475,1348],[1550,1312],[1550,1292]],
+ [[1810,1365],[1800,1310],[1800,1292]],
+ [[2085,1365],[2050,1310],[2050,1292]],
+ [[1650,1370],[1690,1448]],
+ [[1930,1370],[1990,1448]],
+ [[1810,1365],[1815,1482],[1815,1540]],
  [[545,1315],[760,1400],[950,1470],[1090,1510]]
 ]);
 export const LANDMARKS=Object.freeze([
@@ -78,25 +87,27 @@ export const LANDMARKS=Object.freeze([
  {id:'caverna',name:'Paso de la Cordillera',x:1330,y:245,r:34,kind:'cave',collides:true,message:'La cordillera bloquea el camino hacia el norte.'},
  {id:'molino',name:'Molino del Bosque Claro',x:442,y:433,r:46,kind:'windmill',collides:true,message:'El viento mantiene en marcha el molino.'},
  {id:'faro',name:'Faro de Poniente',x:368,y:1339,r:43,kind:'lighthouse',collides:true,message:'Los acantilados occidentales son demasiado peligrosos.'},
- {id:'aldea',name:'Villa Pesquera',x:1790,y:1346,r:75,kind:'village',collides:false,message:'Las barcas saldrán cuando el mar esté en calma.'},
- {id:'muelle',name:'Muelle de los Pescadores',x:1900,y:1500,r:40,kind:'dock',collides:false,message:'Las redes de pesca se secan junto al muelle.'},
+ {id:'aldea',name:'Villa Pesquera',x:1810,y:1365,r:65,kind:'village',collides:false,message:'Las barcas saldrán cuando el mar esté en calma.'},
+ {id:'muelle',name:'Muelle de los Pescadores',x:1815,y:1524,r:40,kind:'dock',collides:false,message:'Las redes de pesca se secan junto al muelle.'},
  {id:'refugio',name:'Refugio de las Marismas',x:1980,y:605,r:35,kind:'swamp-hut',collides:true,message:'Las marismas esconden caminos sobre el agua.'}
 ]);
 /** Actual cottages—not a map marker. Coordinates are feet at the entrance facade. */
 export const VILLAGE_BUILDINGS=Object.freeze([
- {id:'casa-redes',name:'Casa de las Redes',x:1635,y:1262,scale:1.56,roof:'#c49c5e'},
- {id:'casa-capitan',name:'Casa del Capitán',x:1790,y:1262,scale:1.67,roof:'#cead69'},
- {id:'casa-barcaza',name:'Casa de la Barca',x:1950,y:1262,scale:1.56,roof:'#b8855b'},
- {id:'casa-sal',name:'Casa de la Sal',x:1705,y:1440,scale:1.50,roof:'#c6a46a'},
- {id:'casa-puerto',name:'Casa del Puerto',x:1918,y:1440,scale:1.48,roof:'#a9a477'}
+ {id:'casa-redes',name:'Casa de las Redes',x:1550,y:1290,scale:1.90,sprite:'house0'},
+ {id:'casa-capitan',name:'Casa del Capitán',x:1800,y:1290,scale:1.95,sprite:'house1'},
+ {id:'casa-barcaza',name:'Casa de la Barca',x:2050,y:1290,scale:1.90,sprite:'house2'},
+ {id:'casa-sal',name:'Casa de la Sal',x:1690,y:1490,scale:1.86,sprite:'house3'},
+ {id:'casa-puerto',name:'Casa del Puerto',x:1990,y:1490,scale:1.89,sprite:'house4'}
 ]);
 export const HERO_VISUAL=Object.freeze({height:64,bodyWidth:24,footprintRadius:WORLD.playerRadius});
 export function cottageWalls(hut){
  const s=hut.scale;
- return {left:hut.x-31*s,right:hut.x+31*s,
-  top:hut.y-41*s,bottom:hut.y+12*s,
-  doorX:hut.x,doorY:hut.y+14*s,
-  roofTop:hut.y-91*s,roofWidth:96*s};
+ // House 128×192 PNG; visible roof occupies ~108 source pixels width,
+ // while the physical solid wall is the lower 88px, not the overhanging roof.
+ return {left:hut.x-44*s,right:hut.x+44*s,
+  top:hut.y-46*s,bottom:hut.y-2*s,
+  doorX:hut.x,doorY:hut.y+7*s,
+  roofTop:hut.y-150*s,roofWidth:108*s};
 }
 export function nearCottageDoor(x,y,distance=43){
  let nearest=null,best=distance;
@@ -170,7 +181,9 @@ export function createWorld(seed=WORLD.seed){
    if(y<boundaries.north(x)+60||y>boundaries.south(x)-84||
     x<boundaries.west(y)+75||x>boundaries.east(y)-100)continue;
    if(zone==='east'&&pondAt(x,y,22))continue;
-   if(Math.abs(x-riverCenterAt(y))<62||avoidRoad(x,y,rad+30)||
+   if(Math.abs(x-riverCenterAt(y))<RIVER_HALF_WIDTH+rad+24||
+    BRIDGES.some(b=>Math.abs(x-b.x)<b.w/2+rad+22&&Math.abs(y-b.y)<b.h/2+rad+22)||
+    avoidRoad(x,y,rad+30)||
     nearLandmark(x,y,rad+55))continue;
    // Keep actual building walls, entrance approaches and village squares clear.
    if(VILLAGE_BUILDINGS.some(h=>{
@@ -210,7 +223,7 @@ export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
  if(y>boundaries.south(x)+WORLD.shallowSouthPx)
   return 'sur-profundidad-del-mar';
  if(y>=RIVER[0][1]&&y<=RIVER[RIVER.length-1][1]&&
-  Math.abs(x-riverCenterAt(y))<22+radius&&!onBridge(x,y))
+  Math.abs(x-riverCenterAt(y))<RIVER_HALF_WIDTH+radius&&!onBridge(x,y))
   return 'rio-sin-puente';
  if(pondAt(x,y,radius)&&!onBoardwalk(x,y))return 'agua-profunda-del-pantano';
  for(const o of model.objects){
