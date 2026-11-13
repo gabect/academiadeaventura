@@ -510,8 +510,25 @@ export function createOverworldRenderer(canvas,model){
  const paint=terrain.getContext('2d',{alpha:false});
  drawStatic(paint);
  let image=null,assetState='loading',lastErr=null;
+ // Single bitmap for stationary scenery; critical for mobile framerate.
+ const panorama=document.createElement('canvas');
+ panorama.width=WORLD.width;panorama.height=WORLD.height;
+ const pano=panorama.getContext('2d',{alpha:false});
+ let panoramaReady=false;
+ function buildPanorama(){
+  pano.drawImage(terrain,0,0);
+  const all=model.objects.map(obj=>({y:obj.y,kind:'object',obj}))
+   .concat(LANDMARKS.map(obj=>({y:obj.y,kind:'landmark',obj})));
+  all.sort((a,b)=>a.y-b.y);
+  for(const p of all){
+   if(p.kind==='object')drawObject(pano,image,p.obj);
+   else drawLandmark(pano,p.obj,0);
+  }
+  panoramaReady=true;
+ }
+ buildPanorama();
  const resource=new Image();
- resource.onload=()=>{image=resource;assetState='loaded';};
+ resource.onload=()=>{image=resource;buildPanorama();assetState='loaded';};
  resource.onerror=()=>{assetState='fallback';lastErr='Tiny Swords artwork did not load';};
  resource.src=new URL('./assets/tiny-overworld.webp',import.meta.url);
  let w=0,h=0,dpr=1;
@@ -536,25 +553,14 @@ export function createOverworldRenderer(canvas,model){
   ctx.scale(zoom,zoom);
   ctx.translate(-cameraX,-cameraY);
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
-  ctx.drawImage(terrain,0,0);
-  const margin=140,left=cameraX-w/(2*zoom)-margin,
-   right=cameraX+w/(2*zoom)+margin,
-   top=cameraY-h/(2*zoom)-margin,bottom=cameraY+h/(2*zoom)+margin;
-  const drawables=[];
-  for(const o of model.objects){
-   if(o.x<left||o.x>right||o.y<top||o.y>bottom)continue;
-   drawables.push({y:o.y,kind:'object',obj:o});
-  }
-  for(const l of LANDMARKS){
-   if(l.x<left-120||l.x>right+120||l.y<top-150||l.y>bottom+150)continue;
-   drawables.push({y:l.y,kind:'landmark',obj:l});
-  }
-  drawables.push({y:player.y,kind:'player',obj:player});
-  drawables.sort((a,b)=>a.y-b.y);
-  for(const item of drawables){
-   if(item.kind==='object')drawObject(ctx,image,item.obj);
-   else if(item.kind==='landmark')drawLandmark(ctx,item.obj,time);
-   else drawHero(ctx,item.obj,time);
+  ctx.drawImage(panoramaReady?panorama:terrain,0,0);
+  drawHero(ctx,player,time);
+  // Very close foreground crowns conceal the player when appropriate.
+  if(!overview){
+   for(const o of model.objects){
+    if(o.kind!=='tree'||o.y<=player.y||o.y>player.y+48)continue;
+    if(Math.abs(o.x-player.x)<41)drawObject(ctx,image,o);
+   }
   }
   ctx.restore();
   if(overview){
