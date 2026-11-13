@@ -4,12 +4,13 @@ import {
  WORLD,ZONES,boundaries,RIVER,BRIDGES,BOARDWALKS,SWAMP_POOLS,LANDMARKS,
  terrainAt,regionAt,canEnter,blockedReason,movePlayer,createWorld,
  nearestLandmark,onBridge,onBoardwalk,pondAt,nearSouthernShallows,
- VILLAGE_BUILDINGS,cottageWalls,nearCottageDoor,HERO_VISUAL
+ VILLAGE_BUILDINGS,cottageWalls,nearCottageDoor,HERO_VISUAL,RIVER_HALF_WIDTH,riverCenterAt
 } from '../diorama/nuevo-mundo-model.mjs';
 const model=createWorld();
 assert.equal(model.width,2400);
 assert.equal(model.height,1680);
 assert.equal(model.seed,WORLD.seed);
+assert.equal(RIVER_HALF_WIDTH*2,164,'River should be a broad physical river, not a pencil line');
 assert.deepEqual(createWorld().objects,model.objects,'Overworld must be deterministic');
 assert(model.objects.length>=350,'Forest and scenery too sparse: '+model.objects.length);
 assert(model.objects.filter(o=>o.kind==='tree').length>=180,'No dense forest');
@@ -53,6 +54,15 @@ for(const bridge of BRIDGES){
  assert(onBridge(bridge.x,bridge.y),'Bridge collider invalid');
  assert(canEnter(bridge.x,bridge.y,model),'Bridge must permit passage');
 }
+const centerBridge=BRIDGES.find(b=>b.id==='puente-central');
+assert(centerBridge,'Central bridge missing');
+const left={x:centerBridge.x-centerBridge.w/2-12,y:centerBridge.y};
+assert(canEnter(left.x,left.y,model),'Player must approach the west bank of bridge');
+const crossed=movePlayer(left,centerBridge.w+25,0,model);
+assert(crossed.x>centerBridge.x+centerBridge.w/2,
+ 'Character should physically walk from one bank to the other');
+assert.equal(blockedReason(centerBridge.x,centerBridge.y+centerBridge.h/2+42,model),
+ 'rio-sin-puente','Off-bridge river crossing must remain blocked');
 const mid=RIVER.find((_,i)=>i>=4);
 assert(mid,'Missing center river');
 const waterY=920,riverX=1161;
@@ -62,7 +72,7 @@ assert(pondAt(1614,460),'Marsh pool missing');
 assert.equal(blockedReason(1614,460,model),'agua-profunda-del-pantano');
 const plank=BOARDWALKS[0].points[1];
 assert(onBoardwalk(plank[0],plank[1]),'Marsh boardwalk not walkable');
-assert(nearestLandmark(1790,1346)?.id==='aldea','Fishing village missing');
+assert(nearestLandmark(1810,1365)?.id==='aldea','Fishing village missing');
 assert(LANDMARKS.some(l=>l.kind==='dock'));
 assert.equal(VILLAGE_BUILDINGS.length,5);
 assert(HERO_VISUAL.height>=58&&HERO_VISUAL.height<=72);
@@ -71,7 +81,9 @@ for(const hut of VILLAGE_BUILDINGS){
  const box=cottageWalls(hut);
  assert(box.right-box.left>HERO_VISUAL.bodyWidth*3,
   'Each cottage must be substantially wider than the character');
- assert(hut.scale>=1.4,'Cottage looks like a miniature map marker');
+ assert(hut.scale>=1.85,'Each cottage must be rendered noticeably bigger');
+ assert(['house0','house1','house2','house3','house4'].includes(hut.sprite),
+  'Cottages must use actual source sprite frames, not generic drawing');
  assert.equal(blockedReason(hut.x,hut.y-18*hut.scale,model),
   'casa-villa-costera','Each visible cottage must have solid walls');
  const entranceY=box.doorY+13;
@@ -81,9 +93,9 @@ for(const hut of VILLAGE_BUILDINGS){
   'Walkable exterior in front of cottage entrance '+hut.id);
 }
 for(const bridge of BRIDGES){
- assert(bridge.w>=110&&bridge.h>=38,
+ assert(bridge.w>=300&&bridge.h>=90,
   'Bridge should read as traversable structure, not icon');
- assert(bridge.h>=HERO_VISUAL.bodyWidth+10,
+ assert(bridge.h>=HERO_VISUAL.bodyWidth*3,
   'Bridge walking deck is not wide enough for protagonist');
 }
 let p={...model.spawn};
@@ -95,6 +107,17 @@ const collisionPoint={x:1120,y:boundaries.south(1120)-15};
 const after=movePlayer(collisionPoint,0,250,model);
 assert(after.y<=boundaries.south(after.x)+WORLD.shallowSouthPx,
  'Large delta may not tunnel through the southern sea boundary');
+const {TINY_RECTS}=await import('../diorama/tiny-village-assets.mjs');
+for(const key of ['house0','house1','house2','house3','house4',
+ 'bridgeHorizontal','grassTile','sandTile','waterTile','rock0','rock1']){
+ const r=TINY_RECTS[key];
+ assert(r&&r.length===4&&r[2]>0&&r[3]>0,'Source atlas entry missing '+key);
+ assert(r[0]+r[2]<=1024&&r[1]+r[3]<=1024);
+}
+const atlas=fs.readFileSync('diorama/assets/tiny-village-terrain.webp');
+assert(atlas.length>20000,'Game-only assets atlas was not stored');
+assert.equal(atlas.toString('ascii',0,4),'RIFF');
+assert.equal(atlas.toString('ascii',8,12),'WEBP');
 const expected=['diorama/nuevo-mundo.html','diorama/nuevo-mundo-render.mjs'];
 for(const file of expected)assert(fs.readFileSync(file,'utf8').length>5000,'Missing '+file);
 const html=fs.readFileSync(expected[0],'utf8');
