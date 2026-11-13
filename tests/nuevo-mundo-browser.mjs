@@ -41,7 +41,12 @@ try{
    assert(state.model.boardwalks>=2);
    assert(state.canvas>500);
    assert.equal(state.legacyLink,true,'Legacy map must remain available');
-   await page.screenshot({path:out+'/'+view.name+'.png',timeout:35000});
+   // Screenshot a completed still frame; continuous canvas redraw otherwise
+   // competes with Playwright's capture on CI software rendering.
+   await page.waitForTimeout(240);
+   await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+   await page.screenshot({path:out+'/'+view.name+'.png',timeout:45000});
+   await page.evaluate(()=>window.__newWorld.pauseRendering(false));
    if(!view.touch){
     const origin=state.player;
     await page.keyboard.down('w');
@@ -52,7 +57,10 @@ try{
     await page.keyboard.press('m');
     const overview=await page.evaluate(()=>window.__newWorld.overview);
     assert.equal(overview,true);
-    await page.screenshot({path:out+'/map-overview.png',timeout:35000});
+    await page.waitForTimeout(180);
+    await page.evaluate(()=>window.__newWorld.pauseRendering(true));
+    await page.screenshot({path:out+'/map-overview.png',timeout:45000});
+    await page.evaluate(()=>window.__newWorld.pauseRendering(false));
     await page.keyboard.press('m');
     assert.equal(await page.evaluate(()=>window.__newWorld.overview),false);
     const reached=await page.evaluate(()=>window.__newWorld.teleport(750,1550));
