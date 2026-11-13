@@ -82,6 +82,12 @@ export const LANDMARKS=Object.freeze([
  {id:'muelle',name:'Muelle de los Pescadores',x:1900,y:1500,r:40,kind:'dock',collides:false,message:'Las redes de pesca se secan junto al muelle.'},
  {id:'refugio',name:'Refugio de las Marismas',x:1980,y:605,r:35,kind:'swamp-hut',collides:true,message:'Las marismas esconden caminos sobre el agua.'}
 ]);
+export const VILLAGE_BUILDINGS=Object.freeze([
+ {x:1690,y:1328,rx:31,ry:32},
+ {x:1805,y:1294,rx:37,ry:36},
+ {x:1902,y:1332,rx:31,ry:32},
+ {x:1790,y:1414,rx:29,ry:29}
+]);
 export const SWAMP_POOLS=Object.freeze([
  [1614,460,75,50],[1810,445,80,63],[2040,454,70,54],
  [1595,580,63,58],[1780,585,95,75],[2080,620,73,65],
@@ -174,7 +180,7 @@ export function createWorld(seed=WORLD.seed){
   categoryCounts,river:RIVER,swampPools:SWAMP_POOLS};
 }
 export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
- if(x<boundaries.west(y)+radius)return 'oeste-acantilados-y-oceano';
+ if(x<boundaries.west(y)+65+radius)return 'oeste-acantilados-y-oceano';
  if(x>boundaries.east(y)-radius)return 'este-costa-intransitable';
  if(y<boundaries.north(x)+radius)return 'norte-cordillera-infranqueable';
  if(y>boundaries.south(x)+WORLD.shallowSouthPx)
@@ -187,6 +193,10 @@ export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
   if(!o.collision)continue;
   const r=o.radius+radius;
   if((x-o.x)**2+(y-o.y)**2<r*r)return 'obstaculo-'+o.kind;
+ }
+ for(const hut of VILLAGE_BUILDINGS){
+  if(Math.abs(x-hut.x)<hut.rx+radius&&Math.abs(y-hut.y)<hut.ry+radius)
+   return 'casa-villa-costera';
  }
  for(const l of LANDMARKS){
   if(l.collides&&Math.hypot(x-l.x,y-l.y)<l.r*.62+radius)
