@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<meta name="theme-color" content="#213b37"/>
+<meta name="description" content="Academia de Aventura: Nuevo Mundo. Explora bosques, marismas, villas pesqueras y costas en una aventura 2D."/>
+<title>Academia de Aventura · Nuevo Mundo 2D</title>
+<style>
+:root{color-scheme:light;--ink:#2f463c;--gold:#eed995;--paper:#fbf5da;--shadow:#25392b7b;font:15px/1.4 system-ui,-apple-system,sans-serif}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#223a37}
+canvas#game{position:fixed;inset:0;display:block;width:100vw;height:100vh;touch-action:none}
+#ui{position:fixed;inset:0;pointer-events:none}
+#topbar{position:absolute;top:12px;left:12px;display:flex;gap:9px;align-items:flex-start;flex-wrap:wrap;max-width:min(65vw,740px)}
+.box{background:var(--paper);border:2px solid #364b40;border-radius:13px;box-shadow:0 4px 0 #193f3770;color:var(--ink)}
+#titlebar{padding:10px 15px;min-width:220px}
+#titlebar strong{display:block;font-size:16px;letter-spacing:.01em}
+#titlebar span{font-size:12px;opacity:.85}
+#hint{margin:0;padding:8px 12px;font-size:12px;max-width:245px}
+button,a{font:700 13px system-ui;color:var(--ink);cursor:pointer;text-decoration:none}
+#controlsTop{display:flex;gap:7px;pointer-events:auto}
+.uiButton{border:2px solid #36554a;border-radius:12px;box-shadow:0 3px 0 #244d3d7c;background:#f1d78d;min-height:40px;padding:8px 12px}
+.uiButton:active{transform:translateY(2px);box-shadow:none}
+#right{position:absolute;top:12px;right:12px;width:188px;display:grid;gap:7px}
+#miniCard{padding:7px 8px;pointer-events:auto}
+#miniCard header{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;letter-spacing:.06em;margin-bottom:5px}
+#mini{display:block;border-radius:8px;width:170px;height:116px}
+#zoomControls{display:flex;justify-content:flex-end;gap:7px;pointer-events:auto}
+#zoomControls button{min-width:43px}
+#event{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);max-width:min(550px,80vw);padding:10px 16px;text-align:center;pointer-events:none;opacity:0;transition:opacity .2s}
+#event.visible{opacity:1}
+#mapLegend{position:absolute;top:14px;left:50%;transform:translateX(-50%);pointer-events:none;display:none;padding:8px 12px;font-size:12px}
+#mapLegend.visible{display:block}
+#mapLegend b{font-weight:900}
+#mobile{position:absolute;left:0;right:0;bottom:0;display:none;pointer-events:none}
+#stick{position:absolute;bottom:19px;left:20px;width:122px;height:122px;border-radius:50%;border:2px solid #31534c;
+background:#dfecdf96;box-shadow:inset 0 0 0 9px #406e6260;pointer-events:auto;touch-action:none}
+#nub{position:absolute;width:52px;height:52px;left:35px;top:35px;border-radius:50%;background:#f6d985;border:3px solid #3c594e;box-shadow:0 4px 0 #254d3d}
+#touchButtons{position:absolute;right:20px;bottom:22px;display:flex;align-items:flex-end;gap:12px;pointer-events:auto}
+.action{border-radius:50%;width:66px;height:66px;background:#ecca77;border:3px solid #31554c;box-shadow:0 5px 0 #274f3e;font-size:12px}
+#run{background:#9cbd9e;width:80px;height:80px}
+#credits{position:absolute;left:12px;bottom:9px;color:#fcf6dc;font:11px system-ui;text-shadow:0 2px 4px #173d35aa}
+#credits a{font:inherit;color:inherit;text-decoration:underline;pointer-events:auto}
+#orientation{position:absolute;inset:0;display:none;place-items:center;background:#1f3e38ee;color:#f4e6bd;text-align:center;padding:26px;z-index:10}
+@media(pointer:coarse),(max-width:900px){
+ #mobile{display:block}
+ #topbar{top:6px;left:6px;max-width:65vw;gap:4px}
+ #titlebar{min-width:0;padding:6px 9px}
+ #titlebar strong{font-size:12px}#titlebar span{font-size:10px}
+ #hint{display:none}
+ #controlsTop{gap:4px}.uiButton{font-size:11px;min-height:34px;padding:6px 7px}
+ #right{top:6px;right:6px;width:132px;gap:3px}
+ #miniCard{padding:5px}#miniCard header{font-size:9px}
+ #mini{width:118px;height:81px}
+ #zoomControls button{min-width:35px;padding:5px}
+ #event{bottom:9px;max-width:48vw;font-size:12px}
+ #credits{display:none}
+}
+@media(pointer:coarse) and (orientation:portrait){
+ #orientation{display:grid}
+}
+</style></head><body>
+<canvas id="game" aria-label="Mapa jugable en dos dimensiones de Academia de Aventura"></canvas>
+<div id="ui">
+ <div id="topbar">
+  <div id="titlebar" class="box" aria-live="polite">
+   <strong>Academia de Aventura · Nuevo Mundo</strong>
+   <span id="region">Cruce del Valle</span>
+  </div>
+  <div id="controlsTop">
+   <button id="mapBtn" class="uiButton" title="Mostrar mapa completo (M)">Mapa · M</button>
+   <a class="uiButton" href="./" title="Volver al mapa anterior">Mapa anterior</a>
+  </div>
+  <p id="hint" class="box">WASD / flechas: caminar · Shift: correr · E: interactuar · M: mapa</p>
+ </div>
+ <aside id="right">
+  <div id="miniCard" class="box">
+   <header><span>MAPA</span><span id="compass">N ↑</span></header>
+   <canvas id="mini" width="170" height="116"></canvas>
+  </div>
+  <div id="zoomControls">
+   <button class="uiButton" id="minus" title="Alejar">−</button>
+   <button class="uiButton" id="plus" title="Acercar">+</button>
+  </div>
+ </aside>
+ <p id="event" class="box" role="status" aria-live="polite"></p>
+ <p id="mapLegend" class="box"><b>Mapa del nuevo mundo</b> · Norte: cordillera y bosque · Este: pantanos · Sur: villas y playa · Oeste: acantilados</p>
+ <div id="mobile">
+  <div id="stick" role="group" aria-label="Control de desplazamiento"><div id="nub"></div></div>
+  <div id="touchButtons">
+   <button id="action" class="action" type="button">Hablar</button>
+   <button id="run" class="action" type="button">Correr</button>
+  </div>
+ </div>
+ <small id="credits">Paisaje 2D original · Vegetación seleccionada del paquete <a href="https://pixelfrog-assets.itch.io/tiny-swords" target="_blank" rel="noopener">Tiny Swords / Pixel Frog</a></small>
+</div>
+<div id="orientation">Para explorar el nuevo mundo, gira el dispositivo a posición horizontal.</div>
+<script type="module">
+import {
+ WORLD,ZONES,createWorld,regionAt,movePlayer,blockedReason,
+ nearestLandmark,nearSouthernShallows,terrainAt
+} from './nuevo-mundo-model.mjs?v=1';
+import {createOverworldRenderer} from './nuevo-mundo-render.mjs?v=1';
+const model=createWorld();
+const canvas=document.getElementById('game');
+const painter=createOverworldRenderer(canvas,model);
+const player={...WORLD.spawn,dirX:0,dirY:1,moving:false,running:false};
+const camera={x:player.x,y:player.y,zoom:1.05};
+const keyboard=new Set(),stick={x:0,y:0},nub=document.getElementById('nub');
+const region=document.getElementById('region');
+const event=document.getElementById('event');
+const mapBtn=document.getElementById('mapBtn');
+const mapLegend=document.getElementById('mapLegend');
+let now=0,last=0,overview=false,isRunning=false,regionId='',noticeUntil=0,
+ gameFrames=0,lastMini=0,triggerAt=0;
+const zoneNames=new Map(ZONES.map(z=>[z.id,z.name]));
+function message(text,duration=3500){
+ event.textContent=text;event.classList.add('visible');
+ noticeUntil=performance.now()+duration;
+}
+function showMap(value){
+ overview=value;mapBtn.textContent=value?'Volver · M':'Mapa · M';
+ mapLegend.classList.toggle('visible',value);
+ document.getElementById('miniCard').style.visibility=value?'hidden':'visible';
+}
+function interact(){
+ const near=nearestLandmark(player.x,player.y,110);
+ if(near){message(near.name+' · '+near.message,5500);return;}
+ const type=terrainAt(player.x,player.y);
+ if(type==='southern-shallows')message('Aquí el agua es poco profunda. Más adelante no se puede nadar.',4200);
+ else if(type==='south-beach')message('La playa del sur permite caminar junto al mar.',3500);
+ else message('Explora los senderos. El bosque del norte, las marismas y la costa guardan secretos.');
+}
+function setZoom(delta){
+ camera.zoom=Math.max(.75,Math.min(1.95,camera.zoom+delta));
+}
+document.getElementById('plus').addEventListener('click',()=>setZoom(.15));
+document.getElementById('minus').addEventListener('click',()=>setZoom(-.15));
+mapBtn.addEventListener('click',()=>showMap(!overview));
+document.getElementById('action').addEventListener('click',interact);
+const runButton=document.getElementById('run');
+runButton.addEventListener('pointerdown',e=>{
+ e.preventDefault();isRunning=true;runButton.setPointerCapture(e.pointerId);
+});
+for(const eventName of ['pointerup','pointercancel','lostpointercapture']){
+ runButton.addEventListener(eventName,()=>isRunning=false);
+}
+const stickSurface=document.getElementById('stick');
+let activePointer=null;
+function moveStick(e){
+ const r=stickSurface.getBoundingClientRect();
+ const dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+ const d=Math.hypot(dx,dy),scale=d>44?44/d:1;
+ stick.x=dx*scale/44;stick.y=dy*scale/44;
+ nub.style.transform='translate('+stick.x*35+'px,'+stick.y*35+'px)';
+}
+stickSurface.addEventListener('pointerdown',e=>{
+ e.preventDefault();activePointer=e.pointerId;
+ stickSurface.setPointerCapture(e.pointerId);moveStick(e);
+});
+stickSurface.addEventListener('pointermove',e=>{
+ if(activePointer===e.pointerId)moveStick(e);
+});
+function releaseStick(e){
+ if(activePointer!==e.pointerId)return;
+ activePointer=null;stick.x=stick.y=0;nub.style.transform='';
+}
+stickSurface.addEventListener('pointerup',releaseStick);
+stickSurface.addEventListener('pointercancel',releaseStick);
+window.addEventListener('blur',()=>{keyboard.clear();stick.x=stick.y=0;nub.style.transform='';isRunning=false;});
+document.addEventListener('keydown',e=>{
+ const key=e.key.toLowerCase();
+ if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+ if(e.repeat&&(key==='e'||key==='m'))return;
+ keyboard.add(key);
+ if(key==='m')showMap(!overview);
+ if(key==='e'||key==='enter')interact();
+});
+document.addEventListener('keyup',e=>keyboard.delete(e.key.toLowerCase()));
+canvas.addEventListener('wheel',e=>{
+ e.preventDefault();setZoom(e.deltaY<0?.1:-.1);
+},{passive:false});
+const getMovement=()=>{
+ let x=stick.x,y=stick.y;
+ if(keyboard.has('a')||keyboard.has('arrowleft'))x-=1;
+ if(keyboard.has('d')||keyboard.has('arrowright'))x+=1;
+ if(keyboard.has('w')||keyboard.has('arrowup'))y-=1;
+ if(keyboard.has('s')||keyboard.has('arrowdown'))y+=1;
+ const len=Math.hypot(x,y);
+ return len>.045?{x:x/Math.max(1,len),y:y/Math.max(1,len),moving:true}:
+ {x:0,y:0,moving:false};
+};
+const mapReady={
+ ready:false,map:'new-independent-overworld',mode:'canvas-2d',version:'0.1.0',
+ get player(){return {x:player.x,y:player.y}},
+ get biome(){return regionAt(player.x,player.y)},
+ get terrain(){return terrainAt(player.x,player.y)},
+ get assetState(){return painter.assetState},
+ get totalProps(){return model.objects.length},
+ get models(){return {width:WORLD.width,height:WORLD.height,shallowSouthPx:WORLD.shallowSouthPx,landmarks:model.landmarks.length,
+  bridges:model.bridges.length,boardwalks:model.boardwalks.length,trees:painter.treeCount}},
+ get overview(){return overview},
+ get zoom(){return camera.zoom},
+ teleport(x,y){
+  if(!blockedReason(x,y,model)){player.x=x;player.y=y;camera.x=x;camera.y=y;return true;}
+  return false;
+ },
+ testMove(dx,dy){const p=movePlayer(player,dx,dy,model);player.x=p.x;player.y=p.y;return p;},
+ classify:(x,y)=>terrainAt(x,y),
+ screenshot:()=>canvas.toDataURL('image/png'),
+ showMap
+};
+window.__newWorld=mapReady;
+message('Nuevo mundo listo para explorar. Recorre los caminos hacia los cuatro puntos cardinales.',5800);
+function frame(t){
+ requestAnimationFrame(frame);
+ const dt=Math.min((t-(last||t))/1000,.05);last=t;now=t/1000;
+ if(!overview){
+  const movement=getMovement();
+  const run=keyboard.has('shift')||isRunning;
+  const speed=run?218:147;
+  const next=movePlayer(player,movement.x*speed*dt,movement.y*speed*dt,model);
+  player.moving=Math.hypot(next.x-player.x,next.y-player.y)>.001;
+  player.running=run&&player.moving;
+  player.x=next.x;player.y=next.y;
+  if(movement.moving){player.dirX=movement.x;player.dirY=movement.y;}
+  const amount=1-Math.exp(-7*dt);
+  camera.x+=(player.x-camera.x)*amount;
+  camera.y+=(player.y-camera.y)*amount;
+  const id=regionAt(player.x,player.y);
+  if(id!==regionId){
+   regionId=id;region.textContent=zoneNames.get(id)||id;
+   if(gameFrames>10)message('Entraste en '+region.textContent,2100);
+  }
+  if(nearSouthernShallows(player.x,player.y)&&t-triggerAt>5000){
+   triggerAt=t;message('Aguas poco profundas: no avances más de 8 píxeles mar adentro.',2100);
+  }
+ }
+ painter.draw({camera,player,time:now,overview});
+ if(t-lastMini>300){lastMini=t;painter.drawMiniMap(document.getElementById('mini'),
+  matchMedia('(pointer:coarse)').matches?118:170,
+  matchMedia('(pointer:coarse)').matches?81:116,player);}
+ if(t>noticeUntil)event.classList.remove('visible');
+ gameFrames++;
+ mapReady.ready=gameFrames>=2;
+}
+requestAnimationFrame(frame);
+</script></body></html>
