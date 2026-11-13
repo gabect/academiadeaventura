@@ -6,8 +6,10 @@
  */
 import {
  WORLD,boundaries,terrainAt,regionAt,RIVER,BRIDGES,BOARDWALKS,
- PATHS,LANDMARKS,SWAMP_POOLS,VILLAGE_BUILDINGS,HERO_VISUAL
+ PATHS,LANDMARKS,SWAMP_POOLS,VILLAGE_BUILDINGS,HERO_VISUAL,RIVER_HALF_WIDTH
 } from './nuevo-mundo-model.mjs';
+import {loadTinyVillageArt,drawTinyHouse,drawTinyBridge,drawTinyRock,tilePattern}
+ from './tiny-village-assets.mjs?v=1';
 const PI=Math.PI,TAU=2*PI;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const lerp=(a,b,t)=>a+(b-a)*t;
@@ -64,11 +66,16 @@ function colorRamp(c,x,y,rx,ry,inside,outside){
  gradient.addColorStop(0,inside);gradient.addColorStop(1,outside);
  c.fillStyle=gradient;c.fillRect(x-rx,y-ry,rx*2,ry*2);
 }
-function drawSea(c){
+function drawSea(c,pack){
  const g=c.createLinearGradient(0,0,0,WORLD.height);
  g.addColorStop(0,'#155877');g.addColorStop(.45,'#217994');
  g.addColorStop(.9,'#248a9b');g.addColorStop(1,'#157796');
  c.fillStyle=g;c.fillRect(0,0,WORLD.width,WORLD.height);
+ const water=tilePattern(c,pack,'waterTile');
+ if(water){
+  c.save();c.globalAlpha=.19;c.fillStyle=water;
+  c.fillRect(0,0,WORLD.width,WORLD.height);c.restore();
+ }
  const rng=random(8162);
  for(let i=0;i<1900;i++){
   const x=rng()*WORLD.width,y=rng()*WORLD.height;
@@ -79,9 +86,14 @@ function drawSea(c){
   c.lineWidth=i%7===0?2:1;c.stroke();
  }
 }
-function drawBiomeGround(c){
+function drawBiomeGround(c,pack){
  landOutline(c);c.fillStyle='#8caf64';c.fill();
  c.save();landOutline(c);c.clip();
+ const ground=tilePattern(c,pack,'grassTile');
+ if(ground){
+  c.save();c.globalAlpha=.24;c.fillStyle=ground;
+  c.fillRect(0,0,WORLD.width,WORLD.height);c.restore();
+ }
  // Large translucent washes make biomes readable with no tile seams.
  colorRamp(c,1020,260,1500,690,'#416e4f','#416e4f00');
  colorRamp(c,455,850,650,900,'#b0cc70','#b0cc7000');
@@ -185,7 +197,7 @@ function drawEasternShore(c){
  }
  c.restore();
 }
-function drawSouthernBeach(c){
+function drawSouthernBeach(c,pack){
  c.save();c.beginPath();
  for(let x=150;x<=2300;x+=10)c.lineTo(x,boundaries.south(x)-99);
  for(let x=2300;x>=150;x-=10)c.lineTo(x,boundaries.south(x)+8);
@@ -194,6 +206,15 @@ function drawSouthernBeach(c){
  beach.addColorStop(0,'#d2c387');beach.addColorStop(.52,'#f1dca3');
  beach.addColorStop(.90,'#ffe7b9');beach.addColorStop(1,'#a7dbc4');
  fill(c,beach);
+ const sand=tilePattern(c,pack,'sandTile');
+ if(sand){
+  c.save();c.beginPath();
+  for(let x=150;x<=2300;x+=10)c.lineTo(x,boundaries.south(x)-99);
+  for(let x=2300;x>=150;x-=10)c.lineTo(x,boundaries.south(x)+8);
+  c.closePath();c.clip();
+  c.globalAlpha=.23;c.fillStyle=sand;
+  c.fillRect(150,1350,2150,270);c.restore();
+ }
  for(let x=180;x<2250;x+=6){
   const s=boundaries.south(x);
   oval(c,x,s+5,4.8,1.6,'#efffe3bd',.60);
@@ -232,19 +253,28 @@ function drawPathNetwork(c){
   strokePolyline(c,p,'#f2dda466',13);
  }
 }
-function drawRiver(c){
- strokePolyline(c,RIVER,'#58765b',75);
- strokePolyline(c,RIVER,'#8dbe9f',60);
- strokePolyline(c,RIVER,'#266a7c',48);
- strokePolyline(c,RIVER,'#42a6b1',41);
- strokePolyline(c,RIVER,'#84d4c8',20);
+function drawRiver(c,pack){
+ // Shared logical width with physical collision. 164 pixel river.
+ strokePolyline(c,RIVER,'#506f58',RIVER_HALF_WIDTH*2+52);
+ strokePolyline(c,RIVER,'#b3be85',RIVER_HALF_WIDTH*2+37);
+ strokePolyline(c,RIVER,'#477b79',RIVER_HALF_WIDTH*2+14);
+ strokePolyline(c,RIVER,'#287c92',RIVER_HALF_WIDTH*2);
+ strokePolyline(c,RIVER,'#42a7b0',RIVER_HALF_WIDTH*2-16);
+ const water=tilePattern(c,pack,'waterTile');
+ if(water){
+  c.save();c.globalAlpha=.43;c.strokeStyle=water;
+  c.lineWidth=RIVER_HALF_WIDTH*2-20;c.lineCap='round';
+  c.lineJoin='round';smoothPath(c,RIVER);c.stroke();c.restore();
+ }
+ strokePolyline(c,RIVER,'#c6efda72',3);
  for(const [x,y] of [[1280,520],[1130,1030],[1095,1360]]){
-  c.fillStyle='#edf9e3';c.globalAlpha=.7;
+  c.fillStyle='#edf9e3';c.globalAlpha=.55;
   for(let n=0;n<5;n++)oval(c,x+n*5-12,y+n*2-4,8,1.6,'#ebfbda');
   c.globalAlpha=1;
  }
 }
-function drawBridge(c,bridge){
+function drawBridge(c,bridge,pack){
+ if(drawTinyBridge(c,pack,bridge))return;
  const {x,y,w,h}=bridge;
  // Walkable east-west bridge with deck wide enough for a 2D hero.
  c.save();c.translate(x,y);
@@ -297,11 +327,11 @@ function drawGrassDetail(c){
   }
  }
 }
-function drawStatic(c){
- drawSea(c);drawBiomeGround(c);drawMountains(c);
- drawWesternCliffs(c);drawEasternShore(c);drawSouthernBeach(c);
- drawSwamp(c);drawPathNetwork(c);drawRiver(c);
- for(const b of BRIDGES)drawBridge(c,b);
+function drawStatic(c,pack){
+ drawSea(c,pack);drawBiomeGround(c,pack);drawMountains(c);
+ drawWesternCliffs(c);drawEasternShore(c);drawSouthernBeach(c,pack);
+ drawSwamp(c);drawPathNetwork(c);drawRiver(c,pack);
+ for(const b of BRIDGES)drawBridge(c,b,pack);
  for(const b of BOARDWALKS)drawBoardwalk(c,b);
  drawGrassDetail(c);
 }
@@ -363,7 +393,8 @@ function drawReeds(c,o){
  }
  c.restore();
 }
-function drawObject(c,img,o){
+function drawObject(c,img,o,pack){
+ if(o.kind==='rock'&&drawTinyRock(c,pack,o))return;
  if(o.kind==='dead-tree')return drawDeadTree(c,o);
  if(o.kind==='reeds')return drawReeds(c,o);
  if(!drawSprite(c,img,o)){
@@ -515,7 +546,7 @@ export function createOverworldRenderer(canvas,model){
  terrain.width=WORLD.width;terrain.height=WORLD.height;
  const paint=terrain.getContext('2d',{alpha:false});
  drawStatic(paint);
- let image=null,assetState='loading',lastErr=null;
+ let image=null,pack=null,assetState='loading',packState='loading',lastErr=null;
  // Single bitmap for stationary scenery; critical for mobile framerate.
  const panorama=document.createElement('canvas');
  panorama.width=WORLD.width;panorama.height=WORLD.height;
@@ -528,8 +559,11 @@ export function createOverworldRenderer(canvas,model){
    .concat(VILLAGE_BUILDINGS.map(obj=>({y:obj.y,kind:'cottage',obj})));
   all.sort((a,b)=>a.y-b.y);
   for(const p of all){
-   if(p.kind==='object')drawObject(pano,image,p.obj);
-   else if(p.kind==='cottage')drawHouse(pano,p.obj.x,p.obj.y,p.obj.scale,p.obj.roof);
+   if(p.kind==='object')drawObject(pano,image,p.obj,pack);
+   else if(p.kind==='cottage'){
+    if(!drawTinyHouse(pano,pack,p.obj))
+     drawHouse(pano,p.obj.x,p.obj.y,p.obj.scale,p.obj.roof);
+   }
    else drawLandmark(pano,p.obj,0);
   }
   panoramaReady=true;
@@ -539,6 +573,15 @@ export function createOverworldRenderer(canvas,model){
  resource.onload=()=>{image=resource;buildPanorama();assetState='loaded';};
  resource.onerror=()=>{assetState='fallback';lastErr='Tiny Swords artwork did not load';};
  resource.src=new URL('./assets/tiny-overworld.webp',import.meta.url);
+ loadTinyVillageArt().then(img=>{
+  pack=img;packState='loaded';
+  paint.clearRect(0,0,WORLD.width,WORLD.height);
+  drawStatic(paint,pack);
+  buildPanorama();
+ }).catch(err=>{
+  packState='fallback';lastErr=String(err);
+  console.warn('Tiny Swords buildings/bridges/terrain unavailable; keeping fallback',err);
+ });
  let w=0,h=0,dpr=1;
  function resize(){
   dpr=Math.min(window.devicePixelRatio||1,2);
@@ -570,14 +613,15 @@ export function createOverworldRenderer(canvas,model){
   if(!overview){
    for(const o of model.objects){
     if(o.kind!=='tree'||o.y<=player.y||o.y>player.y+48)continue;
-    if(Math.abs(o.x-player.x)<41)drawObject(ctx,image,o);
+    if(Math.abs(o.x-player.x)<41)drawObject(ctx,image,o,pack);
    }
    // Roofs/walls obscure a hero walking behind a house, as in classic
    // top-down games. In front of the door, the hero remains visible.
    for(const hut of VILLAGE_BUILDINGS){
     if(player.y>=hut.y||player.y<hut.y-100*hut.scale)continue;
     if(Math.abs(player.x-hut.x)<55*hut.scale)
-     drawHouse(ctx,hut.x,hut.y,hut.scale,hut.roof);
+     if(!drawTinyHouse(ctx,pack,hut))
+      drawHouse(ctx,hut.x,hut.y,hut.scale,hut.roof);
    }
   }
   ctx.restore();
@@ -601,6 +645,7 @@ export function createOverworldRenderer(canvas,model){
  return {
   draw,resize,drawMiniMap,get assetState(){return assetState;},
   get assetError(){return lastErr;},
+  get assetPackState(){return packState;},
   get treeCount(){return model.objects.filter(o=>o.kind==='tree').length;},
   background:terrain
  };
