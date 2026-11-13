@@ -52,7 +52,8 @@ export function installTinySwordsOverworld({THREE,scene,camera,world,
    color:0x2b3429,transparent:true,opacity:.18,depthWrite:false,
    polygonOffset:true,polygonOffsetFactor:-1
   });
-  applyTerrainCurve?.(m);
+  // Contact decals are planar ground markers and do not require a shader
+  // patch. The optional curve helper is initialized later in the host game.
   return {g,m};
  }
  const contact=shade();
