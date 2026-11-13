@@ -223,7 +223,7 @@ export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
  if(y>boundaries.south(x)+WORLD.shallowSouthPx)
   return 'sur-profundidad-del-mar';
  if(y>=RIVER[0][1]&&y<=RIVER[RIVER.length-1][1]&&
-  Math.abs(x-riverCenterAt(y))<RIVER_HALF_WIDTH+radius&&!onBridge(x,y))
+  distanceToPolyline(x,y,RIVER)<RIVER_HALF_WIDTH+radius&&!onBridge(x,y))
   return 'rio-sin-puente';
  if(pondAt(x,y,radius)&&!onBoardwalk(x,y))return 'agua-profunda-del-pantano';
  for(const o of model.objects){
