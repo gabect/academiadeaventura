@@ -64,6 +64,7 @@ import {installCardboardArt} from './diorama/cardboard-art.mjs?v=3';
 import {installDioramaDetails} from './diorama/cardboard-details.mjs?v=1';
 import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
+import {installTinySwordsOverworld} from './diorama/tiny-swords-overworld.mjs?v=1';
 import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
 import {CLASSIC_CAMERA,classicFrustum,classicOffset} from './diorama/classic-camera.mjs?v=1';
@@ -4581,10 +4582,18 @@ const originalPNGSprites=installExactUserSprites({
  naturalSurfaceY,applyTerrainCurve:bendBuiltInMaterial
 });
 window.__dioramaWorld.assetStyle='user-uploaded-original-png-sprites';
+const tinySwordsScenery=CLASSIC_VIEW?installTinySwordsOverworld({
+ THREE,scene,camera,world:window.__dioramaWorld,baseSprites:originalPNGSprites,
+ treeLocations:dioramaArt.locations,shrubSites:dioramaDetails.sites,
+ stoneSites:MOUNTAIN_STONE_SITES,naturalSurfaceY,
+ applyTerrainCurve:bendBuiltInMaterial
+}):null;
+window.__dioramaWorld.classicAssetPack=CLASSIC_VIEW?'Tiny Swords by Pixel Frog':'original handmade props';
 // Apply source-painted ground/stone/path/water color inside the actual surface
 // shaders, never as bordered tile meshes. No terrain or collision mutations.
 window.__dioramaWorld.crayonTerrain=installCrayonTerrain({
  THREE,terrainMaterial,trailMat,waterMeshes:[waterSurface,upperWaterSurface,spillway],
+ artStyle:CLASSIC_VIEW?'tiny-swords':'crayon',
  waterCoverageAt,upperRiverCoverageAt:(x,z)=>z<=-18.15?
   upperRiverSample(x,z).coverage:-Infinity,worldHalfSize:WORLD.half
 });
@@ -4774,7 +4783,8 @@ function animate(){
  updateRegionStatus();
  followPlayerCamera(dt);
  handdrawnStage.update(); // Mountains and cabin facade remain in the theater.
- originalPNGSprites.update(); // Stationary front-facing cardboard stage props
+ originalPNGSprites.update(); // Original decor remains available as the safe fallback.
+ tinySwordsScenery?.update(); // Tiny Swords classic top-down props
  if(MOUNTAIN_STUDIO)studioOrganic.setPlayerPosition(player.position);
  // When the over-the-shoulder camera is inside a conifer crown, temporarily
  // hide that decorative crown rather than covering the entire player view.
