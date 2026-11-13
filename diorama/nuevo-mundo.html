@@ -216,6 +216,8 @@ const mapReady={
  testMove(dx,dy){const p=movePlayer(player,dx,dy,model);player.x=p.x;player.y=p.y;return p;},
  classify:(x,y)=>terrainAt(x,y),
  screenshot:()=>canvas.toDataURL('image/png'),
+ renderNow(){painter.draw({camera,player,time:performance.now()/1000,overview});},
+
  paused:false,
  pauseRendering(value){this.paused=!!value;},
  showMap
