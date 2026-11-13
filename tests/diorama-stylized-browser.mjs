@@ -22,12 +22,14 @@ try{
    assert.equal(res.status(),200);
    await page.waitForFunction(()=>window.__studioCIReady===true&&
     window.__dioramaCharacters?.restored===true&&
-    window.__dioramaWorld?.isDiorama===true,null,{timeout:65000});
+    window.__dioramaWorld?.isDiorama===true&&
+    window.__dioramaWorld?.tinySwords?.ready===true,null,{timeout:65000});
    const state=await page.evaluate(()=>({
     rig:window.__dioramaCharacters,
     world:window.__dioramaWorld,
     canvas:document.querySelector('canvas')?.width,
     status:document.body.textContent.includes('ESQUELETO ORIGINAL · RESTAURADO'),
+    tiny:window.__dioramaWorld.tinySwords,
     camera:window.__classicCamera,
     viewButton:document.getElementById('viewModeButton')?.textContent
    }));
@@ -48,6 +50,13 @@ try{
    assert(state.canvas>100,'Three.js canvas missing');
    assert(state.status,'No visible skeleton restoration status');
    assert.equal(state.camera.enabled,true,'Classic camera should be the default');
+   assert.equal(state.tiny.ready,true,'Tiny Swords image atlas not loaded');
+   assert.equal(state.tiny.failed,false);
+   assert(state.tiny.trees>0&&state.tiny.bushes>0&&state.tiny.rocks>0,
+    'Trees, shrubs and rocks should all be visible');
+   assert(state.tiny.batches>=8,'Not enough illustrated asset variants');
+   assert.equal(state.tiny.originalSitesPreserved,true);
+   assert.equal(state.world.classicAssetPack,'Tiny Swords by Pixel Frog');
    assert.equal(state.camera.projection,'orthographic');
    assert.equal(state.camera.originalMapPreserved,true);
    assert.equal(state.camera.originalSkeletonPreserved,true);
@@ -70,6 +79,7 @@ try{
   const mode=await legacy.evaluate(()=>window.__classicCamera);
   assert.equal(mode.enabled,false);
   assert.equal(mode.projection,'perspective');
+  assert.equal(await legacy.evaluate(()=>window.__dioramaWorld.tinySwords),undefined);
   assert.equal(await legacy.locator('#viewModeButton').textContent(),'CL');
   await legacy.screenshot({path:output+'/legacy-third-person.png',timeout:35000});
   console.log('PASS: camera=third-person preserves original camera and skeletons');
