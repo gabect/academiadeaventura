@@ -177,7 +177,7 @@ export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
  if(x<boundaries.west(y)+radius)return 'oeste-acantilados-y-oceano';
  if(x>boundaries.east(y)-radius)return 'este-costa-intransitable';
  if(y<boundaries.north(x)+radius)return 'norte-cordillera-infranqueable';
- if(y>boundaries.south(x)+WORLD.shallowSouthPx-radius)
+ if(y>boundaries.south(x)+WORLD.shallowSouthPx)
   return 'sur-profundidad-del-mar';
  if(y>=RIVER[0][1]&&y<=RIVER[RIVER.length-1][1]&&
   Math.abs(x-riverCenterAt(y))<22+radius&&!onBridge(x,y))
