@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import {
  WORLD,ZONES,boundaries,RIVER,BRIDGES,BOARDWALKS,SWAMP_POOLS,LANDMARKS,
  terrainAt,regionAt,canEnter,blockedReason,movePlayer,createWorld,
- nearestLandmark,onBridge,onBoardwalk,pondAt,nearSouthernShallows
+ nearestLandmark,onBridge,onBoardwalk,pondAt,nearSouthernShallows,
+ VILLAGE_BUILDINGS,cottageWalls,nearCottageDoor,HERO_VISUAL
 } from '../diorama/nuevo-mundo-model.mjs';
 const model=createWorld();
 assert.equal(model.width,2400);
@@ -63,7 +64,28 @@ const plank=BOARDWALKS[0].points[1];
 assert(onBoardwalk(plank[0],plank[1]),'Marsh boardwalk not walkable');
 assert(nearestLandmark(1790,1346)?.id==='aldea','Fishing village missing');
 assert(LANDMARKS.some(l=>l.kind==='dock'));
-assert.equal(blockedReason(1805,1294,model),'casa-villa-costera');
+assert.equal(VILLAGE_BUILDINGS.length,5);
+assert(HERO_VISUAL.height>=58&&HERO_VISUAL.height<=72);
+assert(HERO_VISUAL.bodyWidth>=WORLD.playerRadius*2);
+for(const hut of VILLAGE_BUILDINGS){
+ const box=cottageWalls(hut);
+ assert(box.right-box.left>HERO_VISUAL.bodyWidth*3,
+  'Each cottage must be substantially wider than the character');
+ assert(hut.scale>=1.4,'Cottage looks like a miniature map marker');
+ assert.equal(blockedReason(hut.x,hut.y-18*hut.scale,model),
+  'casa-villa-costera','Each visible cottage must have solid walls');
+ const entranceY=box.doorY+13;
+ assert.equal(nearCottageDoor(hut.x,entranceY)?.id,hut.id,
+  'Each door must be individually approachable');
+ assert(canEnter(hut.x,entranceY,model),
+  'Walkable exterior in front of cottage entrance '+hut.id);
+}
+for(const bridge of BRIDGES){
+ assert(bridge.w>=110&&bridge.h>=38,
+  'Bridge should read as traversable structure, not icon');
+ assert(bridge.h>=HERO_VISUAL.bodyWidth+10,
+  'Bridge walking deck is not wide enough for protagonist');
+}
 let p={...model.spawn};
 const before={...p};
 p=movePlayer(p,85,0,model);
@@ -83,7 +105,7 @@ for(const file of [expected[0],expected[1],'diorama/nuevo-mundo-model.mjs']){
  assert(!/Trifuerza|triforce|trifuerza/i.test(fs.readFileSync(file,'utf8')),
   'Unwanted franchise-specific emblem in '+file);
 }
-console.log('PASS: NEW independent 2D world, four biomes, collision on every edge, river bridges, swamps, village and ≤8px southern shallows');
+console.log('PASS: NEW 2D world: four biomes, five physical cottages, scale-coherent bridges, solid coast, 8px shallow water');
 console.log('Summary:',JSON.stringify({
  props:model.objects.length,trees:model.objects.filter(o=>o.kind==='tree').length,
  byBiome:model.categoryCounts,landmarks:LANDMARKS.length,
