@@ -5,7 +5,7 @@
  * Visual-only: terrain mesh, physics, placement and shorelines are unchanged.
  */
 export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes,
- waterCoverageAt,upperRiverCoverageAt,worldHalfSize=83}) {
+ waterCoverageAt,upperRiverCoverageAt,worldHalfSize=83,artStyle='crayon'}) {
  const atlas=new THREE.TextureLoader().load(
   new URL('./assets/crayon-terrain-atlas.webp',import.meta.url).href);
  atlas.colorSpace=THREE.SRGBColorSpace;
@@ -19,13 +19,23 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
  // Separate clean green grass texture provided by the user. The original
  // framed cardboard atlas remains exclusively for dirt, stone and water.
  const grass=new THREE.TextureLoader().load(
-  new URL('./assets/crayon-grass-seamless.webp',import.meta.url).href);
+  new URL(artStyle==='tiny-swords'?'./assets/tiny-ground.webp?v=1':'./assets/crayon-grass-seamless.webp',import.meta.url).href);
  grass.colorSpace=THREE.SRGBColorSpace;
  grass.wrapS=grass.wrapT=THREE.RepeatWrapping;
  grass.minFilter=THREE.LinearMipmapLinearFilter;
  grass.magFilter=THREE.LinearFilter;
  grass.anisotropy=4;
  const grassUniform={value:grass};
+ // The supplied pack's water tile contributes its teal pigment while the
+ // existing animated river/shore geometry and wet bank physics stay intact.
+ const tinyWater=artStyle==='tiny-swords'?new THREE.TextureLoader().load(
+  new URL('./assets/tiny-water.webp?v=1',import.meta.url).href):null;
+ if(tinyWater){
+  tinyWater.colorSpace=THREE.SRGBColorSpace;
+  tinyWater.wrapS=tinyWater.wrapT=THREE.RepeatWrapping;
+  tinyWater.minFilter=tinyWater.magFilter=THREE.LinearFilter;
+ }
+ const tinyWaterUniform={value:tinyWater};
  // Build a world-aligned shoreline mask from the game's actual lake/river
  // contours. This never creates square tiles or changes physical terrain.
  const shoreSize=512,worldMin=-worldHalfSize,worldSpan=worldHalfSize*2;
@@ -79,6 +89,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
  const shared=String.raw`
  uniform sampler2D crayonAtlas;
  uniform sampler2D crayonGrass;
+ uniform sampler2D tinyWaterSwatch;
  uniform sampler2D crayonShoreMap;
  uniform vec4 crayonShoreBounds;
  // Matte wax pigment grade applied to BOTH the field and the path verge.
@@ -104,6 +115,7 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
    if(old)old(shader,renderer);
    shader.uniforms.crayonAtlas=atlasUniform;
    shader.uniforms.crayonGrass=grassUniform;
+   if(tinyWater)shader.uniforms.tinyWaterSwatch=tinyWaterUniform;
    shader.uniforms.crayonShoreMap=shoreUniform;
    shader.uniforms.crayonShoreBounds=shoreBoundsUniform;
    shader.fragmentShader=shader.fragmentShader.replace(
@@ -210,20 +222,22 @@ export function installCrayonTerrain({THREE,terrainMaterial,trailMat,waterMeshes
       '#include <common>','#include <common>\nvarying vec3 crayonWaterWorld;');
     const overlay=String.raw`
       vec3 handmadeWater=crayonTile(crayonWaterWorld.xz*.22,vec2(1.0,0.0));
+      ${artStyle==='tiny-swords'?String.raw`vec3 gameWater=texture2D(tinyWaterSwatch,crayonWaterWorld.xz*.15).rgb;
+      handmadeWater=mix(handmadeWater,gameWater,.62);`:''}
       diffuseColor.rgb=mix(diffuseColor.rgb,handmadeWater,.88);
     `;
     shader.fragmentShader=shader.fragmentShader.replace(
       '#include <roughnessmap_fragment>',overlay+'\n#include <roughnessmap_fragment>');
    }
   };
-  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v8';
+  material.customProgramCacheKey=()=>oldKey()+':handmade-crayon-'+kind+'-v9-'+artStyle;
   material.needsUpdate=true;
  }
  decorate(terrainMaterial,'terrain');
  decorate(trailMat,'path');
  for(const mesh of waterMeshes)decorate(mesh.material,'water');
  return {name:'continuous-frameless-handmade-crayon',atlas:'96-to-64-pixel source swatches',
-   sourceArt:'user-supplied-seamless-crayon-grass',grassTexture:'crayon-grass-seamless.webp',grassCoverage:.98,physicalMapChanged:false,
+   sourceArt:artStyle==='tiny-swords'?'Pixel Frog Tiny Swords user-provided pack':'user-supplied-seamless-crayon-grass',grassTexture:artStyle==='tiny-swords'?'tiny-ground.webp':'crayon-grass-seamless.webp',grassCoverage:.98,physicalMapChanged:false,
    brownBorders:false,seamlessSampling:true,water:true,grass:true,stone:true,soil:true,
    shoreline:true,shorelinePixels,shorelineMaskResolution:shoreSize,
    mattePigmentGrade:true,grassSaturationFactor:.75,stoneGlaze:.21};
