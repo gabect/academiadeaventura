@@ -1,10 +1,16 @@
-name: Diorama classic camera and original skeleton WebGL QA
+name: Diorama classic camera + Tiny Swords scenery WebGL QA
 on:
   push:
     branches: [main]
     paths:
       - 'diorama/index.html'
       - 'diorama/classic-camera.mjs'
+      - 'diorama/tiny-swords-overworld.mjs'
+      - 'diorama/crayon-terrain.mjs'
+      - 'diorama/assets/tiny-overworld.webp'
+      - 'diorama/assets/tiny-ground.webp'
+      - 'diorama/assets/tiny-water.webp'
+      - 'tests/diorama-tiny-swords.mjs'
       - 'tests/diorama-classic-camera.mjs'
       - 'diorama/personaje-3d.html'
       - 'tests/diorama-stylized-characters.mjs'
@@ -35,6 +41,9 @@ jobs:
           node --check diorama/classic-camera.mjs
           node --check tests/diorama-classic-camera.mjs
           node tests/diorama-classic-camera.mjs
+          node --check diorama/tiny-swords-overworld.mjs
+          node --check diorama/crayon-terrain.mjs
+          node tests/diorama-tiny-swords.mjs
       - name: Verify original skeleton in desktop and mobile browsers
         run: |
           python3 -m http.server 8765 >/tmp/diorama-http.log 2>&1 &
