@@ -172,6 +172,12 @@ export function createWorld(seed=WORLD.seed){
    if(zone==='east'&&pondAt(x,y,22))continue;
    if(Math.abs(x-riverCenterAt(y))<62||avoidRoad(x,y,rad+30)||
     nearLandmark(x,y,rad+55))continue;
+   // Keep actual building walls, entrance approaches and village squares clear.
+   if(VILLAGE_BUILDINGS.some(h=>{
+    const v=cottageWalls(h);
+    return x>v.left-rad-26&&x<v.right+rad+26&&
+     y>v.roofTop-rad-14&&y<v.bottom+rad+42;
+   }))continue;
    if(objects.some(o=>Math.hypot(o.x-x,o.y-y)<o.radius+rad+4))continue;
    objects.push({id:objects.length,kind,zone,x:Math.round(x),y:Math.round(y),
     radius:rad,variant:Math.floor(rand()*variants),scale:.83+rand()*.37,
