@@ -6,7 +6,7 @@
  */
 import {
  WORLD,boundaries,terrainAt,regionAt,RIVER,BRIDGES,BOARDWALKS,
- PATHS,LANDMARKS,SWAMP_POOLS
+ PATHS,LANDMARKS,SWAMP_POOLS,VILLAGE_BUILDINGS,HERO_VISUAL
 } from './nuevo-mundo-model.mjs';
 const PI=Math.PI,TAU=2*PI;
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
@@ -246,17 +246,26 @@ function drawRiver(c){
 }
 function drawBridge(c,bridge){
  const {x,y,w,h}=bridge;
+ // Walkable east-west bridge with deck wide enough for a 2D hero.
  c.save();c.translate(x,y);
- rounded(c,-w/2-4,-h/2-6,w+8,h+12,7,'#4f4b35','#6c654e');
- rounded(c,-w/2,-h/2,w,h,4,'#b7864f','#4f4c38');
- for(let dx=-w/2+7;dx<w/2;dx+=13){
-  c.strokeStyle='#684e38aa';c.lineWidth=2;
-  c.beginPath();c.moveTo(dx,-h/2+3);c.lineTo(dx,h/2-3);c.stroke();
-  oval(c,dx,-h/2+6,2,2,'#d0ab73');
+ rounded(c,-w/2-8,-h/2-9,w+16,h+18,7,'#4a493d','#344b45');
+ rounded(c,-w/2-3,-h/2-2,w+6,h+4,3,'#b98b57','#694b35');
+ for(let dx=-w/2+5;dx<w/2;dx+=12){
+  c.fillStyle=(Math.floor(dx/12)%3)?'#c6a172':'#a77b4e';
+  c.fillRect(dx,-h/2+1,10,h-2);
+  c.strokeStyle='#6e5239c5';c.lineWidth=1.2;
+  c.beginPath();c.moveTo(dx+10,-h/2+2);c.lineTo(dx+10,h/2-2);c.stroke();
  }
- c.fillStyle='#674f38';
- for(const xx of [-w/2+7,w/2-7])for(const yy of [-h/2-7,h/2+7])
-  oval(c,xx,yy,5.2,5.2,'#594b35');
+ for(const side of [-1,1]){
+  const railY=side*(h/2+5);
+  c.strokeStyle='#3d554b';c.lineWidth=5;
+  c.beginPath();c.moveTo(-w/2+5,railY);c.lineTo(w/2-5,railY);c.stroke();
+  c.strokeStyle='#dbb583';c.lineWidth=3;
+  c.beginPath();c.moveTo(-w/2+5,railY-3);c.lineTo(w/2-5,railY-3);c.stroke();
+  for(let xx=-w/2+6;xx<=w/2-5;xx+=22){
+   rounded(c,xx-4,railY-7,8,14,2,'#6c543a','#3b4942');
+  }
+ }
  c.restore();
 }
 function drawBoardwalk(c,b){
@@ -432,19 +441,16 @@ function drawLandmark(c,l,time){
   c.closePath();fill(c,'#9c8e5e');
   rounded(c,-6,-16,14,25,3,'#504a35');
  }else if(l.kind==='village'){
-  // Cluster of walkable lanes and distinct small fishing cottages.
-  drawHouse(c,-100,-18,.86,'#c9a565');
-  drawHouse(c,15,-52,1.03,'#d4b166');
-  drawHouse(c,112,-14,.85,'#c9a05d');
-  drawHouse(c,0,68,.80,'#bea069');
-  // Fish racks and crates are decorative but distinct from the roads.
-  for(const xx of [-80,82]){
+  // Square and fishing racks. Cottages are separately positioned geometry.
+  oval(c,0,14,81,37,'#dbc18b88',.64);
+  rounded(c,-19,-13,38,26,4,'#cba36a','#6f593e');
+  rounded(c,-5,-22,10,10,2,'#68806a');
+  for(const xx of [-78,61]){
    c.strokeStyle='#72563d';c.lineWidth=4;
-   c.beginPath();c.moveTo(xx,45);c.lineTo(xx,9);
-   c.lineTo(xx+38,9);c.lineTo(xx+38,45);c.stroke();
-   for(let i=0;i<4;i++)oval(c,xx+7+i*8,23,3.3,9,'#73a5a9');
+   c.beginPath();c.moveTo(xx,53);c.lineTo(xx,18);
+   c.lineTo(xx+32,18);c.lineTo(xx+32,53);c.stroke();
+   for(let i=0;i<3;i++)oval(c,xx+7+i*8,31,3.3,9,'#73a5a9');
   }
-  rounded(c,-15,111,30,19,3,'#a17d55','#645039');
  }else if(l.kind==='dock'){
   // Posts and boards extend south into the shallow southern sea visually.
   rounded(c,-27,-43,54,123,3,'#af8d5d','#675137');
@@ -465,7 +471,7 @@ function drawHero(c,p,time){
  const phase=time*(running?11:7.8),step=moving?Math.sin(phase):0;
  c.save();c.translate(x,y);
  const side=dirX<-.3?-1:1,back=dirY<-.36;
- c.scale(side,1);
+ c.scale(side*HERO_VISUAL.height/80,HERO_VISUAL.height/80);
  oval(c,0,5,16,6,'#263c334b');
  // Boots, short pants, body and head: independent 2D shapes with clean ink.
  for(const k of [-1,1]){
@@ -518,10 +524,12 @@ export function createOverworldRenderer(canvas,model){
  function buildPanorama(){
   pano.drawImage(terrain,0,0);
   const all=model.objects.map(obj=>({y:obj.y,kind:'object',obj}))
-   .concat(LANDMARKS.map(obj=>({y:obj.y,kind:'landmark',obj})));
+   .concat(LANDMARKS.map(obj=>({y:obj.y,kind:'landmark',obj})))
+   .concat(VILLAGE_BUILDINGS.map(obj=>({y:obj.y,kind:'cottage',obj})));
   all.sort((a,b)=>a.y-b.y);
   for(const p of all){
    if(p.kind==='object')drawObject(pano,image,p.obj);
+   else if(p.kind==='cottage')drawHouse(pano,p.obj.x,p.obj.y,p.obj.scale,p.obj.roof);
    else drawLandmark(pano,p.obj,0);
   }
   panoramaReady=true;
@@ -560,6 +568,13 @@ export function createOverworldRenderer(canvas,model){
    for(const o of model.objects){
     if(o.kind!=='tree'||o.y<=player.y||o.y>player.y+48)continue;
     if(Math.abs(o.x-player.x)<41)drawObject(ctx,image,o);
+   }
+   // Roofs/walls obscure a hero walking behind a house, as in classic
+   // top-down games. In front of the door, the hero remains visible.
+   for(const hut of VILLAGE_BUILDINGS){
+    if(player.y>=hut.y||player.y<hut.y-100*hut.scale)continue;
+    if(Math.abs(player.x-hut.x)<55*hut.scale)
+     drawHouse(ctx,hut.x,hut.y,hut.scale,hut.roof);
    }
   }
   ctx.restore();
