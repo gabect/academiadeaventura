@@ -61,12 +61,24 @@ import {installHandDrawnStage} from './diorama/handdrawn-stage.mjs?v=2';
 import {installExactUserSprites} from './diorama/exact-user-sprites.mjs?v=7';
 import {installCrayonTerrain} from './diorama/crayon-terrain.mjs?v=8';
 import {worldWalkDirection,faceWalkDirection} from './diorama/directional-facing.mjs?v=1';
+import {CLASSIC_CAMERA,classicFrustum,classicOffset} from './diorama/classic-camera.mjs?v=1';
 const DIORAMA=true;
 // El manifiesto se consulta sin caché y solo recarga al quedar libre de una misión.
 const BUILD='0.61.0';
 // First reversible art study. Default scene remains unchanged.
 const MOUNTAIN_STUDIO=true; // Same terrain + exact ecology coordinates; images replaced
 const STUDIO_CI=new URLSearchParams(location.search).has('ci-smoke');
+const CAMERA_MODE=new URLSearchParams(location.search).get('camera');
+const CLASSIC_VIEW=CAMERA_MODE!=='third-person';
+document.body.classList.toggle('classic-camera',CLASSIC_VIEW);
+window.__classicCamera={
+ enabled:CLASSIC_VIEW,
+ projection:CLASSIC_VIEW?'orthographic':'perspective',
+ heading:CLASSIC_VIEW?CLASSIC_CAMERA.heading:Math.PI,
+ pitch:CLASSIC_VIEW?CLASSIC_CAMERA.pitch:.62,
+ viewHeight:CLASSIC_VIEW?CLASSIC_CAMERA.verticalWorldUnits:undefined,
+ originalMapPreserved:true,originalSkeletonPreserved:true
+};
 // Shared geometry/material must exist before the older field-tree constructor.
 const studioOrganic=MOUNTAIN_STUDIO?{
  ...createStudioTreeImpostors(THREE),
@@ -89,14 +101,18 @@ const ENABLE_RAGDOLL=false;
 async function checkUpdate(){try{const response=await fetch('./version.json?check='+Date.now(),{cache:'no-store'});if(!response.ok)return;const data=await response.json();if(data.version&&data.version!==BUILD)pendingBuild=data.version;}catch(e){/* conexión temporalmente no disponible */}}
 // Diorama is an isolated snapshot; never auto-update from the original game.
 const scene=new THREE.Scene();scene.background=new THREE.Color('#a9cad1');scene.fog=new THREE.Fog('#a9cad1',56,145);
-const camera=new THREE.PerspectiveCamera(42,16/9,.08,270);let renderer;
+const camera=CLASSIC_VIEW?
+ new THREE.OrthographicCamera(-17,17,10,-10,.08,400):
+ new THREE.PerspectiveCamera(42,16/9,.08,270);
+camera.name=CLASSIC_VIEW?'classic-overworld-orthographic':'legacy-third-person-perspective';
+let renderer;
 try{renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'low-power'});}
 catch(error){
  const notice=document.createElement('div');notice.setAttribute('role','alert');
  notice.textContent='Adventure Academy '+BUILD+': WebGL no está disponible en este navegador. Activa la aceleración gráfica o abre el juego en otro navegador compatible.';
  notice.style.cssText='position:fixed;inset:30% 12% auto;padding:24px;background:#f3f6ee;color:#233b30;border-radius:12px;z-index:100;font:18px/1.5 sans-serif';document.body.append(notice);throw error;
 }
-renderer.setPixelRatio(STUDIO_CI?.82:Math.min(devicePixelRatio,1.25));renderer.shadowMap.enabled=!STUDIO_CI;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
+renderer.setPixelRatio(STUDIO_CI?.82:Math.min(devicePixelRatio,CLASSIC_VIEW?CLASSIC_CAMERA.pixelRatioCap:1.25));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=!STUDIO_CI;renderer.shadowMap.type=THREE.PCFSoftShadowMap;document.body.prepend(renderer.domElement);
 // PC-style third-person chase camera with mouse-look + arrow-key control.
 // The earlier fixed world is preserved in the historical v0.37.0 archive.
 // AC horizon deformation remains optional and never alters input or physics.
@@ -104,7 +120,7 @@ const ZOOM_MIN=.65,ZOOM_MAX=2.25;
 const zoomInButton=document.getElementById('zoomIn');
 const zoomOutButton=document.getElementById('zoomOut');
 let cameraZoom=1,cameraReady=false;
-let cameraHeading=Math.PI,cameraPitch=.62;
+let cameraHeading=Math.PI,cameraPitch=CLASSIC_VIEW?CLASSIC_CAMERA.pitch:.62;
 // Fixed camera heading, adjustable vertical pitch, smooth X/Y/Z follow and zoom.
 let cameraRailY=null;
 const cameraRailOffset=new THREE.Vector3();
@@ -117,26 +133,38 @@ const horizonViewButton=document.getElementById('viewModeButton');
 const cameraHint=document.getElementById('cameraHint');
 const isPointerLocked=()=>document.pointerLockElement===renderer.domElement;
 function updateCameraHint(){
+ if(CLASSIC_VIEW){
+  cameraHint.textContent=matchMedia('(pointer:coarse)').matches?
+   'Cámara clásica fija · Pellizca: zoom':
+   'Cámara clásica fija · Rueda: zoom · WASD: 8 direcciones';
+  return;
+ }
  cameraHint.textContent=matchMedia('(pointer:coarse)').matches?
   'Arrastra vertical: inclinar · Pellizca: zoom':
   'Arrastre derecho vertical / ↑↓: inclinar · Rueda: zoom';
 }
 
 function setHorizonView(enabled){
- rollingHorizon=!!enabled;
- horizonViewButton.textContent=rollingHorizon?'AC':'3P';
- horizonViewButton.title=rollingHorizon?
-  'Curvatura AC activa. Toca para terreno sin curvatura':
-  'Cámara 3ª persona. Toca para activar el horizonte curvo';
- horizonViewButton.setAttribute('aria-pressed',String(rollingHorizon));
+ rollingHorizon=!CLASSIC_VIEW&&!!enabled;
+ horizonViewButton.textContent=CLASSIC_VIEW?'3P':'CL';
+ horizonViewButton.title=CLASSIC_VIEW?
+  'Cambiar a la cámara anterior en tercera persona':
+  'Volver a la cámara clásica elevada';
+ horizonViewButton.setAttribute('aria-pressed',String(CLASSIC_VIEW));
+ horizonViewButton.setAttribute('aria-label',horizonViewButton.title);
  updateCameraHint();
 }
-horizonViewButton.addEventListener('click',()=>setHorizonView(!rollingHorizon));
+horizonViewButton.addEventListener('click',()=>{
+ const target=new URL(location.href);
+ if(CLASSIC_VIEW)target.searchParams.set('camera','third-person');
+ else target.searchParams.delete('camera');
+ location.assign(target.href);
+});
 document.addEventListener('pointerlockchange',updateCameraHint);
-setHorizonView(true);
+setHorizonView(!CLASSIC_VIEW);
 function rotateThirdPersonCamera(deltaX,deltaY){
- // Only tilt vertically. World heading and stage-flat orientation stay fixed.
- if(!Number.isFinite(deltaY)||!deltaY)return;
+ // The classic framing is intentionally fixed: no mouse-driven orbit/pitch.
+ if(CLASSIC_VIEW||!Number.isFinite(deltaY)||!deltaY)return;
  lastCameraManualAt=performance.now();
  cameraPitch=THREE.MathUtils.clamp(cameraPitch+deltaY*MOUSE_SENSITIVITY,
   CAMERA_MIN_PITCH,CAMERA_MAX_PITCH);
@@ -168,6 +196,7 @@ function setCameraZoom(next){
  cameraZoom=THREE.MathUtils.clamp(next,ZOOM_MIN,ZOOM_MAX);
  zoomInButton.disabled=cameraZoom>=ZOOM_MAX-.001;
  zoomOutButton.disabled=cameraZoom<=ZOOM_MIN+.001;
+ if(CLASSIC_VIEW&&renderer)resize();
 }
 zoomInButton.addEventListener('click',()=>{
  recordCameraChange();setCameraZoom(cameraZoom*1.25);
@@ -244,7 +273,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture']){
   if(cameraPointers.size<2){pinchDistance=0;pinchRecorded=false;}
  });
 }
-setCameraZoom(.94);
+setCameraZoom(CLASSIC_VIEW?1:.94);
 // Matte paper illumination, not overexposed studio lights.
 scene.add(new THREE.HemisphereLight(0xf4f3e7,0x858d70,1.55));
 const sun=new THREE.DirectionalLight(0xffeedc,1.75);sun.position.set(-7,15,9);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-33;sun.shadow.camera.right=33;sun.shadow.camera.top=33;sun.shadow.camera.bottom=-33;scene.add(sun);scene.add(sun.target);
@@ -3554,6 +3583,10 @@ function thirdPersonCameraClearance(target,desired){
  return desired.lerp(target,1-lastClear);
 }
 function followPlayerCamera(dt){
+ if(CLASSIC_VIEW){
+  cameraHeading=CLASSIC_CAMERA.heading;
+  cameraPitch=CLASSIC_CAMERA.pitch;
+ }
  // A ladder faces a fixed wall: gradually follow its direction from
  // behind unless the player has manually orbited within the last 900ms.
  if(false&&LADDER_STATE.active&&performance.now()-lastCameraManualAt>900){
@@ -3565,7 +3598,7 @@ function followPlayerCamera(dt){
  CURVED_HORIZON.direction.value.set(Math.sin(cameraHeading),
   Math.cos(cameraHeading));
  CURVED_HORIZON.amount.value=THREE.MathUtils.damp(
-  CURVED_HORIZON.amount.value,rollingHorizon?.0168:0,4,dt);
+  CURVED_HORIZON.amount.value,CLASSIC_VIEW?0:rollingHorizon?.0168:0,4,dt);
  const ground=groundTopAt(player.position.x,player.position.z);
  const head=LADDER_STATE.active?1.13:crawling?.58:crouched?.98:1.44;
  const centerY=LADDER_STATE.active?player.position.y+head:
@@ -3575,12 +3608,19 @@ function followPlayerCamera(dt){
  // Follow the traversable surface elevation on ramps, hills and mountain
  // paths, using a damped vertical rail to avoid abrupt steps and jitter.
  cameraRailY=THREE.MathUtils.damp(cameraRailY,centerY,5.0,dt);
- // X/Y/Z tracking with fixed heading; vertical pitch is user-adjustable.
+ // Parallel projection reads the map like a crisp overhead adventure.
+ // Original 3P track remains available via ?camera=third-person.
  cameraTarget.set(player.position.x,cameraRailY,player.position.z);
- const distance=10.7/cameraZoom;
- const horizontal=distance*Math.cos(cameraPitch);
- cameraRailOffset.set(-Math.sin(cameraHeading)*horizontal,
-  Math.sin(cameraPitch)*distance,-Math.cos(cameraHeading)*horizontal);
+ if(CLASSIC_VIEW){
+  cameraTarget.z-=CLASSIC_CAMERA.lookAhead;
+  const offset=classicOffset();
+  cameraRailOffset.set(offset.x,offset.y,offset.z);
+ }else{
+  const distance=10.7/cameraZoom;
+  const horizontal=distance*Math.cos(cameraPitch);
+  cameraRailOffset.set(-Math.sin(cameraHeading)*horizontal,
+   Math.sin(cameraPitch)*distance,-Math.cos(cameraHeading)*horizontal);
+ }
  cameraDesired.copy(cameraTarget).add(cameraRailOffset);
  // A theater rail does not dodge scenery by changing its depth or elevation.
  // Keep the camera on its fixed horizontal track.
@@ -4706,8 +4746,8 @@ function animate(){
  if(keys.has('KeyS'))forward-=1;
  if(keys.has('KeyA'))right-=1;
  if(keys.has('KeyD'))right+=1;
- // Arrow up/down tilt. Left/right never rotate the fixed theater stage.
- if(!challengeOpen){
+ // Classic top-down view never rotates or tilts with keyboard input.
+ if(!CLASSIC_VIEW&&!challengeOpen){
   const tilt=Number(keys.has('ArrowDown'))-Number(keys.has('ArrowUp'));
   if(tilt){
    lastCameraManualAt=performance.now();
@@ -4757,5 +4797,13 @@ function animate(){
  if(STUDIO_CI){renderedStudioCI++;window.__studioCIReady=renderedStudioCI>=3;}
 }
 if(STUDIO_CI)window.__studioCIRefresh=()=>renderer.render(scene,camera);
-function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}addEventListener('resize',resize);resize();animate();
+function resize(){
+ if(CLASSIC_VIEW){
+  const bounds=classicFrustum(innerWidth,innerHeight,cameraZoom);
+  camera.left=bounds.left;camera.right=bounds.right;
+  camera.top=bounds.top;camera.bottom=bounds.bottom;
+ }else camera.aspect=innerWidth/innerHeight;
+ camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
+}
+addEventListener('resize',resize);resize();animate();
 </script></body></html>
