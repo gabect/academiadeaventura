@@ -82,12 +82,30 @@ export const LANDMARKS=Object.freeze([
  {id:'muelle',name:'Muelle de los Pescadores',x:1900,y:1500,r:40,kind:'dock',collides:false,message:'Las redes de pesca se secan junto al muelle.'},
  {id:'refugio',name:'Refugio de las Marismas',x:1980,y:605,r:35,kind:'swamp-hut',collides:true,message:'Las marismas esconden caminos sobre el agua.'}
 ]);
+/** Actual cottages—not a map marker. Coordinates are feet at the entrance facade. */
 export const VILLAGE_BUILDINGS=Object.freeze([
- {x:1690,y:1328,rx:31,ry:32},
- {x:1805,y:1294,rx:37,ry:36},
- {x:1902,y:1332,rx:31,ry:32},
- {x:1790,y:1414,rx:29,ry:29}
+ {id:'casa-redes',name:'Casa de las Redes',x:1635,y:1262,scale:1.56,roof:'#c49c5e'},
+ {id:'casa-capitan',name:'Casa del Capitán',x:1790,y:1262,scale:1.67,roof:'#cead69'},
+ {id:'casa-barcaza',name:'Casa de la Barca',x:1950,y:1262,scale:1.56,roof:'#b8855b'},
+ {id:'casa-sal',name:'Casa de la Sal',x:1705,y:1440,scale:1.50,roof:'#c6a46a'},
+ {id:'casa-puerto',name:'Casa del Puerto',x:1918,y:1440,scale:1.48,roof:'#a9a477'}
 ]);
+export const HERO_VISUAL=Object.freeze({height:64,bodyWidth:24,footprintRadius:WORLD.playerRadius});
+export function cottageWalls(hut){
+ const s=hut.scale;
+ return {left:hut.x-31*s,right:hut.x+31*s,
+  top:hut.y-41*s,bottom:hut.y+12*s,
+  doorX:hut.x,doorY:hut.y+14*s,
+  roofTop:hut.y-91*s,roofWidth:96*s};
+}
+export function nearCottageDoor(x,y,distance=43){
+ let nearest=null,best=distance;
+ for(const hut of VILLAGE_BUILDINGS){
+  const h=cottageWalls(hut),d=Math.hypot(x-h.doorX,y-(h.doorY+13));
+  if(d<best){nearest=hut;best=d;}
+ }
+ return nearest;
+}
 export const SWAMP_POOLS=Object.freeze([
  [1614,460,75,50],[1810,445,80,63],[2040,454,70,54],
  [1595,580,63,58],[1780,585,95,75],[2080,620,73,65],
@@ -195,7 +213,9 @@ export function blockedReason(x,y,model,{radius=WORLD.playerRadius}={}){
   if((x-o.x)**2+(y-o.y)**2<r*r)return 'obstaculo-'+o.kind;
  }
  for(const hut of VILLAGE_BUILDINGS){
-  if(Math.abs(x-hut.x)<hut.rx+radius&&Math.abs(y-hut.y)<hut.ry+radius)
+  const wall=cottageWalls(hut);
+  if(x+radius>wall.left&&x-radius<wall.right&&
+    y+radius>wall.top&&y-radius<wall.bottom)
    return 'casa-villa-costera';
  }
  for(const l of LANDMARKS){
