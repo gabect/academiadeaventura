@@ -3,6 +3,12 @@ import fs from 'node:fs';
 import {chromium} from 'playwright';
 const folder='artifacts/mundo-sprites';
 fs.mkdirSync(folder,{recursive:true});
+async function saveFrame(page,file){
+  const png=await page.evaluate(()=>window.__spriteWorld.screenshot());
+  assert(png.startsWith('data:image/png;base64,'));
+  fs.writeFileSync(folder+'/'+file+'.png',
+    Buffer.from(png.slice('data:image/png;base64,'.length),'base64'));
+}
 const browser=await chromium.launch({
   headless:true,args:['--use-angle=swiftshader','--disable-dev-shm-usage','--no-sandbox']
 });
@@ -48,7 +54,7 @@ try{
         return colors.size;
       });
       assert(sample>=10,'Frame appears monochrome or unrendered: '+sample);
-      await page.screenshot({path:folder+'/'+device.id+'-village.png'});
+      await saveFrame(page,''+device.id+'-village');
       if(device.mobile){
         assert(await page.locator('#stick').isVisible());
         assert(await page.locator('#dash').isVisible());
@@ -60,7 +66,7 @@ try{
         assert(after.y<before.y-10,'WASD movement must be functional');
         await page.keyboard.press('m');
         assert.equal(await page.evaluate(()=>window.__spriteWorld.overview),true);
-        await page.screenshot({path:folder+'/map-overview.png'});
+        await saveFrame(page,'map-overview');
         await page.keyboard.press('m');
         assert.equal(await page.evaluate(()=>window.__spriteWorld.overview),false);
         const house=await page.evaluate(()=>{
@@ -70,11 +76,11 @@ try{
         });
         assert(house.wall?.startsWith('pared-de-'));
         assert.equal(house.door,true);
-        await page.screenshot({path:folder+'/house-entrance.png'});
+        await saveFrame(page,'house-entrance');
         for(const bridge of state.bridges?await page.evaluate(()=>window.__spriteWorld.bridges):[]){
           assert.equal(await page.evaluate(b=>window.__spriteWorld.teleport(b.x,b.y),bridge),true);
         }
-        await page.screenshot({path:folder+'/bridge-scale.png'});
+        await saveFrame(page,'bridge-scale');
       }
       assert.deepEqual(errors,[],'Browser console/page errors');
       console.log('PASS',device.id,state.houses+' houses, '+state.props+' scenery items');
