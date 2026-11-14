@@ -141,7 +141,7 @@ function drawGround(c,images,model,x0,y0,x1,y1){
       terrainCache.set(key,chunk);
       if(terrainCache.size>32)terrainCache.delete(terrainCache.keys().next().value);
     }
-    c.drawImage(chunk,px,py);
+    c.drawImage(chunk,px-1.3,py-1.3,CHUNK_SIZE+2.6,CHUNK_SIZE+2.6);
   }
 }
 
