@@ -4,6 +4,7 @@ import {chromium} from 'playwright';
 const folder='artifacts/mundo-sprites';
 fs.mkdirSync(folder,{recursive:true});
 async function saveFrame(page,file){
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
   const png=await page.evaluate(()=>window.__spriteWorld.screenshot());
   assert(png.startsWith('data:image/png;base64,'));
   fs.writeFileSync(folder+'/'+file+'.png',
