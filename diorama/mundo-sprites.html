@@ -77,7 +77,7 @@ import {createSpriteRenderer} from './mundo-sprites-render.mjs';
 const model=makeWorld();
 const painter=createSpriteRenderer(document.getElementById('game'),model);
 const player={...WORLD.spawn,facingX:0,facingY:1,direction:'front',moving:false,running:false};
-const camera={x:player.x,y:player.y,zoom:matchMedia('(pointer:coarse)').matches?.83:.92};
+const camera={x:player.x,y:player.y,zoom:matchMedia('(pointer:coarse)').matches ? .56 : .78};
 const keys=new Set(),stick={x:0,y:0};
 const knob=document.getElementById('knob'),region=document.getElementById('region'),
   banner=document.getElementById('notice'),mapBtn=document.getElementById('map'),
