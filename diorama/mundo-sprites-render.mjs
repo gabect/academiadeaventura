@@ -36,7 +36,7 @@ const terrainRects = {
   [TILE.WATER]:'waterTile',[TILE.PATH]:'sandTile',
   [TILE.MARSH]:'grassTile',[TILE.SHALLOW]:'waterTile'
 };
-function drawGround(c,images,model,x0,y0,x1,y1){
+function drawGroundTiles(c,images,model,x0,y0,x1,y1){
   const t=WORLD.tile;
   const col0=Math.max(0,Math.floor(x0/t)-2),col1=Math.min(WORLD.columns-1,Math.ceil(x1/t)+2);
   const row0=Math.max(0,Math.floor(y0/t)-2),row1=Math.min(WORLD.rows-1,Math.ceil(y1/t)+2);
@@ -81,6 +81,31 @@ function drawGround(c,images,model,x0,y0,x1,y1){
     }
   }
 }
+
+const CHUNK_SIZE=512;
+const terrainCache=new Map();
+function drawGround(c,images,model,x0,y0,x1,y1){
+  if(!images.terrain)return;
+  const c0=Math.max(0,Math.floor(x0/CHUNK_SIZE));
+  const c1=Math.min(Math.ceil(WORLD.width/CHUNK_SIZE)-1,Math.floor(x1/CHUNK_SIZE));
+  const r0=Math.max(0,Math.floor(y0/CHUNK_SIZE));
+  const r1=Math.min(Math.ceil(WORLD.height/CHUNK_SIZE)-1,Math.floor(y1/CHUNK_SIZE));
+  for(let row=r0;row<=r1;row++)for(let col=c0;col<=c1;col++){
+    const key=row*100+col,px=col*CHUNK_SIZE,py=row*CHUNK_SIZE;
+    let chunk=terrainCache.get(key);
+    if(!chunk){
+      chunk=document.createElement('canvas');
+      chunk.width=CHUNK_SIZE;chunk.height=CHUNK_SIZE;
+      const g=chunk.getContext('2d',{alpha:false});
+      g.translate(-px,-py);
+      drawGroundTiles(g,images,model,px,py,px+CHUNK_SIZE,py+CHUNK_SIZE);
+      terrainCache.set(key,chunk);
+      if(terrainCache.size>32)terrainCache.delete(terrainCache.keys().next().value);
+    }
+    c.drawImage(chunk,px-.2,py-.2,CHUNK_SIZE+.4,CHUNK_SIZE+.4);
+  }
+}
+
 function drawBridge(c,image,b){
   const name=b.orientation==='vertical'?'bridgeVertical':'bridgeHorizontal';
   drawRegion(c,image,TINY_RECTS[name],b.x-b.w/2,b.y-b.h/2,b.w,b.h);
@@ -151,7 +176,7 @@ export function createSpriteRenderer(canvas,model){
   const ready=Promise.all(Object.entries(assets).map(async ([key,src])=>{
     try{images[key]=await loadImage(src);status.loaded.push(key);}
     catch(e){status.failed.push(key+': '+e.message);}
-  })).then(()=>{status.ready=!!images.terrain&&!!images.character&&!!images.trees;return status;});
+  })).then(()=>{terrainCache.clear();status.ready=!!images.terrain&&!!images.character&&!!images.trees;return status;});
   let width=0,height=0,dpr=1;
   function resize(){
     width=window.innerWidth;height=window.innerHeight;
