@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+<meta name="theme-color" content="#122d2c" />
+<meta name="description" content="Prototipo jugable: mundo abierto 3D en tercera persona para una futura plataforma educativa." />
+<title>Open World Lab · Exploración 3D</title>
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<canvas id="world" aria-label="Mundo 3D explorable en tercera persona"></canvas>
+<div id="overlay">
+  <header class="hud top-left"><span class="eyebrow">OPEN WORLD LAB <span class="pill">ALPHA 0.1</span></span><strong>Valle de los Pinos</strong><span id="region">Villa Central</span></header>
+  <div class="hud top-right"><span id="status">Cargando mundo…</span><span class="subtitle" id="coords"></span></div>
+  <div class="crosshair" aria-hidden="true"></div>
+  <div class="prompt" id="prompt" role="status" aria-live="polite"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="bottom-left"><span class="keys">W A S D</span> Caminar <span class="sep">·</span> <span class="keys">SHIFT</span> Correr <span class="sep">·</span> <span class="keys">ESPACIO</span> Saltar <span class="sep">·</span> Mouse: cámara <span class="sep">·</span> <span class="keys">E</span> Interactuar</div>
+  <div class="bottom-right"><button id="reset" type="button" title="Volver al punto inicial">↺ Reiniciar posición</button><button id="help" type="button">? Ayuda</button></div>
+  <div class="touch-ui" id="touchUI"><div id="joystick"><div id="knob"></div></div><div class="touch-actions"><button id="touchRun">CORRER</button><button id="touchJump">SALTAR</button><button id="touchE">E</button></div></div>
+  <div class="modal" id="helpModal" hidden><div class="modal-card"><button class="close" id="closeHelp" aria-label="Cerrar">×</button><span class="eyebrow">PRIMERA VERSIÓN</span><h2>Explora el mundo</h2><p>Camina por la villa, entra al bosque, sigue el río y cruza el puente. Este es un entorno 3D interactivo, no un mapa visto desde arriba.</p><p>En computadora: usa <b>WASD</b> para moverte, <b>Shift</b> para correr, <b>Espacio</b> para saltar y arrastra el mouse para girar la cámara. Presiona <b>E</b> al acercarte a un edificio señalado por su nombre.</p><p>En pantalla táctil: usa el joystick izquierdo y arrastra el lado derecho de la pantalla para girar la cámara.</p><p class="footnote">La progresión académica y las misiones pertenecen a la fase 2; aquí evaluamos la exploración y escala.</p></div></div>
+  <div class="loading" id="loading"><div class="load-card"><span class="eyebrow">ACADEMIA DE AVENTURA · LABORATORIO</span><h1>Un mundo para explorar</h1><p>Prototipo 3D en tercera persona</p><div class="progress"><div></div></div><span id="loadHint">Preparando el escenario…</span></div></div>
+</div>
+<script type="module" src="./world.mjs"></script>
+</body>
+</html>
