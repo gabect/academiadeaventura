@@ -19,7 +19,7 @@ export const RIVER = Object.freeze([
 export const BRIDGES = Object.freeze([
   {id:'puente-del-bosque',x:2410,y:1180,w:548,h:154,orientation:'horizontal'},
   {id:'puente-del-mercado',x:2200,y:2460,w:575,h:160,orientation:'horizontal'},
-  {id:'pasarela-del-pantano',x:4320,y:1520,w:154,h:404,orientation:'vertical'}
+  {id:'pasarela-del-pantano',x:4320,y:1520,w:154,h:820,orientation:'vertical'}
 ]);
 export const SWAMP_POOLS = Object.freeze([
   {x:3990,y:1370,rx:290,ry:190},
