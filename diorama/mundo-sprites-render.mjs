@@ -52,6 +52,11 @@ function drawGroundTiles(c,images,model,x0,y0,x1,y1){
     }else{
       drawRegion(c,images.terrain,TINY_RECTS[terrainRects[id]],dx,dy,s,s);
     }
+    if([TILE.GRASS,TILE.FOREST,TILE.DRY,TILE.MARSH,TILE.PATH].includes(id)){
+      c.save();c.globalAlpha=id===TILE.FOREST?.19:.14;
+      c.fillStyle=id===TILE.FOREST?'#3b6354':'#668255';
+      c.fillRect(dx,dy,s,s);c.restore();
+    }
     if(id===TILE.DRY){
       c.save();c.globalAlpha=Math.min(.24,.045+Math.max(0,y-2050)/600*.18);
       drawRegion(c,images.terrain,TINY_RECTS.sandTile,dx,dy,s,s);c.restore();
@@ -81,24 +86,38 @@ function drawGroundTiles(c,images,model,x0,y0,x1,y1){
     }
   }
 
-  // Roads remain tile-authoritative for collision/navigation, but their
-  // texture is masked onto continuous rounded corridors. No path geometry
-  // is used as a 3D world mesh or building primitive.
+  // All intersecting routes are stroked as ONE silhouette, avoiding
+  // darker rectangular overlaps where roads meet or split.
   if(images.terrain){
-    const rect=TINY_RECTS.sandTile;
-    const stamp=document.createElement('canvas');
-    stamp.width=rect[2];stamp.height=rect[3];
-    stamp.getContext('2d').drawImage(images.terrain,...rect,0,0,rect[2],rect[3]);
-    const pattern=c.createPattern(stamp,'repeat');
-    c.save();c.lineCap='round';c.lineJoin='round';
-    for(const route of ROADS){
-      c.beginPath();
-      c.moveTo(route[0][0],route[0][1]);
-      for(let i=1;i<route.length;i++)c.lineTo(route[i][0],route[i][1]);
-      c.strokeStyle='#a59b72';c.globalAlpha=.34;c.lineWidth=106;c.stroke();
-      c.strokeStyle=pattern;c.globalAlpha=.86;c.lineWidth=88;c.stroke();
+    const px=Math.floor(x0/512)*512,py=Math.floor(y0/512)*512;
+    function roadMask(width){
+      const mask=document.createElement('canvas');
+      mask.width=512;mask.height=512;
+      const g=mask.getContext('2d');
+      g.translate(-px,-py);
+      g.beginPath();
+      for(const route of ROADS){
+        g.moveTo(route[0][0],route[0][1]);
+        for(let i=1;i<route.length;i++)g.lineTo(route[i][0],route[i][1]);
+      }
+      g.lineCap='round';g.lineJoin='round';
+      g.lineWidth=width;g.strokeStyle='#fff';g.stroke();
+      return {mask,g};
     }
-    c.restore();
+    const shoulder=roadMask(102);
+    shoulder.g.globalCompositeOperation='source-in';
+    shoulder.g.fillStyle='#967c4b';
+    shoulder.g.fillRect(px,py,512,512);
+    c.save();c.globalAlpha=.25;c.drawImage(shoulder.mask,px,py);c.restore();
+    const road=roadMask(86);
+    const rect=TINY_RECTS.sandTile;
+    const tile=document.createElement('canvas');
+    tile.width=rect[2];tile.height=rect[3];
+    tile.getContext('2d').drawImage(images.terrain,...rect,0,0,rect[2],rect[3]);
+    road.g.globalCompositeOperation='source-in';
+    road.g.fillStyle=road.g.createPattern(tile,'repeat');
+    road.g.fillRect(px,py,512,512);
+    c.save();c.globalAlpha=.79;c.drawImage(road.mask,px,py);c.restore();
   }
 }
 
@@ -122,7 +141,7 @@ function drawGround(c,images,model,x0,y0,x1,y1){
       terrainCache.set(key,chunk);
       if(terrainCache.size>32)terrainCache.delete(terrainCache.keys().next().value);
     }
-    c.drawImage(chunk,px-.2,py-.2,CHUNK_SIZE+.4,CHUNK_SIZE+.4);
+    c.drawImage(chunk,px,py);
   }
 }
 
