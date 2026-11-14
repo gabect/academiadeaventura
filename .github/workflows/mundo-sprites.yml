@@ -1,0 +1,42 @@
+name: Sprite-only full-scale overworld QA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'diorama/mundo-sprites*'
+      - 'tests/mundo-sprites*'
+      - '.github/workflows/mundo-sprites.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  game-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax and actual-world topology
+        run: |
+          node --check diorama/mundo-sprites-model.mjs
+          node --check diorama/mundo-sprites-render.mjs
+          node --check diorama/mundo-sprites.html || true
+          node --check tests/mundo-sprites.test.mjs
+          node tests/mundo-sprites.test.mjs
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save --no-package-lock playwright
+          npx playwright install --with-deps chromium
+      - name: Render and play real scene in desktop/mobile Chromium
+        run: |
+          python3 -m http.server 8765 >/tmp/mundo-sprites-http.log 2>&1 &
+          node tests/mundo-sprites-browser.mjs
+      - name: Upload visual QA evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mundo-sprites-desktop-mobile-captures
+          path: artifacts/mundo-sprites/*.png
+          if-no-files-found: warn
