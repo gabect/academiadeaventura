@@ -6,7 +6,7 @@
 export const WORLD = Object.freeze({
   tile:64, columns:80, rows:60, width:5120, height:3840,
   playerRadius:15, heroHeight:80, seed:20261113,
-  spawn:Object.freeze({x:3760,y:2820}),
+  spawn:Object.freeze({x:3560,y:2680}),
   southernWade:8
 });
 export const TILE = Object.freeze({GRASS:0,FOREST:1,DRY:2,SAND:3,ROCK:4,CLIFF:5,
