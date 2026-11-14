@@ -118,16 +118,16 @@ export function makeTiles(){
   const arr=new Uint8Array(WORLD.rows*WORLD.columns);
   for(let row=0;row<WORLD.rows;row++)for(let col=0;col<WORLD.columns;col++){
     const x=(col+.5)*WORLD.tile,y=(row+.5)*WORLD.tile;
-    const n=noise(col,row),edge=mountainEdge(x);
+    const edge=mountainEdge(x);
     let type=TILE.GRASS;
     if(y<edge-50)type=TILE.ROCK;
     else if(y<edge+18)type=TILE.CLIFF;
     else if(x<westShore(y)-45||x>eastShore(y)+12||y>shoreY(x)+10)type=TILE.WATER;
     else if(x<westShore(y)+80)type=TILE.ROCK;
     else if(x>eastShore(y)-140||y>shoreY(x)-150)type=TILE.SAND;
-    else if(y>2050)type=n>.48?TILE.DRY:TILE.GRASS;
-    else if(y<1840)type=n>.24?TILE.FOREST:TILE.GRASS;
-    else if(x>3450)type=n>.35?TILE.MARSH:TILE.GRASS;
+    else if(x>3450&&y<2190)type=TILE.MARSH;
+    else if(y>2050)type=TILE.DRY;
+    else if(y<1840)type=TILE.FOREST;
     if(type!==TILE.WATER&&type!==TILE.ROCK&&type!==TILE.CLIFF){
       if(x>3500&&y<2160&&SWAMP_POOLS.some(p=>inPool(x,y,p)))
         type=TILE.WATER;
