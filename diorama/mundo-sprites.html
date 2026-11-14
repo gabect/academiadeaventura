@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#203e37">
+<title>Academia de Aventura · Mundo a escala</title>
+<meta name="description" content="Nuevo mundo a escala, construido con casas, puentes, árboles, texturas y personaje del kit de sprites.">
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#203e37;font:14px/1.4 system-ui,-apple-system,sans-serif}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:fixed;inset:0;pointer-events:none;color:#263f35}
+.panel{border:2px solid #385b47;border-radius:12px;background:#faf0d0;box-shadow:0 4px 0 #1c392b85}
+#top{position:absolute;top:10px;left:10px;display:flex;gap:8px;align-items:flex-start;max-width:65vw}
+#label{padding:9px 13px;min-width:215px}#label strong{display:block;font-size:15px}#label span{display:block;font-size:12px;opacity:.8}
+#nav{display:flex;gap:6px;pointer-events:auto}
+button,a{font:700 13px system-ui;cursor:pointer;text-decoration:none;color:#283f36}
+.command{min-height:40px;padding:8px 10px;background:#f6d88a;border:2px solid #46654f;border-radius:11px;box-shadow:0 3px 0 #264c3990}
+.command:active{transform:translateY(2px);box-shadow:none}
+#right{position:absolute;top:10px;right:10px;width:173px;display:grid;gap:7px}
+#mapPanel{padding:7px}#mapPanel label{display:flex;justify-content:space-between;font-size:10px;font-weight:800;margin-bottom:5px}
+#mini{display:block;width:155px;height:115px;image-rendering:pixelated}
+#zoom{display:flex;justify-content:end;gap:6px;pointer-events:auto}#zoom button{min-width:39px}
+#notice{position:absolute;bottom:17px;left:50%;transform:translateX(-50%);max-width:min(560px,65vw);min-height:34px;padding:9px 14px;opacity:0;transition:opacity .2s;text-align:center}
+#notice.visible{opacity:1}
+#help{position:absolute;bottom:10px;left:11px;background:#243f36b9;color:#fff8e1;border-radius:8px;padding:5px 9px;font-size:11px}
+#touch{display:none;position:absolute;inset:0}
+#stick{position:absolute;bottom:20px;left:20px;width:126px;height:126px;border:2px solid #294e41;border-radius:50%;background:#f4edcfab;box-shadow:inset 0 0 0 10px #4a76636e;pointer-events:auto;touch-action:none}
+#knob{position:absolute;top:36px;left:36px;width:50px;height:50px;border:3px solid #35594b;border-radius:50%;background:#f0cd79}
+#actions{position:absolute;bottom:24px;right:22px;display:flex;gap:11px;align-items:end;pointer-events:auto}
+.round{width:69px;height:69px;border-radius:50%;border:3px solid #365649;background:#f2d17a;box-shadow:0 4px 0 #345647}
+#dash{width:78px;height:78px;background:#b8d6a5}
+#mapHint{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:#fbefcb;padding:7px 13px;border:2px solid #375545;border-radius:10px;display:none}
+#mapHint.visible{display:block}
+#load{position:fixed;inset:0;background:#203d35;color:#f8edce;display:grid;place-items:center;font-size:16px;z-index:20;text-align:center;padding:20px}
+#load.hidden{display:none}
+#rotate{position:fixed;inset:0;z-index:12;display:none;place-items:center;text-align:center;padding:30px;background:#203d35e8;color:#f8edce;font-size:18px}
+@media(pointer:coarse),(max-width:850px){
+  #touch{display:block}
+  #top{top:5px;left:6px;gap:4px;max-width:67vw}
+  #label{min-width:0;padding:5px 8px}#label strong{font-size:12px}#label span{font-size:10px}
+  #nav{gap:3px}.command{font-size:11px;padding:5px 7px;min-height:33px}
+  #right{right:5px;top:5px;width:118px}
+  #mapPanel{padding:4px}#mini{width:106px;height:79px}#mapPanel label{font-size:9px}
+  #zoom button{min-width:31px;padding:5px}
+  #notice{bottom:9px;max-width:48vw;font-size:11px}
+  #help{display:none}
+}
+@media(pointer:coarse) and (orientation:portrait){#rotate{display:grid}}
+</style>
+</head>
+<body>
+<canvas id="game" aria-label="Academia de Aventura: mundo de casas, villas y bosques a escala"></canvas>
+<div id="hud">
+  <div id="top">
+    <div id="label" class="panel"><strong>Academia de Aventura</strong><span id="region">Villa de los Pescadores</span></div>
+    <div id="nav"><button class="command" id="map">Mapa · M</button><a class="command" href="./nuevo-mundo.html">Versión anterior</a></div>
+  </div>
+  <aside id="right">
+    <div id="mapPanel" class="panel"><label><span>MUNDO A ESCALA</span><span>N ↑</span></label><canvas id="mini" width="155" height="115"></canvas></div>
+    <div id="zoom"><button class="command" id="out" aria-label="Alejar">−</button><button class="command" id="in" aria-label="Acercar">+</button></div>
+  </aside>
+  <div id="mapHint" class="panel">Mapa general · Presiona M para volver a explorar</div>
+  <div id="notice" class="panel" role="status" aria-live="polite"></div>
+  <div id="help">WASD / flechas · Shift correr · E interactuar · M mapa · Rueda zoom</div>
+  <div id="touch">
+    <div id="stick" role="group" aria-label="Control de movimiento"><div id="knob"></div></div>
+    <div id="actions"><button class="round" id="act">Hablar</button><button class="round" id="dash">Correr</button></div>
+  </div>
+</div>
+<div id="load">Cargando el kit original de sprites…</div>
+<div id="rotate">Gira el dispositivo a posición horizontal para explorar el mundo.</div>
+<script type="module">
+import {WORLD,HOUSES,BRIDGES,makeWorld,regionAt,movePlayer,blockedReason,
+  nearDoor,nearestPlace,tileAt,TILE} from './mundo-sprites-model.mjs';
+import {createSpriteRenderer} from './mundo-sprites-render.mjs';
+const model=makeWorld();
+const painter=createSpriteRenderer(document.getElementById('game'),model);
+const player={...WORLD.spawn,facingX:0,facingY:1,direction:'front',moving:false,running:false};
+const camera={x:player.x,y:player.y,zoom:matchMedia('(pointer:coarse)').matches?.83:.92};
+const keys=new Set(),stick={x:0,y:0};
+const knob=document.getElementById('knob'),region=document.getElementById('region'),
+  banner=document.getElementById('notice'),mapBtn=document.getElementById('map'),
+  load=document.getElementById('load');
+let overview=false,runTouch=false,pointer=null,last=0,frameCount=0,
+  noticeUntil=0,lastMini=0,regionName='';
+function notice(message,duration=3500){
+  banner.textContent=message;banner.classList.add('visible');
+  noticeUntil=performance.now()+duration;
+}
+painter.ready.then(status=>{
+  if(status.ready){
+    load.classList.add('hidden');
+    notice('Ahora estás dentro de una villa: acércate a las puertas y recorre los puentes.',5800);
+  }else{
+    load.textContent='No se pudieron cargar recursos esenciales. Revisa la conexión y vuelve a abrir el juego.';
+  }
+});
+function interact(){
+  const house=nearDoor(player.x,player.y,85);
+  if(house){notice(house.name+' · Estás frente a la entrada de una casa real del poblado.',4800);return;}
+  const place=nearestPlace(player.x,player.y);
+  if(place){notice(place.name,3300);return;}
+  if(tileAt(player.x,player.y,model)===TILE.SAND)notice('Has llegado a la playa. El mar profundo no se puede cruzar.');
+  else notice('Explora el bosque, la aldea, los puentes y las marismas.');
+}
+function setOverview(value){
+  overview=value;
+  mapBtn.textContent=value?'Explorar · M':'Mapa · M';
+  document.getElementById('mapHint').classList.toggle('visible',value);
+}
+mapBtn.addEventListener('click',()=>setOverview(!overview));
+document.getElementById('in').addEventListener('click',()=>camera.zoom=Math.min(1.55,camera.zoom+.12));
+document.getElementById('out').addEventListener('click',()=>camera.zoom=Math.max(.58,camera.zoom-.12));
+document.getElementById('act').addEventListener('click',interact);
+document.getElementById('game').addEventListener('wheel',e=>{
+  e.preventDefault();camera.zoom=Math.max(.58,Math.min(1.55,camera.zoom+(e.deltaY<0?.1:-.1)));
+},{passive:false});
+document.addEventListener('keydown',e=>{
+  const key=e.key.toLowerCase();
+  if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key))e.preventDefault();
+  if(e.repeat&&(key==='e'||key==='m'))return;
+  keys.add(key);
+  if(key==='e'||key==='enter')interact();
+  if(key==='m')setOverview(!overview);
+});
+document.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+window.addEventListener('blur',()=>{keys.clear();stick.x=stick.y=0;knob.style.transform='';runTouch=false;});
+const surface=document.getElementById('stick');
+function updateStick(e){
+  const rect=surface.getBoundingClientRect();
+  let x=e.clientX-rect.left-rect.width/2,y=e.clientY-rect.top-rect.height/2;
+  const n=Math.max(1,Math.hypot(x,y)/44);
+  x/=n;y/=n;
+  stick.x=x/44;stick.y=y/44;
+  knob.style.transform='translate('+stick.x*34+'px,'+stick.y*34+'px)';
+}
+surface.addEventListener('pointerdown',e=>{
+  e.preventDefault();pointer=e.pointerId;
+  surface.setPointerCapture(pointer);updateStick(e);
+});
+surface.addEventListener('pointermove',e=>{
+  if(pointer===e.pointerId)updateStick(e);
+});
+function stopStick(e){
+  if(pointer!==e.pointerId)return;
+  pointer=null;stick.x=stick.y=0;knob.style.transform='';
+}
+surface.addEventListener('pointerup',stopStick);
+surface.addEventListener('pointercancel',stopStick);
+const dash=document.getElementById('dash');
+dash.addEventListener('pointerdown',e=>{
+  e.preventDefault();runTouch=true;dash.setPointerCapture(e.pointerId);
+});
+['pointerup','pointercancel','lostpointercapture'].forEach(type=>
+  dash.addEventListener(type,()=>runTouch=false));
+function movement(){
+  let x=stick.x,y=stick.y;
+  if(keys.has('a')||keys.has('arrowleft'))x--;
+  if(keys.has('d')||keys.has('arrowright'))x++;
+  if(keys.has('w')||keys.has('arrowup'))y--;
+  if(keys.has('s')||keys.has('arrowdown'))y++;
+  const length=Math.hypot(x,y);
+  return length>.07?{x:x/Math.max(length,1),y:y/Math.max(length,1)}:{x:0,y:0};
+}
+// Browser QA hook: independent from legacy 3D stage and geometric map.
+window.__spriteWorld={
+  version:'1.0.0',mode:'sprites-and-tiles',world:WORLD,
+  get ready(){return painter.status.ready&&frameCount>2;},
+  get assetStatus(){return painter.status;},
+  get player(){return {x:player.x,y:player.y};},
+  get houses(){return HOUSES.map(h=>({id:h.id,name:h.name,x:h.x,y:h.y,scale:h.scale}));},
+  get bridges(){return BRIDGES.map(b=>({...b}));},
+  get props(){return model.props.length;},
+  get overview(){return overview;},
+  screenshot(){return document.getElementById('game').toDataURL('image/png');},
+  blocked:(x,y)=>blockedReason(x,y,model),
+  teleport(x,y){
+    if(blockedReason(x,y,model))return false;
+    player.x=x;player.y=y;camera.x=x;camera.y=y;return true;
+  },
+  move(dx,dy){
+    const p=movePlayer(player,dx,dy,model);player.x=p.x;player.y=p.y;
+    camera.x=p.x;camera.y=p.y;return p;
+  },
+  showMap:setOverview
+};
+function tick(now){
+  requestAnimationFrame(tick);
+  const dt=Math.min((now-(last||now))/1000,.045);last=now;
+  if(!overview){
+    const v=movement();
+    const running=keys.has('shift')||runTouch;
+    const speed=running?266:175;
+    const dest=movePlayer(player,v.x*speed*dt,v.y*speed*dt,model);
+    player.moving=Math.hypot(dest.x-player.x,dest.y-player.y)>.03;
+    player.running=running&&player.moving;
+    player.x=dest.x;player.y=dest.y;
+    if(Math.abs(v.x)+Math.abs(v.y)>.1){
+      player.facingX=v.x;player.facingY=v.y;
+      player.direction=Math.abs(v.x)>.43&&Math.abs(v.x)>Math.abs(v.y)*.76?
+        'side':v.y<-.2?'back':'front';
+    }
+    const amount=1-Math.exp(-9*dt);
+    camera.x+=(player.x-camera.x)*amount;
+    camera.y+=(player.y-camera.y)*amount;
+    const current=regionAt(player.x,player.y);
+    if(current!==regionName){
+      regionName=current;region.textContent=current;
+      if(frameCount>50)notice('Llegaste a '+current,2300);
+    }
+  }
+  painter.draw({camera,player,time:now/1000,overview});
+  if(now-lastMini>250){
+    lastMini=now;painter.drawMinimap(document.getElementById('mini'),player);
+  }
+  if(now>noticeUntil)banner.classList.remove('visible');
+  frameCount++;
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
