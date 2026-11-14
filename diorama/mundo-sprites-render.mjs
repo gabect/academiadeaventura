@@ -4,7 +4,7 @@
  * rocks and articulated character cutouts. No procedural buildings or
  * geometric mountain meshes are drawn.
  */
-import {WORLD,TILE,HOUSES,BRIDGES,ART,tileAt} from './mundo-sprites-model.mjs';
+import {WORLD,TILE,HOUSES,BRIDGES,ROADS,ART,tileAt} from './mundo-sprites-model.mjs';
 import {TINY_RECTS} from './tiny-village-assets.mjs';
 import {BONE_ATLAS} from './assets/vector-bone-manifest.mjs';
 const TREES = Object.freeze({
@@ -44,7 +44,7 @@ function drawGroundTiles(c,images,model,x0,y0,x1,y1){
     const id=model.tiles[row*WORLD.columns+col],x=col*t,y=row*t;
     // Overpaint fractional edges to prevent floating-point hairline seams.
     const dx=x-.35,dy=y-.35,s=t+.7;
-    if(id===TILE.GRASS||id===TILE.FOREST||id===TILE.MARSH){
+    if(id===TILE.GRASS||id===TILE.FOREST||id===TILE.MARSH||id===TILE.DRY||id===TILE.PATH){
       if(images.grass)drawRegion(c,images.grass,[0,0,images.grass.width,images.grass.height],dx,dy,s,s);
       else drawRegion(c,images.terrain,TINY_RECTS.grassTile,dx,dy,s,s);
     }else if(id===TILE.ROCK&&images.rock){
@@ -52,12 +52,12 @@ function drawGroundTiles(c,images,model,x0,y0,x1,y1){
     }else{
       drawRegion(c,images.terrain,TINY_RECTS[terrainRects[id]],dx,dy,s,s);
     }
-    if(id===TILE.DRY&&images.grass){
-      c.save();c.globalAlpha=.27;
-      drawRegion(c,images.grass,[0,0,images.grass.width,images.grass.height],dx,dy,s,s);c.restore();
+    if(id===TILE.DRY){
+      c.save();c.globalAlpha=Math.min(.24,.045+Math.max(0,y-2050)/600*.18);
+      drawRegion(c,images.terrain,TINY_RECTS.sandTile,dx,dy,s,s);c.restore();
     }
-    if(id===TILE.FOREST&&images.dense&&((col*7+row*11)%5<3)){
-      c.save();c.globalAlpha=.18;
+    if(id===TILE.FOREST&&images.dense){
+      c.save();c.globalAlpha=.10;
       drawRegion(c,images.dense,[0,0,images.dense.width,images.dense.height],dx,dy,s,s);c.restore();
     }
     if(id===TILE.MARSH){
@@ -79,6 +79,26 @@ function drawGroundTiles(c,images,model,x0,y0,x1,y1){
         c.restore();
       }
     }
+  }
+
+  // Roads remain tile-authoritative for collision/navigation, but their
+  // texture is masked onto continuous rounded corridors. No path geometry
+  // is used as a 3D world mesh or building primitive.
+  if(images.terrain){
+    const rect=TINY_RECTS.sandTile;
+    const stamp=document.createElement('canvas');
+    stamp.width=rect[2];stamp.height=rect[3];
+    stamp.getContext('2d').drawImage(images.terrain,...rect,0,0,rect[2],rect[3]);
+    const pattern=c.createPattern(stamp,'repeat');
+    c.save();c.lineCap='round';c.lineJoin='round';
+    for(const route of ROADS){
+      c.beginPath();
+      c.moveTo(route[0][0],route[0][1]);
+      for(let i=1;i<route.length;i++)c.lineTo(route[i][0],route[i][1]);
+      c.strokeStyle='#a59b72';c.globalAlpha=.34;c.lineWidth=106;c.stroke();
+      c.strokeStyle=pattern;c.globalAlpha=.86;c.lineWidth=88;c.stroke();
+    }
+    c.restore();
   }
 }
 
@@ -147,8 +167,8 @@ function drawHero(c,image,player,time){
     if(!part)continue;
     const [l,t,r,b]=part.bbox;
     const [sx,sy,sw,sh]=part.atlas;
-    const phase=partName.includes('leg')?(partName.endsWith('L')?-1:1):
-      partName.includes('arm')?(partName.endsWith('L')?1:-1):0;
+    const phase=partName.includes('leg')?(partName[3]==='L'?-1:1):
+      partName.includes('arm')?(partName[3]==='L'?1:-1):0;
     const movement=phase*swing*2.4;
     const bounce=player.moving?Math.abs(swing)*1.4:0;
     c.drawImage(image,sx,sy,sw,sh,
